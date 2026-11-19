@@ -17,7 +17,7 @@ import { RecentCard } from "@/components/RecentCard";
 import { useState } from "react";
 
 export default function Home() {
-  const { location, ready, interests, interestsChosen } = useAppState();
+  const { location, ready, interests } = useAppState();
   const [editing, setEditing] = useState(false);
   const api = useApi<Forecast>(ready ? `/api/forecast?loc=${location.id}` : null);
   const f = api.data;
@@ -44,7 +44,7 @@ export default function Home() {
             <TrustBadges f={f} />
           </div>
           <div className="flex flex-col gap-4">
-            {(!interestsChosen || editing) && <InterestsPicker onDone={() => setEditing(false)} />}
+            {editing && <InterestsPicker onDone={() => setEditing(false)} />}
             <DecisionList
               items={assessDay(f.hourly, f.daily, todayMU(), 0).filter((a) => a.id === "general" || interests.includes(a.id))}
               title="Today, for you"

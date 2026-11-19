@@ -6,7 +6,9 @@ import type { Island } from "@/lib/weather/types";
 import { readLS, writeLS } from "@/lib/client/storage";
 import type { ActivityId } from "@/lib/weather/intelligence/decision-engine.service";
 
-export const DEFAULT_INTERESTS: ActivityId[] = ["school", "commute", "laundry", "beach"];
+/** Everything is shown by default; people can narrow it down with "Change what I see". */
+export const ALL_INTERESTS: ActivityId[] = ["school", "commute", "laundry", "beach", "outdoor", "gardening", "agriculture", "hiking", "kitesurf", "boating", "solar"];
+export const DEFAULT_INTERESTS: ActivityId[] = ALL_INTERESTS;
 
 interface State {
   island: Island;
