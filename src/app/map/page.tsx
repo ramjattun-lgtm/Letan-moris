@@ -10,11 +10,18 @@ import type { MapPoint } from "@/lib/weather/types";
 import type { Layer } from "@/components/WeatherMap";
 import { getLocality } from "@/data/localities";
 import { ago, formatUtcAsMU } from "@/lib/time";
+import { useLapli } from "@/lib/client/useLapli";
 
 const WeatherMap = dynamic(() => import("@/components/WeatherMap").then((m) => m.WeatherMap), { ssr: false, loading: () => <Skeleton className="h-[60vh]" /> });
 
 const LAYERS: { id: Layer; label: string; legend: string }[] = [
   { id: "rain", label: "Rain", legend: "Highest chance of rain in the next 3 hours. Darker blue = more likely." },
+  {
+    id: "reports",
+    label: "Rain reports",
+    legend:
+      "Lapli isi! — rain reported by people in the last 2 hours (minutes ago, and number of reports). Unverified community observations; tap Lapli isi! to add yours.",
+  },
   {
     id: "heavy",
     label: "Heavy-rain risk",
@@ -32,6 +39,10 @@ export default function MapPage() {
   const [picked, setPicked] = useState<string | null>(null);
   const api = useApi<{ points: MapPoint[]; retrievedAt: string }>(ready ? `/api/map?island=${island}` : null);
   const onSelect = useCallback((id: string) => setPicked(id), []);
+  const lapli = useLapli();
+  const reportPoints: MapPoint[] = (lapli.places ?? [])
+    .filter((p) => p.loc.island === island)
+    .map((p) => ({ locationId: p.loc.id, rainProbNext3h: null, rainNext3h: null, temperature: null, windSpeed: null, windDirection: null, cloudCover: null, report: { kind: p.kind, minutesAgo: p.minutesAgo, count: p.count } }));
   const pickedLoc = getLocality(picked);
 
   return (
@@ -44,8 +55,18 @@ export default function MapPage() {
           </button>
         ))}
       </div>
-      <ErrorBanner error={api.error} hasData={!!api.data} savedAt={api.savedAt} />
-      {api.data ? <WeatherMap island={island} points={api.data.points} layer={layer} onSelect={onSelect} /> : <Skeleton className="h-[60vh]" />}
+      {layer !== "reports" && <ErrorBanner error={api.error} hasData={!!api.data} savedAt={api.savedAt} />}
+      {layer === "reports" ? (
+        <>
+          <WeatherMap island={island} points={reportPoints} layer={layer} onSelect={onSelect} />
+          {lapli.places && reportPoints.length === 0 && <p className="mt-2 text-sm text-muted">No rain reports in the last 2 hours on this island.</p>}
+          {lapli.error && <p className="mt-2 text-sm text-muted">Community reports are unavailable right now.</p>}
+        </>
+      ) : api.data ? (
+        <WeatherMap island={island} points={api.data.points} layer={layer} onSelect={onSelect} />
+      ) : (
+        <Skeleton className="h-[60vh]" />
+      )}
       <div className="mt-3 grid gap-3 lg:grid-cols-2">
         <div className="card text-sm">
           <h2 className="label">Legend</h2>

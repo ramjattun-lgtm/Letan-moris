@@ -13,3 +13,4 @@
 - Live data could not be tested from the build environment (outbound access blocked); it is verified on the deployed site.
 - Heavy-rain risk is an independent indicator from model rain amounts (hourly intensity, 3 h and 24 h totals, last 48 h). Global models often underestimate short tropical downpours, so "Low" never means "no flooding". It never replaces MMS heavy rain / torrential rain warnings.
 - Official flood-prone zones (Land Drainage Authority) are not shown yet: the data is not openly downloadable. Terrain-based low-lying areas are the next step.
+- Lapli isi! reports use the free public ntfy.sh service (no database). Anyone who knows the topic could post fake reports; reports are validated (known place, known kind, recent) and always labelled unverified. If ntfy.sh is unavailable, reports simply don't show. A different topic can be set with NEXT_PUBLIC_LAPLI_TOPIC.

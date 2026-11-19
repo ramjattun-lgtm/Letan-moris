@@ -40,6 +40,10 @@ export default function About() {
         <li>The &quot;now&quot; values are model estimates, not measurements from a weather station.</li>
         <li>Missing values are shown as &quot;—&quot;, never as zero.</li>
       </ul>
+      <h2 className="text-lg font-bold">Lapli isi! community reports</h2>
+      <p>
+        When you tap <strong>Lapli isi!</strong>, only the village name and the kind of rain are sent — no GPS position, no name, no account. Reports go through ntfy.sh, a free public message service, are visible to anyone using Letan Moris, and are automatically deleted after about 12 hours. They are unverified observations. The &quot;upwind&quot; alert estimates when reported rain may reach you from today&apos;s wind; it is a rough guide, not radar.
+      </p>
       <h2 className="text-lg font-bold">Privacy</h2>
       <p>
         No account is needed. Your saved places, last forecasts and theme are stored only on your device. If you use &quot;Use my location&quot;, your position is used on your device to pick the nearest place and is not sent to our servers. We use no advertising or tracking cookies. Written with Mauritius&apos;s Data Protection Act 2017 in mind.

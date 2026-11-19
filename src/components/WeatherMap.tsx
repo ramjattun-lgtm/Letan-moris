@@ -9,7 +9,7 @@ import { getLocality, ISLAND_VIEW } from "@/data/localities";
 import type { Island, MapPoint } from "@/lib/weather/types";
 import { compass } from "@/lib/weather/weather-codes";
 
-export type Layer = "rain" | "heavy" | "temperature" | "wind" | "cloud";
+export type Layer = "rain" | "heavy" | "reports" | "temperature" | "wind" | "cloud";
 
 // Free, keyless vector tiles from OpenFreeMap (OpenStreetMap data). Attribution is shown on the map.
 const STYLE = "https://tiles.openfreemap.org/styles/positron";
@@ -38,6 +38,13 @@ export function labelFor(layer: Layer, p: MapPoint): { text: string; color: stri
       const lvl = p.rainRisk ?? null;
       const color = lvl === "high" ? "#D9480F" : lvl === "moderate" ? "#F2A541" : lvl === "low" ? "#CFEDE6" : "#9FB2BF";
       return { text: lvl === "high" ? "High" : lvl === "moderate" ? "Moderate" : lvl === "low" ? "Low" : "—", color, dark: lvl === "high" };
+    }
+    case "reports": {
+      const r = p.report;
+      if (!r) return { text: "—", color: "#9FB2BF", dark: false };
+      const name = r.kind === "flooding" ? "Water on road" : r.kind === "heavy" ? "Heavy rain" : r.kind === "stopped" ? "Stopped" : "Light rain";
+      const color = r.kind === "flooding" ? "#D9480F" : r.kind === "heavy" ? "#1F5FB8" : r.kind === "stopped" ? "#CFEDE6" : "#7FB2F0";
+      return { text: `${name} · ${r.minutesAgo}′${r.count > 1 ? ` ×${r.count}` : ""}`, color, dark: r.kind === "heavy" || r.kind === "flooding" };
     }
     case "temperature":
       return { text: p.temperature === null ? "—" : `${Math.round(p.temperature)}°`, color: tempColor(p.temperature), dark: (p.temperature ?? 0) >= 31 };

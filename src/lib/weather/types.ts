@@ -112,5 +112,7 @@ export interface MapPoint {
   windDirection: Maybe<number>;
   cloudCover: Maybe<number>;
   rainRisk?: "low" | "moderate" | "high" | null;
+  /** Community report summary (map "Rain reports" layer). */
+  report?: { kind: "light" | "heavy" | "flooding" | "stopped"; minutesAgo: number; count: number };
   rainRiskText?: string;
 }

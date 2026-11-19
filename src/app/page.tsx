@@ -14,6 +14,7 @@ import { InterestsPicker } from "@/components/Interests";
 import { TrustBadges } from "@/components/TrustBadges";
 import { HeavyRainCard } from "@/components/HeavyRainCard";
 import { RecentCard } from "@/components/RecentCard";
+import { CommunityCard } from "@/components/CommunityCard";
 import { useState } from "react";
 
 export default function Home() {
@@ -39,6 +40,7 @@ export default function Home() {
           <div className="flex flex-col gap-4">
             <CurrentCard f={f} />
             <RecentCard />
+            <CommunityCard f={f} />
             <RainOutlookCard f={f} compact />
             <HeavyRainCard />
             <TrustBadges f={f} />
