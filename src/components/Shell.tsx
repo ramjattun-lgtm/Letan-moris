@@ -10,7 +10,7 @@ const NAV = [
   { href: "/", label: "Today", icon: "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" },
   { href: "/day", label: "Plan", icon: "M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm4 8 2 2 4-4" },
   { href: "/map", label: "Map", icon: "M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" },
-  { href: "/marine", label: "Sea", icon: "M2 16c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M2 20c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M12 3v8m0-8 4 4m-4-4-4 4" },
+  { href: "/marine", label: "Beach & Sea", icon: "M2 16c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M2 20c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M12 3v8m0-8 4 4m-4-4-4 4" },
   { href: "/cyclone", label: "Cyclone", icon: "M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0M5 9a8 8 0 0 1 12-5M19 15a8 8 0 0 1-12 5" },
   { href: "/climate", label: "Climate", icon: "M4 19h16M7 16V9m5 7V5m5 11v-4" },
 ];
@@ -91,7 +91,7 @@ export function BottomNav() {
           const active = path === n.href;
           return (
             <li key={n.href}>
-              <Link href={n.href} aria-current={active ? "page" : undefined} className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${active ? "text-teal-ink dark:text-teal-soft" : "text-muted dark:text-slate-400"}`}>
+              <Link href={n.href} aria-current={active ? "page" : undefined} className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-center text-[11px] font-semibold leading-tight ${active ? "text-teal-ink dark:text-teal-soft" : "text-muted dark:text-slate-400"}`}>
                 <Icon d={n.icon} />
                 {n.label}
               </Link>

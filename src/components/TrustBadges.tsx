@@ -42,10 +42,10 @@ export function TrustBadges({ f }: { f: Forecast }) {
                   {d.tempSpread !== null && d.tempSpread > 2 ? ` · temperatures differ by ${d.tempSpread}°C` : ""}
                 </span>
               ))}
-              <span className="block text-[11px] text-muted dark:text-slate-400">Comparing {agree.data?.models.length} independent global models for the {agree.data?.region} area.</span>
+              <span className="block text-[11px] text-muted dark:text-slate-400">Comparing {agree.data?.models.length} independent weather forecasting models for the {agree.data?.region} area.</span>
             </span>
           ) : (
-            <span className="text-muted dark:text-slate-400">{agree.error ? "Model comparison unavailable right now." : "Comparing weather models…"}</span>
+            <span className="text-muted dark:text-slate-400">{agree.error ? "Model comparison unavailable right now." : "Comparing independent weather forecasting models…"}</span>
           )}
         </li>
         <li className="flex items-start gap-2">

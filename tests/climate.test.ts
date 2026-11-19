@@ -81,11 +81,11 @@ describe("models agree?", () => {
   const days = parseMultiModel(raw, ["a", "b", "c"]).map(agreeDay);
   it("agrees on a dry day", () => {
     expect(days[0].rainAgree).toBe(true);
-    expect(days[0].label).toBe("Models agree: mostly dry");
+    expect(days[0].label).toBe("Independent weather forecasting models agree: mostly dry");
   });
   it("flags disagreement and temperature spread", () => {
     expect(days[1].rainAgree).toBe(false);
-    expect(days[1].label).toBe("Models disagree about rain (2 of 3 expect a wet day)");
+    expect(days[1].label).toBe("Independent weather forecasting models disagree about rain (2 of 3 expect a wet day)");
     expect(days[1].tempSpread).toBe(4);
   });
 });

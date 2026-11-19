@@ -29,6 +29,8 @@ Scheduled posts at 05:45, 12:30, 18:30 and Friday 17:00 with branded cards, an i
 
 - **Heavy-rain & flash flood risk** (Map layer, Today card, Facebook line when Moderate/High) — independent, always deferring to MMS warnings.
 
+- **Beach & Sea**: best beaches today, beach score by hour and by morning/midday/afternoon, onshore vs sheltered wind per beach, waves, sea temperature, sunset, 7-day beach outlook.
+
 ## Run locally
 ```bash
 npm install

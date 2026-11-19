@@ -28,9 +28,9 @@ export function agreeDay(d: ModelDay): DayAgreement {
   const spread = temps.length < 2 ? null : Math.round((Math.max(...temps) - Math.min(...temps)) * 10) / 10;
   let label: string;
   if (rainAgree === null) label = "Model comparison not available";
-  else if (rainAgree && wet === rain.length) label = "Models agree: a wet day";
-  else if (rainAgree) label = "Models agree: mostly dry";
-  else label = `Models disagree about rain (${wet} of ${rain.length} expect a wet day)`;
+  else if (rainAgree && wet === rain.length) label = "Independent weather forecasting models agree: a wet day";
+  else if (rainAgree) label = "Independent weather forecasting models agree: mostly dry";
+  else label = `Independent weather forecasting models disagree about rain (${wet} of ${rain.length} expect a wet day)`;
   return { date: d.date, models: rain.length, wetModels: wet, rainAgree, tempSpread: spread, label };
 }
 
