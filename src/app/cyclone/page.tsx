@@ -8,6 +8,18 @@ import { DEFAULT_LOCATION } from "@/data/localities";
 import { ago, dayLabel, formatUtcAsMU } from "@/lib/time";
 import type { CycloneStatus } from "@/lib/weather/providers/gdacs.provider";
 import { SEASON, WARNING_CLASSES } from "@/data/cyclone-season";
+import dynamic from "next/dynamic";
+import { NEAR_KM, stormImpact, utcToMU } from "@/lib/weather/intelligence/storm-impact.service";
+import { addHours, hhmm } from "@/lib/time";
+import { Skeleton } from "@/components/Status";
+
+const CycloneMap = dynamic(() => import("@/components/CycloneMap").then((m) => m.CycloneMap), { ssr: false, loading: () => <Skeleton className="h-[55vh]" /> });
+
+function when(iso: string | null) {
+  if (!iso) return "";
+  const l = utcToMU(iso);
+  return ` around ${dayLabel(l.slice(0, 10))} ${hhmm(l)}`;
+}
 
 const CHECKLIST = [
   "Keep a battery radio, torch, spare batteries and charged power banks.",
@@ -21,7 +33,7 @@ const CHECKLIST = [
 ];
 
 export default function CyclonePage() {
-  const { island, ready } = useAppState();
+  const { island, ready, location } = useAppState();
   const o = OFFICIAL[island];
   const name = island === "rodrigues" ? "Rodrigues" : "Mauritius";
   // Independent model outlook (clearly labelled) for the main town of the island.
@@ -29,6 +41,11 @@ export default function CyclonePage() {
   const f = api.data;
   const tc = useApi<CycloneStatus>(ready ? "/api/cyclones" : null);
   const systems = tc.data?.systems ?? [];
+  const nearest = systems[0];
+  const myClosest = nearest?.closest?.[location.island] ?? null;
+  const isNear = !!nearest && (myClosest ? myClosest.km : Math.min(nearest.distanceKm.mauritius, nearest.distanceKm.rodrigues)) <= NEAR_KM;
+  const mine = useApi<Forecast>(ready && isNear ? `/api/forecast?loc=${location.id}` : null);
+  const impact = mine.data ? stormImpact(mine.data.hourly, myClosest?.time ? addHours(utcToMU(myClosest.time), 24) : undefined) : null;
 
   return (
     <>
@@ -73,7 +90,18 @@ export default function CyclonePage() {
             <strong>No active tropical storm or cyclone</strong> is currently listed for the South-West Indian Ocean.
           </p>
         ) : (
-          <ul className="mt-2 space-y-2">
+          <>
+          <div className="mt-3">
+            <CycloneMap systems={systems} />
+            <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted dark:text-slate-400">
+              <span><span className="mr-1 inline-block h-0.5 w-5 bg-navy align-middle dark:bg-white" />Past track</span>
+              <span><span className="mr-1 inline-block w-5 border-t-2 border-dashed border-[#D9480F] align-middle" />Forecast track</span>
+              <span><span className="mr-1 inline-block h-3 w-4 rounded bg-coral/40 align-middle" />Uncertainty cone (where the centre may go)</span>
+              <span><span className="mr-1 inline-block h-3 w-4 rounded bg-[#D9480F]/20 align-middle" />Strong-wind areas</span>
+            </p>
+            <p className="mt-1 text-[11px] text-muted dark:text-slate-400">The cone is not the size of the storm: strong wind and heavy rain can reach far outside it. Forecast tracks change every few hours.</p>
+          </div>
+          <ul className="mt-3 space-y-2">
             {systems.map((s) => (
               <li key={s.id} className="rounded-2xl bg-mist p-3 dark:bg-white/5">
                 <p className="text-lg font-bold">{s.name}</p>
@@ -85,6 +113,18 @@ export default function CyclonePage() {
                   {s.maxWindKmh !== null ? `Maximum winds about ${s.maxWindKmh} km/h · ` : ""}Position {Math.abs(s.lat).toFixed(1)}°S {s.lon.toFixed(1)}°E
                   {s.alertLevel ? ` · GDACS impact level: ${s.alertLevel}` : ""}
                 </p>
+                {s.closest && (
+                  <ul className="mt-1 text-sm">
+                    {(["mauritius", "rodrigues"] as const).map((isl) =>
+                      s.closest?.[isl] ? (
+                        <li key={isl}>
+                          Closest forecast approach to {isl === "mauritius" ? "Mauritius" : "Rodrigues"}: <strong>about {s.closest[isl]!.km.toLocaleString()} km {s.closest[isl]!.bearing}</strong>
+                          {when(s.closest[isl]!.time)}
+                        </li>
+                      ) : null,
+                    )}
+                  </ul>
+                )}
                 {s.reportUrl && (
                   <a className="text-sm font-semibold text-teal-ink underline dark:text-teal-soft" href={s.reportUrl} target="_blank" rel="noreferrer">
                     Track and details (GDACS)
@@ -93,6 +133,7 @@ export default function CyclonePage() {
               </li>
             ))}
           </ul>
+          </>
         )}
         {tc.data && (
           <p className="mt-2 text-[11px] text-muted dark:text-slate-400">
@@ -100,6 +141,44 @@ export default function CyclonePage() {
           </p>
         )}
       </section>
+
+      {isNear && (
+        <section className="card mb-4 ring-2 ring-coral/50" aria-labelledby="mine">
+          <p className="chip bg-coral/20 text-coral-ink dark:text-coral">INDEPENDENT MODEL FORECAST — NOT A WARNING</p>
+          <h2 id="mine" className="mt-2 text-lg font-bold">What it could mean for {location.name}</h2>
+          {!impact ? (
+            <p className="mt-2 text-sm text-muted">{mine.error ? "Forecast for your place is unavailable." : "Loading…"}</p>
+          ) : (
+            <ul className="mt-2 space-y-2 text-sm">
+              <li>
+                Strongest gusts in the model{" "}
+                {impact.peakGust ? (
+                  <strong>
+                    about {impact.peakGust.kmh} km/h, {dayLabel(impact.peakGust.time.slice(0, 10))} around {hhmm(impact.peakGust.time)}
+                  </strong>
+                ) : (
+                  "not available"
+                )}
+                .
+              </li>
+              <li>
+                Total rain {impact.windowLabel}: <strong>{impact.totalRainMm === null ? "not available" : `about ${impact.totalRainMm} mm`}</strong>.
+              </li>
+              {impact.firstStrongGust ? (
+                <li className="rounded-2xl bg-coral/15 p-3">
+                  Gusts of 60 km/h or more are possible from about <strong>{dayLabel(impact.firstStrongGust.slice(0, 10))} {hhmm(impact.firstStrongGust)}</strong>. Aim to finish your preparations by{" "}
+                  <strong>{impact.prepareBy ? `${dayLabel(impact.prepareBy.slice(0, 10))} ${hhmm(impact.prepareBy)}` : "now"}</strong> — and follow MMS bulletins.
+                </li>
+              ) : (
+                <li>No gusts of 60 km/h or more in the model for your place in this period. Keep following MMS — tracks can change.</li>
+              )}
+            </ul>
+          )}
+          <p className="mt-2 text-[11px] text-muted dark:text-slate-400">
+            Global weather models often underestimate winds near a cyclone&apos;s centre. Change place with the selector on the Home page. Official warnings: MMS.
+          </p>
+        </section>
+      )}
 
       <section className="card mb-4" aria-labelledby="season">
         <h2 id="season" className="text-lg font-bold">Cyclone season {SEASON.name}</h2>

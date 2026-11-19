@@ -1,3 +1,4 @@
+import type { Feature } from "geojson";
 // GDACS (Global Disaster Alert and Coordination System — UN OCHA / European Commission JRC).
 // Free public API, no key. Terms: acknowledge "Global Disaster Alert and Coordination System, GDACS".
 // GDACS compiles advisories from forecasting agencies. It is NOT an MMS warning and is labelled as such.
@@ -13,8 +14,12 @@ export interface ActiveSystem {
   fromDate: string | null;
   toDate: string | null;
   reportUrl: string | null;
+  /** GDACS geometry (track, cone, wind bands) for the latest episode. */
+  geometryUrl: string | null;
   distanceKm: { mauritius: number; rodrigues: number };
   bearingFrom: { mauritius: string; rodrigues: string };
+  track?: StormTrack | null;
+  closest?: { mauritius: ClosestApproach | null; rodrigues: ClosestApproach | null };
 }
 
 export interface CycloneStatus {
@@ -87,6 +92,7 @@ export function parseGdacs(raw: unknown, now = new Date()): ActiveSystem[] {
       fromDate: typeof p.fromdate === "string" ? p.fromdate : null,
       toDate,
       reportUrl: typeof urls.report === "string" ? urls.report : null,
+      geometryUrl: typeof urls.geometry === "string" && urls.geometry.startsWith("https://www.gdacs.org/") ? urls.geometry : null,
       distanceKm: { mauritius: distanceKm(MAURITIUS, pos), rodrigues: distanceKm(RODRIGUES, pos) },
       bearingFrom: { mauritius: bearing(MAURITIUS, pos), rodrigues: bearing(RODRIGUES, pos) },
     });
@@ -109,8 +115,114 @@ export async function getActiveSystems(): Promise<CycloneStatus> {
     if (!res.ok) return { source: SOURCE, checkedAt, ok: false, systems: [], message: `GDACS returned HTTP ${res.status}` };
     const text = await res.text();
     const raw = text.trim() ? JSON.parse(text) : {};
-    return { source: SOURCE, checkedAt, ok: true, systems: parseGdacs(raw) };
+    const systems = parseGdacs(raw);
+    // Add track, forecast cone and closest approach for the nearest systems.
+    await Promise.all(
+      systems.slice(0, 3).map(async (s) => {
+        s.track = s.geometryUrl ? await getTrack(s.geometryUrl) : null;
+        const pts = s.track?.points.length ? s.track.points : [{ lat: s.lat, lon: s.lon, time: null, observed: true, windKmh: s.maxWindKmh }];
+        s.closest = { mauritius: closestApproach(pts, MAURITIUS), rodrigues: closestApproach(pts, RODRIGUES) };
+      }),
+    );
+    return { source: SOURCE, checkedAt, ok: true, systems };
   } catch (e) {
     return { source: SOURCE, checkedAt, ok: false, systems: [], message: (e as Error).message };
+  }
+}
+
+// ——— Track, forecast and cone ———
+
+export interface TrackPoint {
+  lat: number;
+  lon: number;
+  /** ISO UTC time if GDACS provides it. */
+  time: string | null;
+  observed: boolean;
+  windKmh: number | null;
+}
+
+export interface StormTrack {
+  points: TrackPoint[];
+  /** Raw GeoJSON features to draw: lines, the forecast cone and wind-band polygons. */
+  lines: Feature[];
+  cone: Feature[];
+  windBands: Feature[];
+}
+
+export interface ClosestApproach {
+  km: number;
+  bearing: string; // direction of the storm centre as seen from the island
+  time: string | null; // ISO UTC
+}
+
+const isTrue = (v: unknown) => String(v).toLowerCase() === "true" || v === true;
+
+function featureTime(p: Raw): string | null {
+  for (const k of ["trackdate", "polygondate", "datetime", "date", "fromdate"]) {
+    const v = p[k];
+    if (typeof v === "string" && !Number.isNaN(Date.parse(v.includes("Z") || v.includes("+") ? v : `${v}Z`))) return new Date(v.includes("Z") || v.includes("+") ? v : `${v}Z`).toISOString();
+  }
+  return null;
+}
+
+/** Defensive parser for GDACS getgeometry GeoJSON (field names vary between events). */
+export function parseTrack(raw: unknown): StormTrack {
+  const features = (raw && typeof raw === "object" && Array.isArray((raw as Raw).features) ? (raw as Raw).features : []) as Feature[];
+  const out: StormTrack = { points: [], lines: [], cone: [], windBands: [] };
+  for (const f of features) {
+    const g = f.geometry as Feature["geometry"] | null;
+    if (!g) continue;
+    const p = (f.properties ?? {}) as Raw;
+    const cls = String(p.Class ?? p.class ?? p.polygonlabel ?? "").toLowerCase();
+    if (g.type === "Point") {
+      const [lon, lat] = g.coordinates as number[];
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+      const wind = Number(p.wind_speed ?? p.windspeed ?? p.maxwind ?? p.windspeedkmh);
+      const observed = p.actual !== undefined ? isTrue(p.actual) : !cls.includes("forecast");
+      out.points.push({ lat, lon, time: featureTime(p), observed, windKmh: Number.isFinite(wind) && wind > 0 ? Math.round(wind) : null });
+    } else if (g.type === "LineString" || g.type === "MultiLineString") {
+      out.lines.push(f);
+    } else if (g.type === "Polygon" || g.type === "MultiPolygon") {
+      if (cls.includes("cone")) out.cone.push(f);
+      else out.windBands.push(f);
+    }
+  }
+  out.points.sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
+  return out;
+}
+
+/** Closest approach of the storm centre to a place, interpolating hourly between timed points. */
+export function closestApproach(points: TrackPoint[], place: { lat: number; lon: number }, now = new Date()): ClosestApproach | null {
+  const future = points.filter((p) => !p.time || new Date(p.time).getTime() >= now.getTime() - 3 * 3600_000);
+  if (future.length === 0) return null;
+  let best: ClosestApproach | null = null;
+  const consider = (lat: number, lon: number, time: string | null) => {
+    const km = distanceKm(place, { lat, lon });
+    if (!best || km < best.km) best = { km, bearing: bearing(place, { lat, lon }), time };
+  };
+  for (let i = 0; i < future.length; i++) {
+    const a = future[i];
+    consider(a.lat, a.lon, a.time);
+    const b = future[i + 1];
+    if (b && a.time && b.time) {
+      const t0 = Date.parse(a.time);
+      const steps = Math.min(240, Math.max(1, Math.round((Date.parse(b.time) - t0) / 3600_000)));
+      for (let k = 1; k < steps; k++) {
+        const r = k / steps;
+        consider(a.lat + (b.lat - a.lat) * r, a.lon + (b.lon - a.lon) * r, new Date(t0 + (Date.parse(b.time) - t0) * r).toISOString());
+      }
+    }
+  }
+  return best;
+}
+
+export async function getTrack(geometryUrl: string): Promise<StormTrack | null> {
+  if (!geometryUrl.startsWith("https://www.gdacs.org/")) return null;
+  try {
+    const res = await fetch(geometryUrl, { next: { revalidate: 1800 }, signal: AbortSignal.timeout(15_000), headers: { Accept: "application/json" } });
+    if (!res.ok) return null;
+    return parseTrack(await res.json());
+  } catch {
+    return null;
   }
 }

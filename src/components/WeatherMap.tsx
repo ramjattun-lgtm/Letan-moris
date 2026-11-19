@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import * as maplibregl from "maplibre-gl";
+import { setupMaplibre } from "@/lib/client/maplibre";
+import type * as ML from "maplibre-gl";
+const maplibregl = setupMaplibre();
 import "maplibre-gl/dist/maplibre-gl.css";
 import { getLocality, ISLAND_VIEW } from "@/data/localities";
 import type { Island, MapPoint } from "@/lib/weather/types";
@@ -43,8 +45,8 @@ export function labelFor(layer: Layer, p: MapPoint): { text: string; color: stri
 
 export function WeatherMap({ island, points, layer, onSelect }: { island: Island; points: MapPoint[]; layer: Layer; onSelect: (id: string) => void }) {
   const box = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
-  const markers = useRef<maplibregl.Marker[]>([]);
+  const map = useRef<ML.Map | null>(null);
+  const markers = useRef<ML.Marker[]>([]);
 
   useEffect(() => {
     if (!box.current || map.current) return;
