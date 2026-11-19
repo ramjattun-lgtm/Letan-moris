@@ -13,6 +13,7 @@ import { OfficialBanner } from "@/components/OfficialBanner";
 import { InterestsPicker } from "@/components/Interests";
 import { TrustBadges } from "@/components/TrustBadges";
 import { HeavyRainCard } from "@/components/HeavyRainCard";
+import { RecentCard } from "@/components/RecentCard";
 import { useState } from "react";
 
 export default function Home() {
@@ -37,6 +38,7 @@ export default function Home() {
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="flex flex-col gap-4">
             <CurrentCard f={f} />
+            <RecentCard />
             <RainOutlookCard f={f} compact />
             <HeavyRainCard />
             <TrustBadges f={f} />

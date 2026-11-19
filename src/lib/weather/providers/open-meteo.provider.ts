@@ -271,6 +271,25 @@ export const openMeteoProvider: WeatherProvider = {
   },
 };
 
+/** Hourly data for the last day and next day (for "last 3 hours · next 3 hours"). */
+export async function getRecentHours(loc: Coordinates): Promise<{ hourly: HourlyPoint[]; sunset: Maybe<string>; fetchedAt: string | null }> {
+  const p = new URLSearchParams({
+    latitude: r4(loc.lat),
+    longitude: r4(loc.lon),
+    hourly: HOURLY_VARS.join(","),
+    daily: "sunset",
+    past_days: "1",
+    forecast_days: "1",
+    timezone: TZ,
+    wind_speed_unit: "kmh",
+  });
+  const raw = (await getJson(`${FORECAST_URL}?${p}`, 1800)) as Raw;
+  const f = normaliseForecast(loc.id, raw);
+  const sunsets = arr(raw.daily as Raw | undefined, "sunset").map(String);
+  const today = nowMU().slice(0, 10);
+  return { hourly: f.hourly, sunset: sunsets.find((x) => x.startsWith(today)) ?? null, fetchedAt: fetchedAtOf(raw) };
+}
+
 /** Hourly rain for the last 2 days and next 2 days (for heavy-rain risk), several places at once. */
 export async function getRainHistory(locs: Coordinates[]): Promise<{ id: string; hours: { time: string; mm: Maybe<number> }[]; fetchedAt: string | null }[]> {
   if (!locs.length) return [];
