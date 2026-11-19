@@ -22,6 +22,11 @@ function when(iso: string | null) {
   return ` around ${dayLabel(l.slice(0, 10))} ${hhmm(l)}`;
 }
 
+import { EMERGENCY_NUMBERS, EMERGENCY_SOURCE } from "@/data/emergency";
+import { cycloneMode } from "@/lib/weather/intelligence/cyclone-mode.service";
+import { readLS, writeLS } from "@/lib/client/storage";
+import { useEffect, useState as useStateCk } from "react";
+
 const CHECKLIST = [
   "Keep a battery radio, torch, spare batteries and charged power banks.",
   "Store drinking water and non-perishable food for several days.",
@@ -32,6 +37,37 @@ const CHECKLIST = [
   "Stay away from beaches, rivers and flood-prone areas during bad weather.",
   "Do not go outside during the eye of a cyclone — winds return suddenly.",
 ];
+
+function Checklist() {
+  const [done, setDone] = useStateCk<number[]>([]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDone(readLS<number[]>("letan.cyclone.checklist", []));
+  }, [setDone]);
+  const toggle = (i: number) =>
+    setDone((d) => {
+      const n = d.includes(i) ? d.filter((x) => x !== i) : [...d, i];
+      writeLS("letan.cyclone.checklist", n);
+      return n;
+    });
+  return (
+    <>
+      <p className="mt-1 text-xs text-muted dark:text-slate-400">
+        {done.length} of {CHECKLIST.length} done — ticks are saved on this phone.
+      </p>
+      <ul className="mt-2 space-y-1">
+        {CHECKLIST.map((c, i) => (
+          <li key={c}>
+            <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl px-2 py-2 text-sm hover:bg-mist dark:hover:bg-white/5">
+              <input type="checkbox" checked={done.includes(i)} onChange={() => toggle(i)} className="mt-0.5 h-5 w-5 accent-[#0FA3A3]" />
+              <span className={done.includes(i) ? "text-muted line-through" : ""}>{c}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
 
 export default function CyclonePage() {
   const { island, ready, location } = useAppState();
@@ -51,6 +87,25 @@ export default function CyclonePage() {
   return (
     <>
       <h1 className="mb-3 font-[family-name:var(--font-display)] text-2xl font-extrabold">Cyclone information — {name}</h1>
+
+      {cycloneMode(island, tc.data).active && (
+        <section className="card mb-4 border-2 border-[#D9480F]" aria-labelledby="mode">
+          <h2 id="mode" className="text-lg font-bold text-[#D9480F]">Cyclone mode</h2>
+          <p className="mt-1 text-sm">{cycloneMode(island, tc.data).headline}</p>
+          <ul className="mt-3 grid grid-cols-2 gap-2">
+            {EMERGENCY_NUMBERS.map((n) => (
+              <li key={n.label}>
+                <a href={`tel:${n.number.split(" ")[0]}`} className="block rounded-2xl bg-mist p-3 dark:bg-white/5">
+                  <span className="block text-xs text-muted dark:text-slate-400">{n.label}</span>
+                  <span className="text-lg font-extrabold">{n.number}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-sm">Refugee centres open when the authorities decide: listen to radio/TV or ask your District or Municipal Council. Keep phones charged; use the <a href="/lite" className="font-semibold underline">light version</a> if your connection is weak.</p>
+          <p className="mt-1 text-[11px] text-muted dark:text-slate-400">Numbers: <a className="underline" href={EMERGENCY_SOURCE.url} target="_blank" rel="noreferrer">{EMERGENCY_SOURCE.text}</a>. Check locally.</p>
+        </section>
+      )}
 
       <section className="card mb-4 border-2 border-navy/10 dark:border-white/10" aria-labelledby="official">
         <p className="chip bg-navy text-white dark:bg-teal-soft dark:text-navy">OFFICIAL INFORMATION</p>
@@ -247,14 +302,7 @@ export default function CyclonePage() {
 
       <section className="card" aria-labelledby="prep">
         <h2 id="prep" className="text-lg font-bold">Be prepared — checklist</h2>
-        <ul className="mt-2 space-y-2">
-          {CHECKLIST.map((c) => (
-            <li key={c} className="flex gap-2 text-sm">
-              <span aria-hidden="true" className="mt-1 h-2 w-2 shrink-0 rounded-full bg-teal" />
-              {c}
-            </li>
-          ))}
-        </ul>
+        <Checklist />
         <p className="mt-3 text-xs text-muted dark:text-slate-400">General advice only. Follow instructions from MMS and the authorities.</p>
       </section>
     </>

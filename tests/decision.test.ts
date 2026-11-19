@@ -91,3 +91,35 @@ describe("new activity cards", () => {
     expect(b.summary).toContain("Sea page");
   });
 });
+
+describe("laundry drying time", () => {
+  it("estimates when a load will be dry on a sunny day", async () => {
+    const { dryingTime } = await import("@/lib/weather/intelligence/drying.service");
+    const f = normaliseForecast("x", fakeOpenMeteo(FRIDAY));
+    const d = dryingTime(f.hourly, FRIDAY, 9)!;
+    expect(d.dryBy).not.toBeNull();
+    expect(d.hours!).toBeGreaterThanOrEqual(2);
+    expect(d.hours!).toBeLessThanOrEqual(6);
+    const laundry = assessDay(f.hourly, f.daily, FRIDAY, 0).find((a) => a.id === "laundry")!;
+    expect(laundry.summary).toMatch(/dry by about \d\d:\d\d/);
+  });
+  it("rain stops drying", async () => {
+    const { dryingTime } = await import("@/lib/weather/intelligence/drying.service");
+    const raw = fakeOpenMeteo(FRIDAY);
+    raw.hourly.relative_humidity_2m = raw.hourly.relative_humidity_2m.map(() => 95);
+    raw.hourly.shortwave_radiation = raw.hourly.shortwave_radiation.map(() => 50);
+    const f = normaliseForecast("x", raw);
+    expect(dryingTime(f.hourly, FRIDAY, 9)!.dryBy).toBeNull();
+  });
+});
+
+describe("cyclone mode", () => {
+  it("turns on for a nearby system and stays off otherwise", async () => {
+    const { cycloneMode } = await import("@/lib/weather/intelligence/cyclone-mode.service");
+    const base = { source: { text: "", url: "" }, checkedAt: "", ok: true };
+    const sys = (km: number) => ({ id: "1", name: "TEST", alertLevel: null, description: null, lat: -18, lon: 60, maxWindKmh: 120, fromDate: null, toDate: null, reportUrl: null, geometryUrl: null, distanceKm: { mauritius: km, rodrigues: km }, bearingFrom: { mauritius: "NE", rodrigues: "W" }, closest: { mauritius: { km, bearing: "NE", time: null }, rodrigues: null } });
+    expect(cycloneMode("mauritius", { ...base, systems: [sys(300)] }).active).toBe(true);
+    expect(cycloneMode("mauritius", { ...base, systems: [sys(1500)] }).active).toBe(false);
+    expect(cycloneMode("mauritius", null).active).toBe(false);
+  });
+});

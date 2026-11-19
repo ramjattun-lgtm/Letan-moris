@@ -1,8 +1,8 @@
 // Letan Moris service worker: offline fallback for previously viewed pages and forecasts.
 // Pages: network first, fall back to cache. API: network first, fall back to the last copy
 // (the app labels such data as saved/out of date). Nothing is invented offline.
-const VERSION = "letan-v1";
-const SHELL = ["/", "/rain", "/map", "/cyclone", "/marine", "/locations", "/about", "/offline.html"];
+const VERSION = "letan-v2";
+const SHELL = ["/", "/rain", "/map", "/cyclone", "/marine", "/locations", "/about", "/lite", "/offline.html"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL).catch(() => {})));

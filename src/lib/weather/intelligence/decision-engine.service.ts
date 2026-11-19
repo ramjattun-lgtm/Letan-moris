@@ -1,6 +1,7 @@
 import type { DailyPoint, HourlyPoint, Maybe } from "../types";
 import { hourOf, weekday } from "@/lib/time";
 import { decayWithLeadTime, type Confidence } from "./confidence.service";
+import { dryingTime } from "./drying.service";
 
 // Weather Decision Engine — deterministic, transparent rules (no AI).
 // Every assessment lists the forecast period and the values behind it.
@@ -254,7 +255,10 @@ export function assessDay(hourly: HourlyPoint[], daily: DailyPoint[], date: stri
     summary: !complete(laundryHours)
       ? "Forecast not available."
       : lw
-        ? `Good drying window: ${slotText(lw.from, lw.to)}.`
+        ? `Good drying window: ${slotText(lw.from, lw.to)}.${(() => {
+            const d = dryingTime(hourly, date, lw.from);
+            return d?.dryBy && d.hours !== null && !d.interruptedByRain ? ` Hang out at ${h2(lw.from)} → dry by about ${d.dryBy.slice(11, 16)} (about ${d.hours} h).` : d && !d.dryBy ? " Thick items may not dry fully today." : "";
+          })()}`
         : "No reliable 3-hour drying window today. Consider drying indoors.",
     period: "08:00–17:00",
     reasons: [

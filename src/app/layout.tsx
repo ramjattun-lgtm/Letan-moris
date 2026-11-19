@@ -8,6 +8,7 @@ import "./globals.css";
 import { AppStateProvider } from "@/components/AppState";
 import { BottomNav, Footer, Header } from "@/components/Shell";
 import { ServiceWorker } from "@/components/ServiceWorker";
+import { CycloneModeBanner } from "@/components/CycloneModeBanner";
 
 export const metadata: Metadata = {
   title: { default: "Letan Moris — Mauritius & Rodrigues weather", template: "%s · Letan Moris" },
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body>
         <AppStateProvider>
+          <CycloneModeBanner />
           <Header />
           <main className="mx-auto max-w-6xl px-4 pt-4">{children}</main>
           <Footer />
