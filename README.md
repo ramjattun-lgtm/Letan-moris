@@ -18,6 +18,9 @@ Independent, free, non-commercial weather intelligence for the Republic of Mauri
 - PWA: installable, offline fallback, saved data shown with its age
 - Light / dark mode, mobile-first, accessible
 
+## Phase 1B — Facebook posting (built, waiting for Page + secrets)
+Scheduled posts at 05:45, 12:30, 18:30 and Friday 17:00 with branded cards, an independent checker, owner approval (review mode) and a kill switch. Preview: `/posts`. Setup: `docs/FACEBOOK.md`.
+
 ## Run locally
 ```bash
 npm install
@@ -34,6 +37,7 @@ Edit `src/data/official-status.ts` on GitHub (pencil icon) using the exact MMS w
 
 ## Documentation
 - `docs/ARCHITECTURE.md` — how it fits together
+- `docs/FACEBOOK.md` — Facebook posting setup and rules
 - `docs/PROVIDERS.md` — data providers, licences, adding a provider
 - `docs/API-BUDGET.md` — free-tier limits and caching
 - `docs/KNOWN-LIMITATIONS.md`

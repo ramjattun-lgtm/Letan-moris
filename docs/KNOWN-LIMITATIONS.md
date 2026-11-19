@@ -7,5 +7,7 @@
 - Official cyclone status is entered manually from MMS; the app tells users to check MMS when nothing is entered. No cyclone track maps yet.
 - Marine values are open-sea model data; lagoon and reef conditions differ. Some coastal points may return no wave data (shown as "—").
 - Place coordinates are approximate and should be reviewed against OpenStreetMap.
-- Push notifications/personal alerts, Facebook posting and auto-replies are Phase 1B/1C/3.
+- Facebook posting is built but inactive until the Page token and secrets are added. Auto-replies (Phase 1C) and personal alerts (Phase 3) are not built yet.
+- Live tropical systems come from GDACS (international monitoring), not MMS; the official MMS status is still entered manually.
+- GitHub's free scheduler can start a few minutes late.
 - Live data could not be tested from the build environment (outbound access blocked); it is verified on the deployed site.

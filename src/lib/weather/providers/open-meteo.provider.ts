@@ -72,11 +72,16 @@ const num = (v: unknown): Maybe<number> => (typeof v === "number" && Number.isFi
 const str = (v: unknown): Maybe<string> => (typeof v === "string" && v.length > 0 ? v : null);
 const arr = (o: Raw | undefined, k: string): unknown[] => (o && Array.isArray(o[k]) ? (o[k] as unknown[]) : []);
 
+/** Key under which getJson stores when the provider actually produced the response. */
+const FETCHED_AT = "__fetchedAt";
+
 function provenance(raw: Raw, model = "best_match"): DataProvenance {
+  const fetched = typeof raw[FETCHED_AT] === "string" ? (raw[FETCHED_AT] as string) : null;
   return {
     provider: "open-meteo",
     model,
-    retrievedAt: new Date().toISOString(),
+    // Time the provider produced this response (HTTP Date header), not the time we served it.
+    retrievedAt: fetched ?? new Date().toISOString(),
     gridElevation: num(raw.elevation),
     resolutionNote:
       "Global weather models describe areas a few kilometres to ~25 km wide, so nearby villages often share one forecast.",
@@ -196,7 +201,12 @@ async function getJson(url: string, ttl: number): Promise<unknown> {
     } catch {}
     throw new ProviderError("open-meteo", `HTTP ${res.status} ${reason ?? ""}`.trim(), res.status);
   }
-  return res.json();
+  const body = (await res.json()) as unknown;
+  // Record when the provider produced the response (cached responses keep their original Date header).
+  const date = res.headers.get("date");
+  const fetchedAt = date && !Number.isNaN(Date.parse(date)) ? new Date(date).toISOString() : new Date().toISOString();
+  if (Array.isArray(body)) return body.map((b) => ({ ...(b as Raw), [FETCHED_AT]: fetchedAt }));
+  return { ...(body as Raw), [FETCHED_AT]: fetchedAt };
 }
 
 const r4 = (x: number) => x.toFixed(4);
@@ -254,3 +264,10 @@ export const openMeteoProvider: WeatherProvider = {
     return locs.map((l, i) => normaliseMapPoint(l.id, list[i] ?? {}));
   },
 };
+
+/** When a raw map/forecast response was produced by the provider. */
+export function fetchedAtOf(raw: unknown): string | null {
+  const r = (Array.isArray(raw) ? raw[0] : raw) as Raw | undefined;
+  return r && typeof r[FETCHED_AT] === "string" ? (r[FETCHED_AT] as string) : null;
+}
+

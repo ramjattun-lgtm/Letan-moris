@@ -1,0 +1,93 @@
+# Letan Moris — scheduled Facebook posts (free GitHub Actions scheduler).
+# Times are UTC. Mauritius = UTC+4. GitHub may start scheduled jobs a few minutes late.
+#   05:45 MU morning  → 01:45 UTC
+#   12:30 MU midday   → 08:30 UTC
+#   18:30 MU evening  → 14:30 UTC
+#   Fri 17:00 MU weekend → Fri 13:00 UTC
+# Needs repository secret CRON_SECRET (same value as in Vercel). Without it, the job does nothing.
+
+name: Facebook posts
+
+on:
+  schedule:
+    - cron: "45 1 * * *"
+    - cron: "30 8 * * *"
+    - cron: "30 14 * * *"
+    - cron: "0 13 * * 5"
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: "Which post (morning, midday, evening, weekend)"
+        required: true
+        default: morning
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: facebook-posts
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SITE: https://letan-moris.vercel.app
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Choose slot
+        id: slot
+        run: |
+          case "${{ github.event.schedule }}" in
+            "45 1 * * *") s=morning ;;
+            "30 8 * * *") s=midday ;;
+            "30 14 * * *") s=evening ;;
+            "0 13 * * 5") s=weekend ;;
+            *) s="${{ github.event.inputs.slot }}" ;;
+          esac
+          echo "slot=$s" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare or publish
+        if: env.CRON_SECRET != ''
+        run: |
+          code=$(curl -sS -m 90 -o out.json -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$SITE/api/social/run?slot=${{ steps.slot.outputs.slot }}") || code=000
+          echo "HTTP $code"; cat out.json || true
+          echo "$code" > code.txt
+
+      - name: Ask the owner to approve (review mode)
+        if: env.CRON_SECRET != '' && hashFiles('out.json') != ''
+        run: |
+          status=$(jq -r '.status // "error"' out.json)
+          if [ "$status" = "review" ]; then
+            title=$(jq -r '.title' out.json)
+            ok=$(jq -r '.check.ok' out.json)
+            {
+              if [ "$ok" = "true" ]; then
+                echo "### ✅ Checker passed — tap to post"
+                echo
+                echo "**[👉 Approve and post to Facebook]($(jq -r '.approveUrl' out.json))** (link works for 3 hours; the post is rebuilt with the latest forecast when you tap)"
+              else
+                echo "### ⛔ Not ready — the checker blocked this post"
+                jq -r '.check.failures[] | "- " + .' out.json
+              fi
+              echo
+              echo "![card]($(jq -r '.cardUrl' out.json))"
+              echo
+              echo '```'
+              jq -r '.text' out.json
+              echo '```'
+              echo
+              echo "_Ignore this issue to skip the post. Close it when done._"
+            } > body.md
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "Approve: $title" --body-file body.md
+          elif [ "$status" = "blocked" ] || [ "$status" = "error" ]; then
+            { echo "Automatic post was NOT published."; echo; jq -r '(.failures // [.message])[] | "- " + .' out.json; } > body.md
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "Facebook post blocked (${{ steps.slot.outputs.slot }})" --body-file body.md
+          else
+            echo "Status: $status"
+          fi
