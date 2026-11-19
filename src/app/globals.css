@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-navy: #0b2a3c;
+  --color-navy-2: #123a50;
+  --color-teal: #0fa3a3;
+  --color-teal-ink: #0b7f86;
+  --color-teal-soft: #3ccfcf;
+  --color-coral: #f2a541;
+  --color-coral-ink: #9a5b06;
+  --color-rain: #2f7de1;
+  --color-rain-soft: #5aa2ff;
+  --color-mist: #f4f8f9;
+  --color-ink: #0b2a3c;
+  --color-muted: #4a5b66;
+  --color-night: #071c28;
+  --color-night-card: #0e2a3a;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-mist text-ink dark:bg-night dark:text-slate-100 antialiased;
+  font-family: var(--font-sans);
+}
+
+.card {
+  @apply rounded-3xl bg-white p-5 shadow-[0_1px_2px_rgba(11,42,60,0.06),0_8px_24px_rgba(11,42,60,0.06)] dark:bg-night-card dark:shadow-none;
+}
+
+.chip {
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+}
+
+.label {
+  @apply text-xs font-bold uppercase tracking-[0.08em] text-muted dark:text-slate-400;
+}
+
+.scroll-x {
+  @apply relative flex gap-2 overflow-x-auto pb-2;
+  scrollbar-width: thin;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-teal);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+@keyframes drift {
+  from { transform: translateX(-4%); }
+  to { transform: translateX(4%); }
+}
+.drift { animation: drift 9s ease-in-out infinite alternate; }
+
+@keyframes fall {
+  0% { transform: translateY(-6px); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(10px); opacity: 0; }
+}
+.fall { animation: fall 1.4s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .drift, .fall { animation: none; }
+}
+
+/* Grid/flex children must be allowed to shrink so horizontal scrollers stay inside the screen. */
+.grid > *,
+.flex-col > * {
+  min-width: 0;
+}
+main {
+  overflow-x: clip;
 }

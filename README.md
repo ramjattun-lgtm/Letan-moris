@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Letan Moris
 
-## Getting Started
+**Konn letan Moris ek Rodrig, planifie to zournee.** — *Know the weather in Mauritius and Rodrigues, plan your day.*
 
-First, run the development server:
+Independent, free, non-commercial weather intelligence for the Republic of Mauritius (Mauritius **and** Rodrigues): hour-by-hour forecasts, rain timing, plain-language day planning, marine conditions, and clear links to official warnings from Mauritius Meteorological Services (MMS).
 
+> Not an official warning service. Official warnings: http://metservice.intnet.mu/
+
+## What's in Phase 1A (this release)
+- Home dashboard: current model conditions, rain outlook, decision cards, 24-hour strip, 7-day forecast
+- Island switcher (Mauritius / Rodrigues), 60+ places, district filter, search with Kreol/French spellings, "use my location" (processed on the device), saved places
+- Rain intelligence: rain periods, 48-hour timeline chart, daily totals, honest confidence
+- Weather Decision Engine (deterministic rules): daily planning, school run, commuting, outdoor activities, laundry, gardening, beach, agriculture
+- My Weather Day (any of the next 7 days)
+- Map (MapLibre + OpenFreeMap) with rain / temperature / wind / cloud layers
+- Cyclone page: official MMS status (manual, dated entry) + links, independent model outlook clearly labelled, preparedness checklist
+- Marine & beaches (Mauritius and Rodrigues) — weather suitability separated from swimming safety
+- PWA: installable, offline fallback, saved data shown with its age
+- Light / dark mode, mobile-first, accessible
+
+## Run locally
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm test           # automated tests (vitest)
+npm run build      # production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deploy (free)
+Import this repository in Vercel (Hobby plan). No environment variables are needed for Phase 1.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Update official cyclone information
+Edit `src/data/official-status.ts` on GitHub (pencil icon) using the exact MMS wording, link and time, then commit. Vercel redeploys automatically.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Documentation
+- `docs/ARCHITECTURE.md` — how it fits together
+- `docs/PROVIDERS.md` — data providers, licences, adding a provider
+- `docs/API-BUDGET.md` — free-tier limits and caching
+- `docs/KNOWN-LIMITATIONS.md`
+- `docs/COST.md` — cost assessment and commercial switch checklist
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Weather data by [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0). Map data © OpenStreetMap contributors.
