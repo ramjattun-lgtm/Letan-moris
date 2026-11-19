@@ -290,6 +290,27 @@ export async function getRecentHours(loc: Coordinates): Promise<{ hourly: Hourly
   return { hourly: f.hourly, sunset: sunsets.find((x) => x.startsWith(today)) ?? null, fetchedAt: fetchedAtOf(raw) };
 }
 
+/** Yesterday's forecast (day-1 lead) and the latest model values, hourly, for the last day. */
+export async function getPreviousRun(loc: Coordinates): Promise<{ time: string; temp: Maybe<number>; mm: Maybe<number>; temp1: Maybe<number>; mm1: Maybe<number> }[]> {
+  const p = new URLSearchParams({
+    latitude: r4(loc.lat),
+    longitude: r4(loc.lon),
+    hourly: "temperature_2m,precipitation,temperature_2m_previous_day1,precipitation_previous_day1",
+    past_days: "1",
+    forecast_days: "1",
+    timezone: TZ,
+  });
+  const raw = (await getJson(`https://previous-runs-api.open-meteo.com/v1/forecast?${p}`, 1800)) as Raw;
+  const h = raw.hourly as Raw | undefined;
+  return arr(h, "time").map((t, i) => ({
+    time: String(t),
+    temp: num(arr(h, "temperature_2m")[i]),
+    mm: num(arr(h, "precipitation")[i]),
+    temp1: num(arr(h, "temperature_2m_previous_day1")[i]),
+    mm1: num(arr(h, "precipitation_previous_day1")[i]),
+  }));
+}
+
 /** Hourly rain for the last 2 days and next 2 days (for heavy-rain risk), several places at once. */
 export async function getRainHistory(locs: Coordinates[]): Promise<{ id: string; hours: { time: string; mm: Maybe<number> }[]; fetchedAt: string | null }[]> {
   if (!locs.length) return [];
