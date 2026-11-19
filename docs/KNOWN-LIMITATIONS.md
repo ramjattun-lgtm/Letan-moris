@@ -11,3 +11,5 @@
 - Live tropical systems come from GDACS (international monitoring), not MMS; the official MMS status is still entered manually.
 - GitHub's free scheduler can start a few minutes late.
 - Live data could not be tested from the build environment (outbound access blocked); it is verified on the deployed site.
+- Heavy-rain risk is an independent indicator from model rain amounts (hourly intensity, 3 h and 24 h totals, last 48 h). Global models often underestimate short tropical downpours, so "Low" never means "no flooding". It never replaces MMS heavy rain / torrential rain warnings.
+- Official flood-prone zones (Land Drainage Authority) are not shown yet: the data is not openly downloadable. Terrain-based low-lying areas are the next step.

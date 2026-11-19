@@ -9,7 +9,7 @@ import { getLocality, ISLAND_VIEW } from "@/data/localities";
 import type { Island, MapPoint } from "@/lib/weather/types";
 import { compass } from "@/lib/weather/weather-codes";
 
-export type Layer = "rain" | "temperature" | "wind" | "cloud";
+export type Layer = "rain" | "heavy" | "temperature" | "wind" | "cloud";
 
 // Free, keyless vector tiles from OpenFreeMap (OpenStreetMap data). Attribution is shown on the map.
 const STYLE = "https://tiles.openfreemap.org/styles/positron";
@@ -34,6 +34,11 @@ export function labelFor(layer: Layer, p: MapPoint): { text: string; color: stri
   switch (layer) {
     case "rain":
       return { text: p.rainProbNext3h === null ? "—" : `${p.rainProbNext3h}%`, color: rainColor(p.rainProbNext3h), dark: (p.rainProbNext3h ?? 0) >= 50 };
+    case "heavy": {
+      const lvl = p.rainRisk ?? null;
+      const color = lvl === "high" ? "#D9480F" : lvl === "moderate" ? "#F2A541" : lvl === "low" ? "#CFEDE6" : "#9FB2BF";
+      return { text: lvl === "high" ? "High" : lvl === "moderate" ? "Moderate" : lvl === "low" ? "Low" : "—", color, dark: lvl === "high" };
+    }
     case "temperature":
       return { text: p.temperature === null ? "—" : `${Math.round(p.temperature)}°`, color: tempColor(p.temperature), dark: (p.temperature ?? 0) >= 31 };
     case "wind":

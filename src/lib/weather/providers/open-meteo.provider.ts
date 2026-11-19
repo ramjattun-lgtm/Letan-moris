@@ -271,6 +271,26 @@ export const openMeteoProvider: WeatherProvider = {
   },
 };
 
+/** Hourly rain for the last 2 days and next 2 days (for heavy-rain risk), several places at once. */
+export async function getRainHistory(locs: Coordinates[]): Promise<{ id: string; hours: { time: string; mm: Maybe<number> }[]; fetchedAt: string | null }[]> {
+  if (!locs.length) return [];
+  const p = new URLSearchParams({
+    latitude: locs.map((l) => r4(l.lat)).join(","),
+    longitude: locs.map((l) => r4(l.lon)).join(","),
+    hourly: "precipitation",
+    past_days: "2",
+    forecast_days: "2",
+    timezone: TZ,
+  });
+  const raw = await getJson(`${FORECAST_URL}?${p}`, MAP_TTL);
+  const list = (Array.isArray(raw) ? raw : [raw]) as Raw[];
+  return locs.map((l, i) => {
+    const r = list[i] ?? {};
+    const h = r.hourly as Raw | undefined;
+    return { id: l.id, hours: arr(h, "time").map((t, j) => ({ time: String(t), mm: num(arr(h, "precipitation")[j]) })), fetchedAt: fetchedAtOf(r) };
+  });
+}
+
 /** When a raw map/forecast response was produced by the provider. */
 export function fetchedAtOf(raw: unknown): string | null {
   const r = (Array.isArray(raw) ? raw[0] : raw) as Raw | undefined;

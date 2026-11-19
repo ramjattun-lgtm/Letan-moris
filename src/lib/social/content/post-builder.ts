@@ -3,6 +3,7 @@ import { addDays, hhmm, hourOf, nowMU, weekday } from "@/lib/time";
 import { findRainPeriods } from "@/lib/weather/intelligence/rainfall-intelligence.service";
 import { confidenceForDry, confidenceForRain, decayWithLeadTime, type Confidence } from "@/lib/weather/intelligence/confidence.service";
 import { describeCode, type IconKind } from "@/lib/weather/weather-codes";
+import { assessHeavyRain, type RainRisk } from "@/lib/weather/intelligence/heavy-rain.service";
 
 // Builds Facebook posts from the SAME forecast engine the website uses.
 // Posts never compute weather on their own and never contain invented values.
@@ -34,6 +35,8 @@ export interface RegionSummary {
   maxGust: Maybe<number>;
   uvMax: Maybe<number>;
   icon: IconKind;
+  /** Independent heavy-rain risk for the next 24 hours from the time the post is made. */
+  heavyRisk: RainRisk | null;
   phrase: string;
   confidence: Confidence;
 }
@@ -84,6 +87,7 @@ export function summariseRegion(
   from: number,
   to: number,
   daysAhead: number,
+  now: string = nowMU(),
 ): RegionSummary {
   const hs: HourlyPoint[] = f.hourly.filter((h) => h.time.startsWith(date) && hourOf(h.time) >= from && hourOf(h.time) < to);
   const temps = nums(hs.map((h) => h.temperature));
@@ -123,6 +127,7 @@ export function summariseRegion(
     maxGust: gusts.length ? round(Math.max(...gusts)) : null,
     uvMax: uv.length ? Math.max(...uv) : null,
     icon,
+    heavyRisk: assessHeavyRain(f.hourly.map((h) => ({ time: h.time, mm: h.precipitation })), now).level,
     phrase: complete ? rainPhrase(maxRainProb, rainMm, windows) : "forecast not available",
     confidence: decayWithLeadTime(base, daysAhead),
   };
@@ -169,6 +174,13 @@ function regionLine(r: RegionSummary): string {
 export function tipsFor(sections: DaySection[]): string[] {
   const tips: string[] = [];
   const all = sections.flatMap((s) => s.regions);
+  const regs = sections[0]?.regions ?? [];
+  const high = regs.filter((r) => r.heavyRisk === "high").map((r) => r.label);
+  const mod = regs.filter((r) => r.heavyRisk === "moderate").map((r) => r.label);
+  if (high.length || mod.length) {
+    const parts = [high.length ? `High in ${high.join(", ")}` : "", mod.length ? `Moderate in ${mod.join(", ")}` : ""].filter(Boolean);
+    tips.push(`🌧️ Heavy-rain risk, next 24 hours: ${parts.join("; ")}. Avoid rivers and flood-prone spots; never drive through moving water. Follow MMS.`);
+  }
   const uv = Math.max(0, ...nums(all.map((r) => r.uvMax)));
   if (uv >= 8) tips.push(`☀️ UV very high (up to ${Math.round(uv)}) around midday — sun protection essential.`);
   const gust = Math.max(0, ...nums(all.map((r) => r.maxGust)));
@@ -194,7 +206,7 @@ export function buildSnapshot(slot: Slot, forecasts: Record<string, Forecast>, n
     label: relLabel(p.date, planFrom),
     from: p.from,
     to: p.to,
-    regions: POST_REGIONS.map((r) => summariseRegion(r, forecasts[r.locId], p.date, p.from, p.to, p.daysAhead)),
+    regions: POST_REGIONS.map((r) => summariseRegion(r, forecasts[r.locId], p.date, p.from, p.to, p.daysAhead, now)),
   }));
   const dateText = sections.length === 1 ? fullDate(sections[0].date) : `${fullDate(sections[0].date)} – ${fullDate(sections[1].date)}`;
   const title = `🌦️ Letan Moris — ${SLOT_TITLE[slot]} · ${dateText}`;

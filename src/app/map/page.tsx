@@ -15,6 +15,12 @@ const WeatherMap = dynamic(() => import("@/components/WeatherMap").then((m) => m
 
 const LAYERS: { id: Layer; label: string; legend: string }[] = [
   { id: "rain", label: "Rain", legend: "Highest chance of rain in the next 3 hours. Darker blue = more likely." },
+  {
+    id: "heavy",
+    label: "Heavy-rain risk",
+    legend:
+      "Independent heavy-rain risk for the next 24 hours: Low, Moderate (amber) or High (red). Based on rain intensity per hour, 3- and 24-hour totals and how wet the ground already is. High = flash flooding possible in low-lying and flood-prone areas. Not an MMS warning — always follow MMS heavy rain and torrential rain warnings. Models can miss sudden local downpours.",
+  },
   { id: "temperature", label: "Temperature", legend: "Current model temperature (°C). Cooler blues on high ground, warmer oranges on the coast." },
   { id: "wind", label: "Wind", legend: "Current wind speed (km/h) and the direction it blows from. Orange = 40 km/h or more." },
   { id: "cloud", label: "Cloud", legend: "Current cloud cover (%). Darker = cloudier." },

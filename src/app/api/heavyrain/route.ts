@@ -1,0 +1,13 @@
+import { type NextRequest, NextResponse } from "next/server";
+import { getHeavyRainFor } from "@/lib/weather/services/forecast.service";
+import { fail, ok, validId } from "@/lib/api";
+
+export async function GET(req: NextRequest) {
+  const loc = req.nextUrl.searchParams.get("loc");
+  if (!validId(loc)) return NextResponse.json({ error: "bad_request", message: "Missing or invalid ?loc=" }, { status: 400 });
+  try {
+    return ok(await getHeavyRainFor(loc), 1800);
+  } catch (e) {
+    return fail(e);
+  }
+}

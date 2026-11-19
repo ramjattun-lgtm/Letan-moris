@@ -111,4 +111,6 @@ export interface MapPoint {
   windSpeed: Maybe<number>;
   windDirection: Maybe<number>;
   cloudCover: Maybe<number>;
+  rainRisk?: "low" | "moderate" | "high" | null;
+  rainRiskText?: string;
 }

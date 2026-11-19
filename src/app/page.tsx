@@ -12,6 +12,7 @@ import { todayMU } from "@/lib/time";
 import { OfficialBanner } from "@/components/OfficialBanner";
 import { InterestsPicker } from "@/components/Interests";
 import { TrustBadges } from "@/components/TrustBadges";
+import { HeavyRainCard } from "@/components/HeavyRainCard";
 import { useState } from "react";
 
 export default function Home() {
@@ -37,6 +38,7 @@ export default function Home() {
           <div className="flex flex-col gap-4">
             <CurrentCard f={f} />
             <RainOutlookCard f={f} compact />
+            <HeavyRainCard />
             <TrustBadges f={f} />
           </div>
           <div className="flex flex-col gap-4">

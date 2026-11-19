@@ -27,6 +27,8 @@ Scheduled posts at 05:45, 12:30, 18:30 and Friday 17:00 with branded cards, an i
 - **My interests**: choose which plan cards appear (school run, commute, laundry, beach, farming, hiking, kitesurf, boating, solar…).
 - **Cyclone**: trajectory, cone, closest approach, local impact, and past storms on a similar path (*Cyclone history* workflow).
 
+- **Heavy-rain & flash flood risk** (Map layer, Today card, Facebook line when Moderate/High) — independent, always deferring to MMS warnings.
+
 ## Run locally
 ```bash
 npm install
