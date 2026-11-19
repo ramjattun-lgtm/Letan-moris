@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { NEAR_KM, stormImpact, utcToMU } from "@/lib/weather/intelligence/storm-impact.service";
 import { addHours, hhmm } from "@/lib/time";
 import { Skeleton } from "@/components/Status";
+import { seasonLabel } from "@/lib/weather/intelligence/analogues.service";
 
 const CycloneMap = dynamic(() => import("@/components/CycloneMap").then((m) => m.CycloneMap), { ssr: false, loading: () => <Skeleton className="h-[55vh]" /> });
 
@@ -98,6 +99,7 @@ export default function CyclonePage() {
               <span><span className="mr-1 inline-block w-5 border-t-2 border-dashed border-[#D9480F] align-middle" />Forecast track</span>
               <span><span className="mr-1 inline-block h-3 w-4 rounded bg-coral/40 align-middle" />Uncertainty cone (where the centre may go)</span>
               <span><span className="mr-1 inline-block h-3 w-4 rounded bg-[#D9480F]/20 align-middle" />Strong-wind areas</span>
+              <span><span className="mr-1 inline-block w-5 border-t-2 border-dotted border-[#7F94A3] align-middle" />Past storms on a similar path</span>
             </p>
             <p className="mt-1 text-[11px] text-muted dark:text-slate-400">The cone is not the size of the storm: strong wind and heavy rain can reach far outside it. Forecast tracks change every few hours.</p>
           </div>
@@ -124,6 +126,25 @@ export default function CyclonePage() {
                       ) : null,
                     )}
                   </ul>
+                )}
+                {s.analogues && s.analogues.length > 0 && (
+                  <div className="mt-2 rounded-2xl bg-white p-3 text-sm dark:bg-night-card">
+                    <p className="font-bold">Past storms on a similar path</p>
+                    <ul className="mt-1 space-y-1">
+                      {s.analogues.map((a) => (
+                        <li key={a.sid}>
+                          <strong>
+                            {a.name} ({seasonLabel(a.season)})
+                          </strong>
+                          : passed about {a.closest.mauritius.km.toLocaleString()} km from Mauritius
+                          {a.closest.mauritius.windKmh ? ` (winds near its centre about ${a.closest.mauritius.windKmh} km/h)` : ""} and about {a.closest.rodrigues.km.toLocaleString()} km from Rodrigues.
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-1 text-[11px] text-muted dark:text-slate-400">
+                      Matched on position, direction of travel and strength, using NOAA IBTrACS records since 1980. Past storms are context only: each storm follows today&apos;s weather patterns. The forecast track above comes first.
+                    </p>
+                  </div>
                 )}
                 {s.reportUrl && (
                   <a className="text-sm font-semibold text-teal-ink underline dark:text-teal-soft" href={s.reportUrl} target="_blank" rel="noreferrer">

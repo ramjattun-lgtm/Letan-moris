@@ -30,6 +30,7 @@ export function CycloneMap({ systems }: { systems: ActiveSystem[] }) {
       const past: Feature[] = [];
       const fut: Feature[] = [];
       const pts: Feature[] = [];
+      const hist: Feature[] = [];
       const bounds = new maplibregl.LngLatBounds([MAURITIUS.lon, MAURITIUS.lat], [RODRIGUES.lon, RODRIGUES.lat]);
 
       for (const s of systems) {
@@ -47,9 +48,12 @@ export function CycloneMap({ systems }: { systems: ActiveSystem[] }) {
           pts.push({ type: "Feature", properties: { observed: p.observed ? 1 : 0 }, geometry: { type: "Point", coordinates: [p.lon, p.lat] } });
           bounds.extend([p.lon, p.lat]);
         });
+        (s.analogues ?? []).forEach((a) => hist.push({ type: "Feature", properties: { name: `${a.name} ${a.season}` }, geometry: { type: "LineString", coordinates: a.path } }));
         new maplibregl.Marker({ color: "#D9480F" }).setLngLat([s.lon, s.lat]).setPopup(new maplibregl.Popup().setText(`${s.name} — latest position`)).addTo(map);
       }
 
+      map.addSource("hist", { type: "geojson", data: fc(hist) });
+      map.addLayer({ id: "hist", type: "line", source: "hist", paint: { "line-color": "#7F94A3", "line-width": 2, "line-opacity": 0.7, "line-dasharray": [1, 1] } });
       map.addSource("cone", { type: "geojson", data: fc(cone) });
       map.addLayer({ id: "cone", type: "fill", source: "cone", paint: { "fill-color": "#F2A541", "fill-opacity": 0.22 } });
       map.addSource("wind", { type: "geojson", data: fc(wind) });

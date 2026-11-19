@@ -19,6 +19,7 @@ export interface ActiveSystem {
   distanceKm: { mauritius: number; rodrigues: number };
   bearingFrom: { mauritius: string; rodrigues: string };
   track?: StormTrack | null;
+  analogues?: import("../intelligence/analogues.service").Analogue[];
   closest?: { mauritius: ClosestApproach | null; rodrigues: ClosestApproach | null };
 }
 
@@ -122,6 +123,8 @@ export async function getActiveSystems(): Promise<CycloneStatus> {
         s.track = s.geometryUrl ? await getTrack(s.geometryUrl) : null;
         const pts = s.track?.points.length ? s.track.points : [{ lat: s.lat, lon: s.lon, time: null, observed: true, windKmh: s.maxWindKmh }];
         s.closest = { mauritius: closestApproach(pts, MAURITIUS), rodrigues: closestApproach(pts, RODRIGUES) };
+        const { findAnalogues } = await import("../intelligence/analogues.service");
+        s.analogues = findAnalogues(pts, s.maxWindKmh);
       }),
     );
     return { source: SOURCE, checkedAt, ok: true, systems };

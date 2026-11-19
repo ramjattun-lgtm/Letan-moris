@@ -1,0 +1,36 @@
+# Builds the past-storm database used for "storms on a similar path".
+# Runs monthly and on demand. Downloads NOAA IBTrACS (public domain) and commits a small JSON file.
+name: Cyclone history
+
+on:
+  schedule:
+    - cron: "17 3 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download IBTrACS (South Indian basin)
+        run: |
+          base=https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs
+          for v in v04r02 v04r01; do
+            if curl -fsSL --retry 3 -o si.csv "$base/$v/access/csv/ibtracs.SI.list.$v.csv"; then echo "Got $v"; break; fi
+          done
+          test -s si.csv
+      - name: Build JSON
+        run: node scripts/build-cyclone-history.mjs si.csv
+      - name: Commit if changed
+        run: |
+          git config user.name "letan-moris-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/data/cyclone-history.json
+          git diff --cached --quiet || (git commit -m "Update cyclone history from IBTrACS" && git push)
