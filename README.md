@@ -21,6 +21,12 @@ Independent, free, non-commercial weather intelligence for the Republic of Mauri
 ## Phase 1B — Facebook posting (built, waiting for Page + secrets)
 Scheduled posts at 05:45, 12:30, 18:30 and Friday 17:00 with branded cards, an independent checker, owner approval (review mode) and a kill switch. Preview: `/posts`. Setup: `docs/FACEBOOK.md`.
 
+## Phase 2 additions
+- **Climate page** (`/climate`): 30-year normals, best months, records, trends, El Niño summers — data built by the *Climate history* workflow.
+- **Trust badges** on Today: vs normal, do the models agree, (accuracy score coming).
+- **My interests**: choose which plan cards appear (school run, commute, laundry, beach, farming, hiking, kitesurf, boating, solar…).
+- **Cyclone**: trajectory, cone, closest approach, local impact, and past storms on a similar path (*Cyclone history* workflow).
+
 ## Run locally
 ```bash
 npm install

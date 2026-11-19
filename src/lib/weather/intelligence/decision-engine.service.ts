@@ -20,6 +20,15 @@ export const RULES = {
   gardenSkipMm: 5,
   irrigateMaxMm: 2,
   sprayMaxWind: 15,
+  kiteMinWind: 22, // km/h (~12 knots)
+  kiteMaxWind: 45,
+  kiteMaxGust: 55,
+  hikeMaxGust: 45,
+  hikeMaxLowCloud: 70,
+  hikeMinVisibility: 3000,
+  hikeMaxFeelsLike: 33,
+  boatMaxWind: 20,
+  boatMaxGust: 30,
   uvHigh: 8,
   outdoorStart: 7,
   outdoorEnd: 18,
@@ -27,8 +36,37 @@ export const RULES = {
 
 export type Verdict = "good" | "fair" | "poor" | "unknown";
 
+export type ActivityId =
+  | "general"
+  | "school"
+  | "commute"
+  | "outdoor"
+  | "laundry"
+  | "gardening"
+  | "beach"
+  | "agriculture"
+  | "kitesurf"
+  | "hiking"
+  | "solar"
+  | "boating";
+
+export const ACTIVITY_LABEL: Record<ActivityId, string> = {
+  general: "Daily planning",
+  school: "School run",
+  commute: "Commuting",
+  outdoor: "Outdoor activities",
+  laundry: "Laundry & drying",
+  gardening: "Gardening",
+  beach: "Beach",
+  agriculture: "Farming",
+  kitesurf: "Kitesurf & windsurf",
+  hiking: "Hiking",
+  solar: "Solar panels",
+  boating: "Boating & fishing",
+};
+
 export interface Assessment {
-  id: "general" | "school" | "commute" | "outdoor" | "laundry" | "gardening" | "beach" | "agriculture";
+  id: ActivityId;
   title: string;
   verdict: Verdict;
   summary: string;
@@ -290,10 +328,107 @@ export function assessDay(hourly: HourlyPoint[], daily: DailyPoint[], date: stri
     confidence: conf(),
   });
 
+  // 9. Kitesurf & windsurf
+  const kiteHours = hoursBetween(hourly, date, 7, 18);
+  const kiteOk = (h: HourlyPoint) =>
+    h.windSpeed !== null && h.windGusts !== null && h.windSpeed >= RULES.kiteMinWind && h.windSpeed <= RULES.kiteMaxWind && h.windGusts <= RULES.kiteMaxGust && (h.rainProbability ?? 0) < 40;
+  const kw = windows(kiteHours, kiteOk);
+  const kiteAvg = avg(kiteHours.map((h) => h.windSpeed));
+  out.push({
+    id: "kitesurf",
+    title: ACTIVITY_LABEL.kitesurf,
+    verdict: !kiteHours.length || kiteAvg === null ? "unknown" : kw.length && kw[0].len >= 3 ? "good" : kw.length ? "fair" : "poor",
+    summary:
+      kiteAvg === null
+        ? "Forecast not available."
+        : kw.length
+          ? `Wind in range ${slotText(kw[0].from, kw[0].to)} (about ${Math.round(avg(kiteHours.filter((h) => hourOf(h.time) >= kw[0].from && hourOf(h.time) < kw[0].to).map((h) => h.windSpeed)) ?? 0)} km/h, ${Math.round((avg(kiteHours.map((h) => h.windSpeed)) ?? 0) / 1.852)} kn on average today).`
+          : kiteAvg < RULES.kiteMinWind
+            ? `Too light for most kites (about ${Math.round(kiteAvg)} km/h).`
+            : "Too strong or too gusty for most riders today.",
+    period: "07:00–18:00",
+    reasons: [
+      `Good when wind is ${RULES.kiteMinWind}–${RULES.kiteMaxWind} km/h with gusts under ${RULES.kiteMaxGust} km/h and little rain.`,
+      "Model wind at 10 m for the area; local spots (e.g. Le Morne lagoon) can differ. Not a safety assessment.",
+    ],
+    confidence: conf("medium"),
+  });
+
+  // 10. Hiking
+  const hikeHours = hoursBetween(hourly, date, 6, 16);
+  const summitClear = (h: HourlyPoint) =>
+    (h.cloudLow === null || h.cloudLow < RULES.hikeMaxLowCloud) && (h.visibility === null || h.visibility >= RULES.hikeMinVisibility) && describeFog(h.weatherCode) === false;
+  const hikeOk = (h: HourlyPoint) => isDryHour(h) && (h.windGusts ?? 99) < RULES.hikeMaxGust && (h.feelsLike ?? 0) < RULES.hikeMaxFeelsLike && summitClear(h);
+  const hw = windows(hikeHours, hikeOk, 3);
+  const prevRain = sumOf(hourly.filter((h) => h.time < `${date}T06:00` && h.time >= `${prevDay(date)}T18:00`).map((h) => h.precipitation));
+  out.push({
+    id: "hiking",
+    title: ACTIVITY_LABEL.hiking,
+    verdict: !complete(hikeHours) ? "unknown" : hw.length && hw[0].len >= 4 ? "good" : hw.length ? "fair" : "poor",
+    summary: !complete(hikeHours)
+      ? "Forecast not available."
+      : (hw.length ? `Best hiking window: ${slotText(hw[0].from, hw[0].to)} — start early.` : "No good 3-hour hiking window (rain, wind, heat or low cloud on the hills).") +
+        (prevRain !== null && prevRain >= 2 ? " Trails may be muddy and slippery after overnight rain." : ""),
+    period: "06:00–16:00",
+    reasons: [
+      `Good when dry, gusts under ${RULES.hikeMaxGust} km/h, feels-like under ${RULES.hikeMaxFeelsLike}°C and low cloud under ${RULES.hikeMaxLowCloud}% (summit views).`,
+      "Mountain tops can be cloudier and windier than the forecast area. Tell someone your route.",
+    ],
+    confidence: conf("medium"),
+  });
+
+  // 11. Solar panels
+  const sunHours = dayHours.map((h) => h.solarRadiation);
+  const kwh = sunHours.every((x) => x === null) ? null : Math.round((sunHours.reduce<number>((a, b) => a + (b ?? 0), 0) / 1000) * 10) / 10;
+  out.push({
+    id: "solar",
+    title: ACTIVITY_LABEL.solar,
+    verdict: kwh === null ? "unknown" : kwh >= 6 ? "good" : kwh >= 4 ? "fair" : "poor",
+    summary:
+      kwh === null
+        ? "Forecast not available."
+        : `${kwh >= 6 ? "Excellent" : kwh >= 4.5 ? "Good" : kwh >= 3 ? "Fair" : "Poor"} solar day: about ${kwh} kWh of sunlight per m². A typical 3 kW home system might make roughly ${Math.round(kwh * 3 * 0.8)} kWh.`,
+    period: "Whole day",
+    reasons: ["Sunlight forecast from the model (shortwave radiation). Output estimate assumes a well-oriented system at 80% efficiency — a rough guide only."],
+    confidence: conf("medium"),
+  });
+
+  // 12. Boating & fishing
+  const boatHours = hoursBetween(hourly, date, 6, 17);
+  const boatOk = (h: HourlyPoint) => (h.windSpeed ?? 99) < RULES.boatMaxWind && (h.windGusts ?? 99) < RULES.boatMaxGust && (h.rainProbability ?? 100) < 40;
+  const bw = windows(boatHours, boatOk, 3);
+  const boatWind = maxOf(boatHours.map((h) => h.windSpeed));
+  out.push({
+    id: "boating",
+    title: ACTIVITY_LABEL.boating,
+    verdict: boatWind === null ? "unknown" : bw.length && bw[0].len >= 5 ? "good" : bw.length ? "fair" : "poor",
+    summary:
+      boatWind === null
+        ? "Forecast not available."
+        : bw.length
+          ? `Calmer window: ${slotText(bw[0].from, bw[0].to)}. Check waves on the Sea page.`
+          : `Windy on the water (up to about ${Math.round(boatWind)} km/h). Check waves on the Sea page.`,
+    period: "06:00–17:00",
+    reasons: [
+      `Calmer when wind is under ${RULES.boatMaxWind} km/h and gusts under ${RULES.boatMaxGust} km/h.`,
+      "Weather only — not a sea-safety assessment. Follow official sea warnings and local advice.",
+    ],
+    confidence: conf("medium"),
+  });
+
   return out;
 }
 
 function avg(xs: Maybe<number>[]) {
   const v = xs.filter((x): x is number => x !== null);
   return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+}
+
+const FOG_CODES = new Set([45, 48]);
+function describeFog(code: Maybe<number>) {
+  return code !== null && FOG_CODES.has(code);
+}
+function prevDay(date: string) {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
 }

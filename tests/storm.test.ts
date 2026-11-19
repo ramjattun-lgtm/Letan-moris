@@ -53,7 +53,7 @@ describe("what it means for my place", () => {
   const hours: HourlyPoint[] = Array.from({ length: 72 }, (_, i) => {
     const d = new Date(Date.UTC(2026, 1, 1, i));
     const time = d.toISOString().slice(0, 16);
-    return { time, temperature: 26, feelsLike: 28, humidity: 85, rainProbability: 80, precipitation: 2, weatherCode: 63, cloudCover: 100, windSpeed: 40, windDirection: 90, windGusts: i < 30 ? 40 : i === 40 ? 110 : 70, uvIndex: 1 };
+    return { time, temperature: 26, feelsLike: 28, humidity: 85, rainProbability: 80, precipitation: 2, weatherCode: 63, cloudCover: 100, windSpeed: 40, windDirection: 90, windGusts: i < 30 ? 40 : i === 40 ? 110 : 70, uvIndex: 1, solarRadiation: 0, cloudLow: 100, visibility: 5000 };
   });
   it("gives the peak gust, total rain and a preparation time 12 hours before strong gusts", () => {
     const m = stormImpact(hours, undefined, "2026-02-01T00:00");

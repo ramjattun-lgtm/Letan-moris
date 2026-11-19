@@ -7,12 +7,12 @@ import { useAppState } from "./AppState";
 import type { Island } from "@/lib/weather/types";
 
 const NAV = [
-  { href: "/", label: "Home", icon: "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" },
+  { href: "/", label: "Today", icon: "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" },
+  { href: "/day", label: "Plan", icon: "M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm4 8 2 2 4-4" },
   { href: "/map", label: "Map", icon: "M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" },
-  { href: "/rain", label: "Rain", icon: "M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11Z" },
+  { href: "/marine", label: "Sea", icon: "M2 16c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M2 20c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M12 3v8m0-8 4 4m-4-4-4 4" },
   { href: "/cyclone", label: "Cyclone", icon: "M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0M5 9a8 8 0 0 1 12-5M19 15a8 8 0 0 1-12 5" },
-  { href: "/marine", label: "Marine", icon: "M2 16c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M2 20c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M12 3v8m0-8 4 4m-4-4-4 4" },
-  { href: "/locations", label: "Places", icon: "M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Zm0-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" },
+  { href: "/climate", label: "Climate", icon: "M4 19h16M7 16V9m5 7V5m5 11v-4" },
 ];
 
 function Icon({ d }: { d: string }) {
@@ -123,7 +123,7 @@ export function Footer() {
         <Link className="underline" href="/about">
           About, data sources &amp; privacy
         </Link>{" "}
-        · <Link className="underline" href="/day">My Weather Day</Link> · Free, non-commercial public service.
+        · <Link className="underline" href="/rain">Rain details</Link> · <Link className="underline" href="/locations">My places</Link> · Free, non-commercial public service.
       </p>
     </footer>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { DISTRICTS, nearestLocality, searchLocalities, REGION_LABEL } from "@/data/localities";
+import { DISTRICTS, getLocality, nearestLocality, searchLocalities, REGION_LABEL } from "@/data/localities";
 import { useAppState } from "./AppState";
 
 export function LocationPicker() {
@@ -100,6 +100,17 @@ export function LocationPicker() {
             </button>
           </div>
           {geoMsg && <p className="mt-2 text-sm text-muted dark:text-slate-400">{geoMsg}</p>}
+          {favourites.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-muted dark:text-slate-400">Saved:</span>
+              {favourites.map((id) => (
+                <button key={id} type="button" onClick={() => { setLocation(id); setOpen(false); }} className="min-h-9 rounded-full bg-coral/15 px-3 text-sm font-semibold">
+                  {getLocality(id)?.name}
+                </button>
+              ))}
+              <a href="/locations" className="text-sm font-semibold text-teal-ink underline dark:text-teal-soft">Compare</a>
+            </div>
+          )}
           <ul className="mt-3 grid max-h-80 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
             {results.map((l) => (
               <li key={l.id}>

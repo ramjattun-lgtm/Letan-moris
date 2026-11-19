@@ -1,0 +1,29 @@
+# Builds the 30-year climate analytics (normals, records, trends, El Niño) used by the Climate page
+# and the "vs normal" badges. Run once by hand, then it refreshes every January.
+name: Climate history
+
+on:
+  schedule:
+    - cron: "23 22 2 1 *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build climate data
+        run: node scripts/build-climate.mjs
+      - name: Commit if changed
+        run: |
+          git config user.name "letan-moris-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/data/climate.json
+          git diff --cached --quiet || (git commit -m "Update 30-year climate analytics" && git push)

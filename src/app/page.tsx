@@ -10,9 +10,13 @@ import type { Forecast } from "@/lib/weather/types";
 import { assessDay } from "@/lib/weather/intelligence/decision-engine.service";
 import { todayMU } from "@/lib/time";
 import { OfficialBanner } from "@/components/OfficialBanner";
+import { InterestsPicker } from "@/components/Interests";
+import { TrustBadges } from "@/components/TrustBadges";
+import { useState } from "react";
 
 export default function Home() {
-  const { location, ready } = useAppState();
+  const { location, ready, interests, interestsChosen } = useAppState();
+  const [editing, setEditing] = useState(false);
   const api = useApi<Forecast>(ready ? `/api/forecast?loc=${location.id}` : null);
   const f = api.data;
 
@@ -33,9 +37,17 @@ export default function Home() {
           <div className="flex flex-col gap-4">
             <CurrentCard f={f} />
             <RainOutlookCard f={f} compact />
+            <TrustBadges f={f} />
           </div>
           <div className="flex flex-col gap-4">
-            <DecisionList items={assessDay(f.hourly, f.daily, todayMU(), 0).filter((a) => ["general", "school", "laundry", "beach"].includes(a.id))} title="Today in plain words" />
+            {(!interestsChosen || editing) && <InterestsPicker onDone={() => setEditing(false)} />}
+            <DecisionList
+              items={assessDay(f.hourly, f.daily, todayMU(), 0).filter((a) => a.id === "general" || interests.includes(a.id))}
+              title="Today, for you"
+            />
+            <button type="button" onClick={() => setEditing(true)} className="-mt-2 self-start text-sm font-semibold text-teal-ink underline dark:text-teal-soft">
+              Change what I see
+            </button>
             <Link href="/day" className="card flex items-center justify-between font-semibold text-teal-ink hover:bg-white/80 dark:text-teal-soft">
               <span>My Weather Day — plan any of the next 7 days</span>
               <span aria-hidden="true">→</span>

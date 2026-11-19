@@ -20,7 +20,7 @@ const MARINE_URL = "https://marine-api.open-meteo.com/v1/marine";
 const TZ = "Indian/Mauritius";
 
 /** Seconds a forecast stays cached before revalidation (budget: see docs/API-BUDGET.md). */
-export const FORECAST_TTL = 3600;
+export const FORECAST_TTL = 5400;
 export const MAP_TTL = 3600;
 export const MARINE_TTL = 3 * 3600;
 
@@ -50,6 +50,9 @@ const HOURLY_VARS = [
   "wind_direction_10m",
   "wind_gusts_10m",
   "uv_index",
+  "shortwave_radiation",
+  "cloud_cover_low",
+  "visibility",
 ];
 const DAILY_VARS = [
   "weather_code",
@@ -122,6 +125,9 @@ export function normaliseForecast(locationId: string, raw: Raw): Forecast {
     windDirection: num(arr(h, "wind_direction_10m")[i]),
     windGusts: num(arr(h, "wind_gusts_10m")[i]),
     uvIndex: num(arr(h, "uv_index")[i]),
+    solarRadiation: num(arr(h, "shortwave_radiation")[i]),
+    cloudLow: num(arr(h, "cloud_cover_low")[i]),
+    visibility: num(arr(h, "visibility")[i]),
   }));
 
   const d = raw.daily as Raw | undefined;

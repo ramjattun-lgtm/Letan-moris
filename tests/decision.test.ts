@@ -59,3 +59,35 @@ describe("decision engine", () => {
     expect(w[1]).toEqual({ from: 13, to: 18, len: 5 });
   });
 });
+
+describe("new activity cards", () => {
+  it("kitesurf: too light with 15 km/h, good with steady 30 km/h", () => {
+    const calm = normaliseForecast("x", fakeOpenMeteo(FRIDAY));
+    expect(assessDay(calm.hourly, calm.daily, FRIDAY, 0).find((a) => a.id === "kitesurf")!.summary).toContain("Too light");
+    const raw = fakeOpenMeteo(FRIDAY);
+    raw.hourly.wind_speed_10m = raw.hourly.wind_speed_10m.map(() => 30);
+    raw.hourly.wind_gusts_10m = raw.hourly.wind_gusts_10m.map(() => 40);
+    const windy = normaliseForecast("x", raw);
+    expect(assessDay(windy.hourly, windy.daily, FRIDAY, 0).find((a) => a.id === "kitesurf")!.verdict).toBe("good");
+  });
+  it("hiking: low cloud on the hills means no good window", () => {
+    const raw = fakeOpenMeteo(FRIDAY);
+    raw.hourly.cloud_cover_low = raw.hourly.cloud_cover_low.map(() => 95);
+    const f = normaliseForecast("x", raw);
+    expect(assessDay(f.hourly, f.daily, FRIDAY, 0).find((a) => a.id === "hiking")!.verdict).toBe("poor");
+  });
+  it("solar: estimates sunlight and output from radiation", () => {
+    const f = normaliseForecast("x", fakeOpenMeteo(FRIDAY));
+    const s = assessDay(f.hourly, f.daily, FRIDAY, 0).find((a) => a.id === "solar")!;
+    expect(s.summary).toMatch(/about \d+(\.\d)? kWh of sunlight per m²/);
+    expect(s.verdict).not.toBe("unknown");
+  });
+  it("boating: calm wind gives a window and always points to the Sea page", () => {
+    const raw = fakeOpenMeteo(FRIDAY);
+    raw.hourly.wind_gusts_10m = raw.hourly.wind_gusts_10m.map(() => 25);
+    const f = normaliseForecast("x", raw);
+    const b = assessDay(f.hourly, f.daily, FRIDAY, 0).find((a) => a.id === "boating")!;
+    expect(b.verdict).toBe("good");
+    expect(b.summary).toContain("Sea page");
+  });
+});

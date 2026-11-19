@@ -36,6 +36,9 @@ export function fakeOpenMeteo(date: string, rainAt: Record<number, [number, numb
       wind_direction_10m: time.map(() => 120),
       wind_gusts_10m: time.map(() => 30),
       uv_index: time.map(() => 5),
+      shortwave_radiation: time.map((t) => { const h = Number(t.slice(11, 13)); return h >= 6 && h <= 18 ? Math.round(800 * Math.sin(((h - 6) / 12) * Math.PI)) : 0; }),
+      cloud_cover_low: time.map(() => 20),
+      visibility: time.map(() => 24000),
     },
     daily: {
       time: [date],

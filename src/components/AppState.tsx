@@ -4,6 +4,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { DEFAULT_LOCATION, getLocality, type Locality } from "@/data/localities";
 import type { Island } from "@/lib/weather/types";
 import { readLS, writeLS } from "@/lib/client/storage";
+import type { ActivityId } from "@/lib/weather/intelligence/decision-engine.service";
+
+export const DEFAULT_INTERESTS: ActivityId[] = ["school", "commute", "laundry", "beach"];
 
 interface State {
   island: Island;
@@ -11,6 +14,9 @@ interface State {
   favourites: string[];
   theme: "light" | "dark";
   ready: boolean;
+  interests: ActivityId[];
+  interestsChosen: boolean;
+  setInterests: (a: ActivityId[]) => void;
   setIsland: (i: Island) => void;
   setLocation: (id: string) => void;
   toggleFavourite: (id: string) => void;
@@ -24,6 +30,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [favourites, setFavourites] = useState<string[]>([]);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [ready, setReady] = useState(false);
+  const [interests, setInterestsState] = useState<ActivityId[]>(DEFAULT_INTERESTS);
+  const [interestsChosen, setInterestsChosen] = useState(false);
 
   useEffect(() => {
     // Restore saved choices (stored on this device only).
@@ -33,6 +41,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setLocId(getLocality(saved) ? saved : DEFAULT_LOCATION.mauritius);
     setFavourites(readLS<string[]>("letan.favs", []).filter((id) => getLocality(id)));
     setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
+    const savedInterests = readLS<ActivityId[] | null>("letan.interests", null);
+    if (savedInterests) {
+      setInterestsState(savedInterests);
+      setInterestsChosen(true);
+    }
     setReady(true);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
@@ -61,6 +74,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const setInterests = useCallback((a: ActivityId[]) => {
+    setInterestsState(a);
+    setInterestsChosen(true);
+    writeLS("letan.interests", a);
+  }, []);
+
   const toggleTheme = useCallback(() => {
     setTheme((t) => {
       const next = t === "dark" ? "light" : "dark";
@@ -71,8 +90,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ island: location.island, location, favourites, theme, ready, setIsland, setLocation, toggleFavourite, toggleTheme }),
-    [location, favourites, theme, ready, setIsland, setLocation, toggleFavourite, toggleTheme],
+    () => ({ island: location.island, location, favourites, theme, ready, interests, interestsChosen, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme }),
+    [location, favourites, theme, ready, interests, interestsChosen, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

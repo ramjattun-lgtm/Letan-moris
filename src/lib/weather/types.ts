@@ -53,6 +53,12 @@ export interface HourlyPoint {
   windDirection: Maybe<number>;
   windGusts: Maybe<number>;
   uvIndex: Maybe<number>;
+  /** Sunlight reaching the ground, W/m² (hour average). */
+  solarRadiation: Maybe<number>;
+  /** Low cloud cover, % (summits in cloud, fog risk). */
+  cloudLow: Maybe<number>;
+  /** Visibility, metres. */
+  visibility: Maybe<number>;
 }
 
 export interface DailyPoint {
