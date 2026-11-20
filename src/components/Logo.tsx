@@ -43,5 +43,5 @@ export function Wordmark({ className = "" }: { className?: string }) {
 
 export const TAGLINE = "Konn letan Moris ek Rodrig, planifie to zournee.";
 /** Second line of the tagline (T3). */
-export const POWERED = "Powered by 30 years of local weather history";
+export const POWERED = "Powered by 30 years of local weather history from Open-Meteo (ECMWF ERA5)";
 export const TAGLINE_SHORT = "Konn letan, planifie to zournee.";

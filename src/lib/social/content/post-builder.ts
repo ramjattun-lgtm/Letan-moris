@@ -238,7 +238,7 @@ export function buildSnapshot(slot: Slot, forecasts: Record<string, Forecast>, n
     DISCLAIMER,
     ATTRIBUTION,
     TAGLINE,
-    "📈 Powered by 30 years of local weather history",
+    "📈 Powered by 30 years of local weather history from Open-Meteo (ECMWF ERA5)",
   );
 
   return { slot, title, sections, headline, tips, confidence, issuedAtMU: now, oldestDataUtc: oldest, text: body.join("\n") };

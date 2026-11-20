@@ -112,7 +112,7 @@ export async function renderCard(s: PostSnapshot): Promise<ImageResponse> {
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", fontSize: 24, color: "#BFD3DD" }}>Konn letan, planifie to zournee.</div>
-              <div style={{ display: "flex", fontSize: 18, color: TEAL_SOFT, fontWeight: 600 }}>Powered by 30 years of local weather history</div>
+              <div style={{ display: "flex", fontSize: 18, color: TEAL_SOFT, fontWeight: 600 }}>Powered by 30 years of local weather history from Open-Meteo (ECMWF ERA5)</div>
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
