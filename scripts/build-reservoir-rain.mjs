@@ -1,5 +1,6 @@
 // Builds src/data/reservoir-rain.json: daily rainfall over each reservoir catchment since 1950
-// (ERA5-Land reanalysis via the Open-Meteo Historical Weather API), plus island evaporation (ET₀).
+// (ERA5 reanalysis via the Open-Meteo Historical Weather API), plus island evaporation (ET₀).
+// Note: Open-Meteo's ERA5-Land has no precipitation, so ERA5 (0.25°) is used throughout.
 // Values are tenths of a mm.
 // Runs in GitHub Actions. Fetched in 10-year chunks, several places per request, to stay inside the free limits.
 // Keep these points in sync with src/data/reservoirs.ts.
@@ -15,12 +16,11 @@ const POINTS = [
   { id: "mare-longue", lat: -20.385, lon: 57.465, built: 1948 },
   { id: "la-nicoliere", lat: -20.13, lon: 57.655, built: 1929 },
   { id: "piton-du-milieu", lat: -20.23, lon: 57.6, built: 1952 },
-  // Rodrigues is too small for the land-only ERA5-Land grid, so it uses ERA5 (0.25°).
-  { id: "rodrigues", lat: -19.71, lon: 63.42, built: 0, model: "era5" },
+    { id: "rodrigues", lat: -19.71, lon: 63.42, built: 0, model: "era5" },
 ];
 // Evaporation (FAO reference ET₀) for the island as a whole: one central catchment point, and Rodrigues.
 const ET0_POINTS = [
-  { id: "mauritius", lat: -20.27, lon: 57.53, model: "era5_land" },
+  { id: "mauritius", lat: -20.27, lon: 57.53, model: "era5" },
   { id: "rodrigues", lat: -19.71, lon: 63.42, model: "era5" },
 ];
 // Six inland points spread over Mauritius for an island-average rain series ("Where did the rain fall?").
@@ -70,22 +70,19 @@ for (const p of POINTS) out[p.id] = {};
 
 for (let y0 = START; y0 <= END; y0 += 10) {
   const y1 = Math.min(END, y0 + 9);
-  // 1) Rain at the 7 catchments + 6 island points (ERA5-Land).
-  const a = await fetchMulti(muAll, "era5_land", ["precipitation_sum"], y0, y1);
+  // 1) Rain at the 7 catchments + 6 island points.
+  const a = await fetchMulti(muAll, "era5", ["precipitation_sum"], y0, y1);
   muAll.forEach((p, i) => {
     const d = a[i].daily;
     if (p.id.startsWith("island-")) push(islandYears[Number(p.id.slice(7))], d.time, d.precipitation_sum);
     else push(out[p.id], d.time, d.precipitation_sum);
   });
   await sleep(15000);
-  // 2) Evaporation for Mauritius (ERA5-Land).
-  const e = await fetchMulti([ET_MU], "era5_land", ["et0_fao_evapotranspiration"], y0, y1);
-  push(et0.mauritius, e[0].daily.time, e[0].daily.et0_fao_evapotranspiration);
-  await sleep(15000);
-  // 3) Rodrigues rain + evaporation (ERA5: the island is too small for the land-only grid).
-  const r = await fetchMulti([RO], "era5", ["precipitation_sum", "et0_fao_evapotranspiration"], y0, y1);
-  push(out.rodrigues, r[0].daily.time, r[0].daily.precipitation_sum);
-  push(et0.rodrigues, r[0].daily.time, r[0].daily.et0_fao_evapotranspiration);
+  // 2) Evaporation for Mauritius, and Rodrigues rain + evaporation.
+  const r = await fetchMulti([ET_MU, RO], "era5", ["precipitation_sum", "et0_fao_evapotranspiration"], y0, y1);
+  push(et0.mauritius, r[0].daily.time, r[0].daily.et0_fao_evapotranspiration);
+  push(out.rodrigues, r[1].daily.time, r[1].daily.precipitation_sum);
+  push(et0.rodrigues, r[1].daily.time, r[1].daily.et0_fao_evapotranspiration);
   console.log(`${y0}–${y1} done`);
   await sleep(15000);
 }
@@ -126,7 +123,7 @@ writeFileSync(
     start: START,
     end: END,
     unit: "0.1 mm per day",
-    source: "Open-Meteo Historical Weather API, ERA5-Land reanalysis (ERA5 for Rodrigues), Copernicus/ECMWF, CC BY 4.0",
+    source: "Open-Meteo Historical Weather API, ERA5 reanalysis (Copernicus/ECMWF), CC BY 4.0",
     rain: out,
     et0,
     validation,

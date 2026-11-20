@@ -35,7 +35,7 @@ export default function About() {
           Known flood-prone areas: the sectors studied in the Land Drainage Master Plan prepared for the Land Drainage Authority (AdaptAction / AFD, report D5.2 Vol. 2, 2022). Map positions are approximate area centres, not official flood boundaries.
         </li>
         <li>
-          Reservoirs: rain over each catchment from ERA5-Land reanalysis (since 1950) and ECMWF forecasts via Open-Meteo; reservoir facts from the Water Resources Unit. We do not show reservoir levels — those come from the CWA.
+          Reservoirs: rain over each catchment from the ERA5 reanalysis (since 1950) and ECMWF forecasts via Open-Meteo; reservoir facts from the Water Resources Unit. We do not show reservoir levels — those come from the CWA.
         </li>
         <li>Place list: compiled for Letan Moris with reference to OpenStreetMap.</li>
       </ul>

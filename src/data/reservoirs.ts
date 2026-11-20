@@ -1,9 +1,9 @@
 // The 7 main reservoirs of Mauritius. Year of construction, capacity and catchment area are from the
 // Water Resources Unit, Ministry of Energy and Public Utilities (publicutilities.govmu.org, WRU page).
-// lat/lon = APPROXIMATE centre of each catchment, used only to read gridded rainfall (≈9 km cells).
+// lat/lon = APPROXIMATE centre of each catchment, used only to read gridded rainfall (≈25 km cells).
 // It is not a catchment boundary.
 
-/** First year of the daily rainfall records we use (ERA5-Land reanalysis). */
+/** First year of the daily rainfall records we use (ERA5 reanalysis). */
 export const RECORDS_START = 1950;
 
 export interface Reservoir {
@@ -29,14 +29,14 @@ export const RESERVOIRS: Reservoir[] = [
 ];
 
 /** Rodrigues has no large reservoirs: rain feeds its few rivers, rainwater tanks and groundwater.
- *  One central point; ERA5 (0.25°) because the island is too small for the land-only ERA5-Land grid. */
+ *  One central point (ERA5, 0.25°). */
 export const RODRIGUES_POINT = { id: "rodrigues", lat: -19.71, lon: 63.42 };
 
 /** First year a reservoir is compared against: the first full year after it was built, but not before our records start. */
 export const compareFrom = (r: Reservoir) => Math.max(RECORDS_START, r.built + 1);
 
 export const RESERVOIR_SOURCE =
-  "Reservoir facts: Water Resources Unit, Ministry of Energy and Public Utilities. Rainfall: Open-Meteo (ERA5-Land reanalysis since 1950, ECMWF forecasts), CC BY 4.0.";
+  "Reservoir facts: Water Resources Unit, Ministry of Energy and Public Utilities. Rainfall: Open-Meteo (ERA5 reanalysis since 1950, ECMWF forecasts), CC BY 4.0.";
 
 /** Six inland points spread over Mauritius for an island-average rain estimate ("Where did the rain fall?").
  *  Keep in sync with ISLAND_PTS in scripts/build-reservoir-rain.mjs. */

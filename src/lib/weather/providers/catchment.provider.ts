@@ -2,7 +2,7 @@ import { getJson } from "./open-meteo.provider";
 import { addDays } from "@/lib/time";
 
 // Rain over reservoir catchments from Open-Meteo (CC BY 4.0):
-//  - Historical Weather API, ERA5-Land reanalysis: complete days up to ~5 days ago.
+//  - Historical Weather API, ERA5 reanalysis: complete days up to ~5 days ago. (Open-Meteo's ERA5-Land has no rain.)
 //  - Forecast API: the most recent days (model estimates) and the next 7 days.
 //  - Seasonal API: ECMWF EC46 weekly and SEAS5 monthly ensemble-mean rain and anomaly.
 
@@ -24,8 +24,8 @@ const coords = (pts: { lat: number; lon: number }[]) => ({
   longitude: pts.map((p) => p.lon.toFixed(3)).join(","),
 });
 
-/** ERA5-Land daily rain for each point from `start` to yesterday. Recent days may be null (not yet available). */
-export async function getReanalysisRain(pts: { lat: number; lon: number }[], start: string, today: string, model: "era5_land" | "era5" = "era5_land"): Promise<Daily[]> {
+/** ERA5 daily rain for each point from `start` to yesterday. Recent days may be null (not yet available). */
+export async function getReanalysisRain(pts: { lat: number; lon: number }[], start: string, today: string, model: "era5" = "era5"): Promise<Daily[]> {
   const q = new URLSearchParams({ ...coords(pts), start_date: start, end_date: addDays(today, -1), daily: "precipitation_sum", models: model, timezone: TZ });
   return dailyMaps(await getJson(`https://archive-api.open-meteo.com/v1/archive?${q}`, 6 * 3600));
 }
@@ -61,7 +61,7 @@ async function seasonal(lat: number, lon: number, days: number): Promise<unknown
 }
 
 /** Daily evaporation (FAO reference ET₀, mm) for one point: reanalysis from `start`, then forecast-model values for recent days. */
-export async function getEt0(pt: { lat: number; lon: number }, start: string, today: string, model: "era5_land" | "era5" = "era5_land"): Promise<Daily> {
+export async function getEt0(pt: { lat: number; lon: number }, start: string, today: string, model: "era5" = "era5"): Promise<Daily> {
   const pick = (raw: unknown) => {
     const d = (raw as { daily?: { time?: string[]; et0_fao_evapotranspiration?: (number | null)[] } }).daily;
     const out: Daily = {};

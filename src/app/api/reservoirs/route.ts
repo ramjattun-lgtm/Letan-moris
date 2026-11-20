@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
     const historyReady = !!h.builtAt && !!h.rain[rod ? RODRIGUES_POINT.id : RESERVOIRS[0].id];
     const pts = rod ? [RODRIGUES_POINT] : RESERVOIRS.map((r) => ({ lat: r.lat, lon: r.lon }));
     const centre = rod ? RODRIGUES_POINT : CENTRAL;
-    const model5 = rod ? "era5" : "era5_land";
+    const model5 = "era5" as const;
     // Fetch recent days back to whichever is earliest: 6 months ago, the start of this wet season,
     // or the first day after the stored history ends (so there is no gap).
     const starts = [addDays(today, -190), seasonStart(today)];

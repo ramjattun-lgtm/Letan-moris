@@ -213,11 +213,11 @@ export default function ReservoirsPage() {
           <section className="card mt-3 text-[11px] text-muted dark:text-slate-400">
             <h2 className="label">How it works</h2>
             <ul className="mt-1 list-disc space-y-1 pl-4">
-              {rod && <li>Rodrigues uses ERA5 (25 km grid squares), because the island is too small for the finer land-only ERA5-Land grid. Treat it as island-wide rain.</li>}
+              <li>Rain comes from the ERA5 reanalysis on a 25 km grid, so nearby catchments can share a grid square and show similar figures.{rod ? " For Rodrigues, treat it as island-wide rain." : ""}</li>
               <li>
                 Rain is estimated {rod ? "for the island" : "for the centre of each catchment"} from weather models, not measured by rain gauges. Models under-estimate the total rain on high ground, so the % of normal rain level is more reliable than the mm figures.
               </li>
-              <li>Past rain: ERA5-Land reanalysis (from {RECORDS_START}).{d.filledDays > 0 ? ` The last ${d.filledDays} days are not in the reanalysis yet and come from the forecast model.` : ""}</li>
+              <li>Past rain: ERA5 reanalysis (from {RECORDS_START}).{d.filledDays > 0 ? ` The last ${d.filledDays} days are not in the reanalysis yet and come from the forecast model.` : ""}</li>
               <li>&quot;Normal rain level&quot; is the middle value of rain over the same dates in past years. Each reservoir is compared only with years after it was built.</li>
               {!rod && <li>La Nicolière gets most of its water by canal from the Midlands area, so also watch the Midlands Dam row.</li>}
               <li>{RESERVOIR_SOURCE}</li>
