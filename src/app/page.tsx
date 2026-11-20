@@ -17,6 +17,7 @@ import { RecentCard } from "@/components/RecentCard";
 import { CommunityCard } from "@/components/CommunityCard";
 import { ReservoirSummary } from "@/components/ReservoirSummary";
 import { AboutBanner } from "@/components/AboutBanner";
+import { DidYouKnow } from "@/components/DidYouKnow";
 import { ExploreLink, HeatCard, MosquitoCard } from "@/components/WellbeingCards";
 import { useState } from "react";
 
@@ -50,6 +51,7 @@ export default function Home() {
             <HeatCard hours={f.hourly} date={todayMU()} />
             <MosquitoCard />
             <ReservoirSummary />
+            <DidYouKnow />
             <TrustBadges f={f} />
           </div>
           <div className="flex flex-col gap-4">

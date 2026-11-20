@@ -6,6 +6,7 @@ import { checkPost, type CheckResult } from "./checker/post-validator.service";
 import { renderCard } from "./content/card-renderer";
 import { alreadyPosted, facebookConfig, publishPhoto } from "./publishers/facebook.publisher";
 import { SOCIAL } from "@/data/social-settings";
+import { weeklyPostFact } from "@/lib/weather/intelligence/facts.server";
 import { addHours, nowMU } from "@/lib/time";
 
 export const isSlot = (s: string | null): s is Slot => !!s && (SLOTS as string[]).includes(s);
@@ -14,7 +15,11 @@ export async function prepare(slot: Slot, planFrom?: string): Promise<{ snapshot
   const entries = await Promise.all(POST_REGIONS.map(async (r) => [r.locId, await getForecastFor(r.locId)] as const));
   const forecasts = Object.fromEntries(entries) as Record<string, Forecast>;
   const now = nowMU();
-  const snapshot = buildSnapshot(slot, forecasts, now, planFrom ?? now);
+  const from = planFrom ?? now;
+  // Weekly "Did you know?": added to the Sunday morning post.
+  const isSunday = new Date(`${from.slice(0, 10)}T12:00:00Z`).getUTCDay() === 0;
+  const didYouKnow = slot === "morning" && isSunday ? weeklyPostFact(from.slice(0, 10)) : null;
+  const snapshot = buildSnapshot(slot, forecasts, now, from, { didYouKnow });
   return { snapshot, check: checkPost(snapshot) };
 }
 

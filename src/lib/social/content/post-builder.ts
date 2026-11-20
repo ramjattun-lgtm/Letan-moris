@@ -199,7 +199,7 @@ export const FOLLOW_NOTE = "👉 Follow Letan Moris for daily forecasts for Mori
 export const TAGLINE = "Konn letan Moris ek Rodrig, planifie to zournee.";
 
 /** `planFrom` fixes which day(s) the post covers (e.g. the time the post was prepared for review). */
-export function buildSnapshot(slot: Slot, forecasts: Record<string, Forecast>, now: string = nowMU(), planFrom: string = now): PostSnapshot {
+export function buildSnapshot(slot: Slot, forecasts: Record<string, Forecast>, now: string = nowMU(), planFrom: string = now, extra: { didYouKnow?: string | null } = {}): PostSnapshot {
   const plan = slotPlan(slot, planFrom);
   const sections: DaySection[] = plan.map((p) => ({
     date: p.date,
@@ -227,6 +227,7 @@ export function buildSnapshot(slot: Slot, forecasts: Record<string, Forecast>, n
     body.push("");
   }
   if (tips.length) body.push(...tips, "");
+  if (extra.didYouKnow) body.push(`💡 Did you know? ${extra.didYouKnow}`, "");
   if (slot === "weekend") body.push("🏖️ Beach weather is not the same as sea safety — follow lifeguard flags and MMS sea advice.", "");
   body.push(
     `Issued ${hhmm(now)} Mauritius time · Confidence: ${CONF_WORD[confidence]} · Times are approximate (hourly data).`,
