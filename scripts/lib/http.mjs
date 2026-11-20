@@ -19,7 +19,8 @@ export async function getWithRetry(url, { asText = false, tries = 8 } = {}) {
       await sleep(res.status === 429 ? 65_000 * (i + 1) : Math.min(180_000, 15_000 * 2 ** i));
     } catch (e) {
       last = `${e.name}: ${e.cause?.code ?? e.message}`;
-      await sleep(Math.min(180_000, 15_000 * 2 ** i));
+      // Connection problems are usually brief: retry soon, then back off.
+      await sleep(Math.min(180_000, 5_000 * 2 ** i));
     }
     console.warn(`Retry ${i + 1}/${tries} for ${url.split("?")[0]} — ${last}`);
   }

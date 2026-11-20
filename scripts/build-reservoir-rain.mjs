@@ -1,7 +1,7 @@
 // Builds src/data/reservoir-rain.json: daily rainfall over each reservoir catchment since 1950
 // (ERA5-Land reanalysis via the Open-Meteo Historical Weather API), plus island evaporation (ET₀).
 // Values are tenths of a mm.
-// Runs in GitHub Actions. Fetched in 10-year chunks to stay well inside the free limits.
+// Runs in GitHub Actions. Fetched in 10-year chunks, several places per request, to stay inside the free limits.
 // Keep these points in sync with src/data/reservoirs.ts.
 import { getWithRetry, sleep } from "./lib/http.mjs";
 import { writeFileSync } from "node:fs";
@@ -38,71 +38,67 @@ const END = new Date().getUTCFullYear() - 1; // last complete year
 
 const get = (url) => getWithRetry(url);
 
-async function seriesOf(p, variable) {
-  const years = {};
-  for (let y0 = START; y0 <= END; y0 += 10) {
-    const y1 = Math.min(END, y0 + 9);
-    const q = new URLSearchParams({
-      latitude: String(p.lat),
-      longitude: String(p.lon),
-      start_date: `${y0}-01-01`,
-      end_date: `${y1}-12-31`,
-      daily: variable,
-      models: p.model ?? "era5_land",
-      timezone: "Indian/Mauritius",
-    });
-    const j = await get(`https://archive-api.open-meteo.com/v1/archive?${q}`);
-    const t = j.daily.time;
-    const v = j.daily[variable];
-    for (let i = 0; i < t.length; i++) (years[t[i].slice(0, 4)] ??= []).push(v[i] === null ? null : Math.round(v[i] * 10));
-    console.log(p.id, variable, y0, y1, t.length, "days");
-    await sleep(6000);
-  }
-  return years;
+// Few, larger requests: several places per request (Open-Meteo accepts comma-separated coordinates),
+// one decade at a time. ~24 requests in total instead of ~130, so occasional connection timeouts
+// on GitHub's network cost minutes, not hours.
+async function fetchMulti(points, model, variables, y0, y1) {
+  const q = new URLSearchParams({
+    latitude: points.map((p) => String(p.lat)).join(","),
+    longitude: points.map((p) => String(p.lon)).join(","),
+    start_date: `${y0}-01-01`,
+    end_date: `${y1}-12-31`,
+    daily: variables.join(","),
+    models: model,
+    timezone: "Indian/Mauritius",
+  });
+  const j = await get(`https://archive-api.open-meteo.com/v1/archive?${q}`);
+  return Array.isArray(j) ? j : [j];
 }
+const push = (years, t, v) => {
+  for (let i = 0; i < t.length; i++) (years[t[i].slice(0, 4)] ??= []).push(v[i] === null || v[i] === undefined ? null : Math.round(v[i] * 10));
+};
 
-const et0 = {};
-for (const p of ET0_POINTS) et0[p.id] = await seriesOf(p, "et0_fao_evapotranspiration");
+const MU_POINTS = POINTS.filter((p) => !p.model);
+const RO = POINTS.find((p) => p.id === "rodrigues");
+const ET_MU = ET0_POINTS.find((p) => p.id === "mauritius");
+const muAll = [...MU_POINTS, ...ISLAND_PTS.map((p, i) => ({ id: `island-${i}`, ...p }))];
 
 const out = {};
-for (const p of POINTS) {
-  // We keep every year from 1950 (useful island-wide); the app decides which years to compare per reservoir.
-  const years = {};
-  for (let y0 = START; y0 <= END; y0 += 10) {
-    const y1 = Math.min(END, y0 + 9);
-    const q = new URLSearchParams({
-      latitude: String(p.lat),
-      longitude: String(p.lon),
-      start_date: `${y0}-01-01`,
-      end_date: `${y1}-12-31`,
-      daily: "precipitation_sum",
-      models: p.model ?? "era5_land",
-      timezone: "Indian/Mauritius",
-    });
-    const j = await get(`https://archive-api.open-meteo.com/v1/archive?${q}`);
-    const t = j.daily.time;
-    const v = j.daily.precipitation_sum;
-    for (let i = 0; i < t.length; i++) {
-      const y = t[i].slice(0, 4);
-      (years[y] ??= []).push(v[i] === null ? null : Math.round(v[i] * 10));
-    }
-    console.log(p.id, y0, y1, t.length, "days");
-    await sleep(6000);
-  }
-  out[p.id] = years;
+const islandYears = ISLAND_PTS.map(() => ({}));
+const et0 = { mauritius: {}, rodrigues: {} };
+for (const p of POINTS) out[p.id] = {};
+
+for (let y0 = START; y0 <= END; y0 += 10) {
+  const y1 = Math.min(END, y0 + 9);
+  // 1) Rain at the 7 catchments + 6 island points (ERA5-Land).
+  const a = await fetchMulti(muAll, "era5_land", ["precipitation_sum"], y0, y1);
+  muAll.forEach((p, i) => {
+    const d = a[i].daily;
+    if (p.id.startsWith("island-")) push(islandYears[Number(p.id.slice(7))], d.time, d.precipitation_sum);
+    else push(out[p.id], d.time, d.precipitation_sum);
+  });
+  await sleep(15000);
+  // 2) Evaporation for Mauritius (ERA5-Land).
+  const e = await fetchMulti([ET_MU], "era5_land", ["et0_fao_evapotranspiration"], y0, y1);
+  push(et0.mauritius, e[0].daily.time, e[0].daily.et0_fao_evapotranspiration);
+  await sleep(15000);
+  // 3) Rodrigues rain + evaporation (ERA5: the island is too small for the land-only grid).
+  const r = await fetchMulti([RO], "era5", ["precipitation_sum", "et0_fao_evapotranspiration"], y0, y1);
+  push(out.rodrigues, r[0].daily.time, r[0].daily.precipitation_sum);
+  push(et0.rodrigues, r[0].daily.time, r[0].daily.et0_fao_evapotranspiration);
+  console.log(`${y0}–${y1} done`);
+  await sleep(15000);
 }
 
 // Island average (mean of the six points), stored as rain.island.
 {
-  const series = [];
-  for (const [i, p] of ISLAND_PTS.entries()) series.push(await seriesOf({ id: `island-${i}`, ...p }, "precipitation_sum"));
   const island = {};
   for (let y = START; y <= END; y++) {
-    const arrs = series.map((s) => s[String(y)]);
-    if (arrs.some((a) => !a)) continue;
+    const arrs = islandYears.map((s) => s[String(y)]);
+    if (arrs.some((x) => !x)) continue;
     island[String(y)] = arrs[0].map((_, d) => {
-      const vs = arrs.map((a) => a[d]);
-      return vs.some((v) => v === null || v === undefined) ? null : Math.round(vs.reduce((a, b) => a + b, 0) / vs.length);
+      const vs = arrs.map((x) => x[d]);
+      return vs.some((v) => v === null || v === undefined) ? null : Math.round(vs.reduce((m, n) => m + n, 0) / vs.length);
     });
   }
   out.island = island;
