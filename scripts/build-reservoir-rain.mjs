@@ -4,6 +4,7 @@
 // Runs in GitHub Actions. Fetched in 10-year chunks to stay well inside the free limits.
 // Keep these points in sync with src/data/reservoirs.ts.
 import { writeFileSync } from "node:fs";
+import { validateAnalogues } from "./lib/validate-analogues.mjs";
 
 const POINTS = [
   { id: "mare-aux-vacoas", lat: -20.375, lon: 57.5, built: 1885 },
@@ -89,6 +90,21 @@ for (const p of POINTS) {
   out[p.id] = years;
 }
 
+const catchIds = POINTS.filter((p) => p.id !== "rodrigues").map((p) => p.id);
+const avgSeries = new Map();
+for (let y = START; y <= END; y++) {
+  const arrs = catchIds.map((id) => out[id]?.[String(y)]);
+  if (arrs.some((a) => !a)) continue;
+  for (let i = 0; i < arrs[0].length; i++) {
+    const vs = arrs.map((a) => a[i]);
+    if (vs.some((v) => v === null || v === undefined)) continue;
+    const date = new Date(Date.UTC(y, 0, 1 + i)).toISOString().slice(0, 10);
+    avgSeries.set(date, vs.reduce((a, b) => a + b, 0) / vs.length / 10);
+  }
+}
+const validation = validateAnalogues(avgSeries, START, END);
+console.log("validation", validation);
+
 writeFileSync(
   "src/data/reservoir-rain.json",
   JSON.stringify({
@@ -99,6 +115,7 @@ writeFileSync(
     source: "Open-Meteo Historical Weather API, ERA5-Land reanalysis (ERA5 for Rodrigues), Copernicus/ECMWF, CC BY 4.0",
     rain: out,
     et0,
+    validation,
   }),
 );
 console.log("Wrote src/data/reservoir-rain.json");

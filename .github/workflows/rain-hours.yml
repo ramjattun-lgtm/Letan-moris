@@ -1,0 +1,30 @@
+# Builds "When does it usually rain here?": chance of rain by hour and month for each region
+# (reanalysis) and observed at the two airports (METAR). Run once by hand; refreshes every January.
+name: Rain timing history
+
+on:
+  schedule:
+    - cron: "53 22 4 1 *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build rain timing
+        run: node scripts/build-rain-hours.mjs
+      - name: Commit if changed
+        run: |
+          git config user.name "letan-moris-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase --quiet || true
+          git add src/data/rain-hours.json
+          git diff --cached --quiet || (git commit -m "Update rain timing history" && git push)

@@ -30,6 +30,7 @@ export interface ClimateRegion {
   annual: { year: number; tmax: Maybe<number>; tmin: Maybe<number>; rainMm: number; hotDays: number }[];
   trend: { tmaxPerDecade: Maybe<number>; tminPerDecade: Maybe<number>; rainPctPerDecade: Maybe<number> };
   elNino: { summers: number[]; rainVsNormalPct: Maybe<number>; tmaxVsNormal: Maybe<number> };
+  validation?: { days: number; skillVsFlatPct: number; bins: { from: number; to: number; said: number | null; rained: number | null; days: number }[] } | null;
 }
 
 export const CLIMATE = climate as {

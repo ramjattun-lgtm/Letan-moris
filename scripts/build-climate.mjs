@@ -132,7 +132,73 @@ export function analyse(days) {
     tmaxVsNormal: r1(mean(nino.map((s) => s.tmax)) - mean(summers.map((s) => s.tmax))),
   };
 
-  return { monthly, daily, records, annual, trend, elNino };
+  return { monthly, daily, records, annual, trend, elNino, validation: validate(days) };
+}
+
+/**
+ * "Does history help?" — leave-one-year-out test of the "chance of a rainy day" used across the app.
+ * For every day of every year, the chance is worked out from the OTHER 29 years only (same date ±7 days),
+ * then compared with what actually happened. Also compared with a flat chance that ignores the season.
+ */
+export function validate(days) {
+  const doy = (date) => {
+    const [, m, dd] = date.split("-").map(Number);
+    return Math.round((Date.UTC(2000, m - 1, dd) - Date.UTC(2000, 0, 1)) / 86400000);
+  };
+  const ok = days.filter((d) => d.rain !== null && d.rain !== undefined);
+  const wetAll = new Array(366).fill(0);
+  const nAll = new Array(366).fill(0);
+  const byYear = new Map();
+  for (const d of ok) {
+    const i = doy(d.date);
+    const y = d.date.slice(0, 4);
+    const w = d.rain >= 1 ? 1 : 0;
+    wetAll[i] += w;
+    nAll[i]++;
+    if (!byYear.has(y)) byYear.set(y, { wet: new Array(366).fill(0), n: new Array(366).fill(0), totalWet: 0, total: 0 });
+    const r = byYear.get(y);
+    r.wet[i] += w;
+    r.n[i]++;
+    r.totalWet += w;
+    r.total++;
+  }
+  const totWet = ok.filter((d) => d.rain >= 1).length;
+  const bins = Array.from({ length: 10 }, () => ({ p: 0, o: 0, n: 0 }));
+  let bs = 0;
+  let bsFlat = 0;
+  let n = 0;
+  for (const d of ok) {
+    const i = doy(d.date);
+    const r = byYear.get(d.date.slice(0, 4));
+    let wet = 0;
+    let cnt = 0;
+    for (let k = -7; k <= 7; k++) {
+      const j = (i + k + 366) % 366;
+      wet += wetAll[j] - r.wet[j];
+      cnt += nAll[j] - r.n[j];
+    }
+    if (!cnt) continue;
+    const p = wet / cnt;
+    const pFlat = (totWet - r.totalWet) / (ok.length - r.total);
+    const o = d.rain >= 1 ? 1 : 0;
+    bs += (p - o) ** 2;
+    bsFlat += (pFlat - o) ** 2;
+    n++;
+    const b = bins[Math.min(9, Math.floor(p * 10))];
+    b.p += p;
+    b.o += o;
+    b.n++;
+  }
+  if (!n) return null;
+  return {
+    method: "leave-one-year-out",
+    days: n,
+    // Brier skill score vs a flat yearly chance: how much knowing the season improves the rain chance (%).
+    skillVsFlatPct: Math.round((1 - bs / bsFlat) * 100),
+    bins: bins
+      .map((b, k) => ({ from: k * 10, to: k * 10 + 10, said: b.n ? Math.round((b.p / b.n) * 100) : null, rained: b.n ? Math.round((b.o / b.n) * 100) : null, days: b.n }))
+      .filter((b) => b.days >= 30),
+  };
 }
 
 async function main() {

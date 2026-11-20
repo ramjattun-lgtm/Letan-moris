@@ -86,3 +86,12 @@ describe("cyclone climatology", () => {
     expect(n.byNow).toBe(0);
   });
 });
+
+import { timingSentence } from "@/components/ClimateEvidence";
+describe("rain timing", () => {
+  it("describes the peak and quietest daytime hours", () => {
+    const row = Array.from({ length: 24 }, (_, h) => (h === 15 ? 30 : h === 9 ? 10 : 15));
+    expect(timingSentence(row, "Curepipe", 0)).toBe("In January, rain in Curepipe is most likely around 15:00 (30% of hours) and least likely around 09:00 (10%) — about 3× as likely.");
+    expect(timingSentence(Array(24).fill(20), "Curepipe", 6)).toMatch(/about as likely at any time/);
+  });
+});

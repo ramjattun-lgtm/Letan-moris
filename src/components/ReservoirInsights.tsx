@@ -2,6 +2,7 @@
 
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Analogues, SeasonProgress } from "@/lib/weather/intelligence/reservoir-insights.service";
+import { useApi } from "@/lib/client/useApi";
 
 const AX = { fontSize: 11, fill: "#7A8B96" };
 
@@ -101,6 +102,7 @@ export function ReservoirInsights({ i, rod }: { i: Insights; rod: boolean }) {
             ))}
           </div>
           <p className="text-[11px] text-muted dark:text-slate-400">Based on past rain only, not a forecast. Each chip: last 6 months → next 3 months, % of normal rain level.</p>
+          <AnalogueTest />
         </Card>
       )}
 
@@ -189,5 +191,21 @@ export function ReservoirInsights({ i, rod }: { i: Insights; rod: boolean }) {
         </Card>
       )}
     </div>
+  );
+}
+
+function AnalogueTest() {
+  const api = useApi<{ analogues: { analogueErrorPct: number; assumeNormalErrorPct: number; beatsNormalPct: number; cases: number } | null }>("/api/validation");
+  const a = api.data?.analogues;
+  if (!a) return null;
+  const helpful = a.analogueErrorPct < a.assumeNormalErrorPct - 1;
+  return (
+    <p className="rounded-xl bg-mist p-2 text-[12px] dark:bg-white/5">
+      <strong>Tested on the past:</strong>{" "}
+      {helpful
+        ? `similar years beat "assume normal rain" in ${a.beatsNormalPct}% of ${a.cases.toLocaleString()} tests.`
+        : `similar years were no better than assuming normal rain (${a.cases.toLocaleString()} tests) — treat this as context only.`}{" "}
+      <a className="underline" href="/climate#hist-check">How we test</a>
+    </p>
   );
 }

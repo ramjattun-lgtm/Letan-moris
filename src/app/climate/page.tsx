@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAppState } from "@/components/AppState";
 import { MonthlyChart, TrendChart } from "@/components/ClimateCharts";
+import { HistoryCheck, RainTiming } from "@/components/ClimateEvidence";
 import { bestMonths, CLIMATE, climateKeyFor, climateReady, monthName, normalFor, region } from "@/lib/weather/intelligence/climate.service";
 import { todayMU } from "@/lib/time";
 
@@ -27,6 +28,9 @@ export default function ClimatePage() {
           The 30-year climate data is being prepared. It appears here once the &quot;Climate history&quot; job has run on GitHub (about 10 minutes).
         </div>
         <ReservoirLink />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <RainTiming regionKey={climateKeyFor(location)} regionLabel={location.name} island={location.island} />
+        </div>
       </>
     );
   }
@@ -74,6 +78,8 @@ export default function ClimatePage() {
             <li>Rain in a typical year: <strong>about {yearRain.toLocaleString()} mm</strong></li>
           </ul>
         </section>
+
+        <RainTiming regionKey={r.key} regionLabel={r.label} island={r.key === "rodrigues" ? "rodrigues" : "mauritius"} />
 
         <section className="card lg:col-span-2">
           <h2 className="label">Month by month · {r.label}</h2>
@@ -149,6 +155,8 @@ export default function ClimatePage() {
             </tbody>
           </table>
         </section>
+
+        <HistoryCheck v={r.validation} regionLabel={r.label} />
 
         <section className="card text-xs text-muted lg:col-span-2 dark:text-slate-400">
           <p>
