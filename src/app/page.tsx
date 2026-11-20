@@ -42,19 +42,17 @@ export default function Home() {
         ) : null
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="flex flex-col gap-4">
+          {/* Left: what the weather is doing. Right: what it means for you. Balanced so neither column runs short on wide screens. */}
+          <div className="flex min-w-0 flex-col gap-4">
             <CurrentCard f={f} />
             <RecentCard />
-            <CommunityCard f={f} />
-            <RainOutlookCard f={f} compact />
             <HeavyRainCard />
             <HeatCard hours={f.hourly} date={todayMU()} />
             <MosquitoCard />
-            <ReservoirSummary />
-            <DidYouKnow />
+            <RainOutlookCard f={f} compact />
             <TrustBadges f={f} />
           </div>
-          <div className="flex flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-4">
             {editing && <InterestsPicker onDone={() => setEditing(false)} />}
             <DecisionList
               items={assessDay(f.hourly, f.daily, todayMU(), 0).filter((a) => a.id === "general" || interests.includes(a.id))}
@@ -63,6 +61,9 @@ export default function Home() {
             <button type="button" onClick={() => setEditing(true)} className="-mt-2 self-start text-sm font-semibold text-teal-ink underline dark:text-teal-soft">
               Change what I see
             </button>
+            <CommunityCard f={f} />
+            <DidYouKnow />
+            <ReservoirSummary />
             <Link href="/day" className="card flex items-center justify-between font-semibold text-teal-ink hover:bg-white/80 dark:text-teal-soft">
               <span>My Weather Day — plan any of the next 7 days</span>
               <span aria-hidden="true">→</span>
