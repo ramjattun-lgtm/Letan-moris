@@ -8,6 +8,8 @@ import { RECORDS_START, RESERVOIR_SOURCE, type Reservoir } from "@/data/reservoi
 import { TREND_TEXT, type Comparison, type OutlookPeriod, type Trend } from "@/lib/weather/intelligence/reservoir.service";
 import { ago, formatUtcAsMU } from "@/lib/time";
 import { ReservoirInsights, type Insights } from "@/components/ReservoirInsights";
+import { RainSharePie } from "@/components/RainSharePie";
+import type { RainShare } from "@/lib/weather/intelligence/reservoir.service";
 
 type Win = "d7" | "m1" | "m6";
 interface Data {
@@ -21,6 +23,7 @@ interface Data {
   reservoirs: (Reservoir & { compareFrom: number; past: Record<Win, Comparison>; next7: Comparison | null })[];
   outlook: { weeks: OutlookPeriod | null; months: { months: OutlookPeriod[]; total: OutlookPeriod } | null };
   insights?: Insights | null;
+  share?: Record<"d7" | "m1" | "m6", RainShare | null> | null;
   retrievedAt: string;
 }
 
@@ -157,6 +160,12 @@ export default function ReservoirsPage() {
               The month and 6-month outlooks are long-range ECMWF forecasts for the whole island (36 km grid squares). They only indicate a tendency and are often wrong in detail; check again every week.
             </p>
           </section>
+
+          {!rod && d.share && (
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              <RainSharePie share={d.share} />
+            </div>
+          )}
 
           {d.insights && (
             <>

@@ -4,7 +4,7 @@ import history from "@/data/reservoir-rain.json";
 import cycloneHistory from "@/data/cyclone-history.json";
 import { compareFrom, RECORDS_START, RESERVOIRS, RODRIGUES_POINT } from "@/data/reservoirs";
 import { getEt0, getModelRain, getReanalysisRain, getSeasonalRain } from "@/lib/weather/providers/catchment.provider";
-import { averagedHistory, catchmentReport, monthlyOutlook, weeklyOutlook, type RainHistory } from "@/lib/weather/intelligence/reservoir.service";
+import { averagedHistory, catchmentReport, mergeDaily, monthlyOutlook, pastRange, rainShare, weeklyOutlook, WINDOWS, type RainHistory } from "@/lib/weather/intelligence/reservoir.service";
 import {
   analogues,
   catchUp,
@@ -25,6 +25,15 @@ export const maxDuration = 30;
 
 // Centre of the main catchments: island-wide seasonal outlook (36 km cells) and evaporation.
 const CENTRAL = { lat: -20.27, lon: 57.53 };
+// Spread across Mauritius (north, east, south, west, plateau, Port Louis) for an island-average rain estimate.
+const ISLAND_PTS = [
+  { lat: -20.013, lon: 57.58 },
+  { lat: -20.1897, lon: 57.7144 },
+  { lat: -20.4081, lon: 57.7 },
+  { lat: -20.2742, lon: 57.3711 },
+  { lat: -20.3163, lon: 57.5259 },
+  { lat: -20.1609, lon: 57.5012 },
+];
 const ISLAND_CENTRE = { mauritius: { lat: -20.25, lon: 57.55 }, rodrigues: { lat: -19.7, lon: 63.42 } };
 
 type Daily = Record<string, number | null>;
@@ -72,11 +81,13 @@ export async function GET(req: NextRequest) {
     if (historyReady && h.end) starts.push(`${h.end + 1}-01-01`);
     const fetchStart = [...starts].sort()[0] < addDays(today, -400) ? addDays(today, -400) : [...starts].sort()[0];
 
-    const [rea, mod, sea, et0] = await Promise.allSettled([
+    const [rea, mod, sea, et0, islRea, islMod] = await Promise.allSettled([
       getReanalysisRain(pts, fetchStart, today, model5),
       getModelRain(pts),
       getSeasonalRain(centre.lat, centre.lon),
       getEt0(centre, fetchStart, today, model5),
+      rod ? Promise.resolve([]) : getReanalysisRain(ISLAND_PTS, addDays(today, -190), today),
+      rod ? Promise.resolve([]) : getModelRain(ISLAND_PTS),
     ]);
     if (mod.status === "rejected") throw mod.reason;
     const reanalysis = rea.status === "fulfilled" ? rea.value : pts.map(() => ({}));
@@ -124,6 +135,21 @@ export async function GET(req: NextRequest) {
       };
     }
 
+    // Where did the rain fall? (Mauritius only)
+    let share = null;
+    if (!rod && islMod.status === "fulfilled" && islMod.value.length) {
+      const iRea = avg(islRea.status === "fulfilled" ? islRea.value : []);
+      const iMod = avg(islMod.value);
+      share = Object.fromEntries(
+        WINDOWS.map((w) => {
+          const { start, end } = pastRange(today, w.days);
+          const island = mergeDaily(iRea, iMod, start, end);
+          const parts = RESERVOIRS.map((r, i) => ({ mm: mergeDaily(reanalysis[i] ?? {}, model[i] ?? {}, start, end).mm, km2: r.catchmentKm2 }));
+          return [w.key, island.missing > 1 ? null : rainShare(parts, island.mm)];
+        }),
+      );
+    }
+
     const outlook = sea.status === "fulfilled" ? { weeks: weeklyOutlook(sea.value, today), months: monthlyOutlook(sea.value, today) } : { weeks: null, months: null };
     return ok(
       {
@@ -137,6 +163,7 @@ export async function GET(req: NextRequest) {
         reservoirs,
         outlook,
         insights,
+        share,
         retrievedAt: new Date().toISOString(),
       },
       3 * 3600,

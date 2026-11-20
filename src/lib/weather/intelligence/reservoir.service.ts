@@ -260,3 +260,29 @@ export function catchmentReport(
   const next7 = nx.missing > 1 ? null : compare(nx.mm, pastWindows(h, id, n.start, n.end, fromYear));
   return { id, compareFrom: fromYear, past, next7, filledDays };
 }
+
+// ---- Where did the rain fall? Share of Mauritius's rain that fell on the reservoir catchments ----
+
+/** Land area of the island of Mauritius, km². */
+export const MAURITIUS_AREA_KM2 = 1865;
+
+export interface RainShare {
+  catchmentMm3: number; // million m³ of rain on the 7 catchments
+  islandMm3: number; // million m³ of rain on the whole island
+  pct: number; // share that fell on the catchments
+  areaPct: number; // share of the island's land the catchments cover
+}
+
+/** 1 mm of rain over 1 km² = 1,000 m³. Volumes in million m³. */
+export function rainShare(catchments: { mm: number; km2: number }[], islandMm: number): RainShare | null {
+  const onCatch = catchments.reduce((a, c) => a + (c.mm * c.km2) / 1000, 0);
+  const island = (islandMm * MAURITIUS_AREA_KM2) / 1000;
+  if (island <= 0.01) return null;
+  const area = catchments.reduce((a, c) => a + c.km2, 0);
+  return {
+    catchmentMm3: Math.round(onCatch * 10) / 10,
+    islandMm3: Math.round(island * 10) / 10,
+    pct: Math.round(Math.min(100, (onCatch / island) * 100) * 10) / 10,
+    areaPct: Math.round((area / MAURITIUS_AREA_KM2) * 1000) / 10,
+  };
+}

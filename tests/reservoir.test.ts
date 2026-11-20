@@ -101,3 +101,15 @@ describe("reservoir catchment rain", () => {
     expect(weeklyOutlook({}, "2026-11-20")).toBeNull();
   });
 });
+
+import { rainShare } from "@/lib/weather/intelligence/reservoir.service";
+describe("rain share", () => {
+  it("computes volumes and the catchments' share", () => {
+    const s = rainShare([{ mm: 100, km2: 50 }, { mm: 200, km2: 40 }], 50)!;
+    expect(s.catchmentMm3).toBe(13); // (100*50 + 200*40)/1000
+    expect(s.islandMm3).toBe(93.3); // 50*1865/1000
+    expect(s.pct).toBe(13.9);
+    expect(s.areaPct).toBe(4.8);
+    expect(rainShare([{ mm: 1, km2: 1 }], 0)).toBeNull();
+  });
+});
