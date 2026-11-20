@@ -28,6 +28,10 @@ export const RESERVOIRS: Reservoir[] = [
   { id: "piton-du-milieu", name: "Piton du Milieu", built: 1952, builtNote: "1952", capacityMm3: 2.99, catchmentKm2: 6.3, lat: -20.23, lon: 57.6, note: "Supplies the east." },
 ];
 
+/** Rodrigues has no large reservoirs: rain feeds its few rivers, rainwater tanks and groundwater.
+ *  One central point; ERA5 (0.25°) because the island is too small for the land-only ERA5-Land grid. */
+export const RODRIGUES_POINT = { id: "rodrigues", lat: -19.71, lon: 63.42 };
+
 /** First year a reservoir is compared against: the first full year after it was built, but not before our records start. */
 export const compareFrom = (r: Reservoir) => Math.max(RECORDS_START, r.built + 1);
 

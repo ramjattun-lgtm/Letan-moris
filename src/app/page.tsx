@@ -15,6 +15,7 @@ import { TrustBadges } from "@/components/TrustBadges";
 import { HeavyRainCard } from "@/components/HeavyRainCard";
 import { RecentCard } from "@/components/RecentCard";
 import { CommunityCard } from "@/components/CommunityCard";
+import { ReservoirSummary } from "@/components/ReservoirSummary";
 import { useState } from "react";
 
 export default function Home() {
@@ -43,6 +44,7 @@ export default function Home() {
             <CommunityCard f={f} />
             <RainOutlookCard f={f} compact />
             <HeavyRainCard />
+            <ReservoirSummary />
             <TrustBadges f={f} />
           </div>
           <div className="flex flex-col gap-4">

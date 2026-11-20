@@ -12,6 +12,8 @@ const POINTS = [
   { id: "mare-longue", lat: -20.385, lon: 57.465, built: 1948 },
   { id: "la-nicoliere", lat: -20.13, lon: 57.655, built: 1929 },
   { id: "piton-du-milieu", lat: -20.23, lon: 57.6, built: 1952 },
+  // Rodrigues is too small for the land-only ERA5-Land grid, so it uses ERA5 (0.25°).
+  { id: "rodrigues", lat: -19.71, lon: 63.42, built: 0, model: "era5" },
 ];
 const START = 1950;
 const END = new Date().getUTCFullYear() - 1; // last complete year
@@ -39,7 +41,7 @@ for (const p of POINTS) {
       start_date: `${y0}-01-01`,
       end_date: `${y1}-12-31`,
       daily: "precipitation_sum",
-      models: "era5_land",
+      models: p.model ?? "era5_land",
       timezone: "Indian/Mauritius",
     });
     const j = await get(`https://archive-api.open-meteo.com/v1/archive?${q}`);
@@ -62,7 +64,7 @@ writeFileSync(
     start: START,
     end: END,
     unit: "0.1 mm per day",
-    source: "Open-Meteo Historical Weather API, ERA5-Land reanalysis (Copernicus/ECMWF), CC BY 4.0",
+    source: "Open-Meteo Historical Weather API, ERA5-Land reanalysis (ERA5 for Rodrigues), Copernicus/ECMWF, CC BY 4.0",
     rain: out,
   }),
 );

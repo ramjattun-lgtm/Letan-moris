@@ -25,8 +25,8 @@ const coords = (pts: { lat: number; lon: number }[]) => ({
 });
 
 /** ERA5-Land daily rain for each point from `start` to yesterday. Recent days may be null (not yet available). */
-export async function getReanalysisRain(pts: { lat: number; lon: number }[], start: string, today: string): Promise<Daily[]> {
-  const q = new URLSearchParams({ ...coords(pts), start_date: start, end_date: addDays(today, -1), daily: "precipitation_sum", models: "era5_land", timezone: TZ });
+export async function getReanalysisRain(pts: { lat: number; lon: number }[], start: string, today: string, model: "era5_land" | "era5" = "era5_land"): Promise<Daily[]> {
+  const q = new URLSearchParams({ ...coords(pts), start_date: start, end_date: addDays(today, -1), daily: "precipitation_sum", models: model, timezone: TZ });
   return dailyMaps(await getJson(`https://archive-api.open-meteo.com/v1/archive?${q}`, 6 * 3600));
 }
 
