@@ -45,7 +45,7 @@ export function AboutBanner() {
         <LogoMark size={56} dark className="shrink-0" />
         <span className="min-w-0 flex-1">
           <span className="block text-xs font-semibold uppercase tracking-wide text-teal-soft">What is Letan Moris?</span>
-          <span className="block font-[family-name:var(--font-display)] text-base font-extrabold leading-tight">Weather that tells you what to do — village by village.</span>
+          <span className="block font-[family-name:var(--font-display)] text-base font-extrabold leading-tight">Weather, decoded for your day and your way of life.</span>
           <span className="block text-xs opacity-80">Tap to find out more</span>
         </span>
         <span aria-hidden="true" className="text-2xl opacity-80">›</span>
