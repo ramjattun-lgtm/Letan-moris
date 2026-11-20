@@ -184,6 +184,11 @@ export function DecisionList({ items, title = "Plan your day" }: { items: Assess
               <span className={`chip ${VERDICT_STYLE[a.verdict].cls}`}>{VERDICT_STYLE[a.verdict].label}</span>
             </div>
             <p className="mt-1 text-sm">{a.summary}</p>
+            {a.id === "commute" && (
+              <Link href="/drive" className="mt-2 inline-flex min-h-9 items-center gap-1 rounded-full bg-navy px-3 text-xs font-semibold text-white dark:bg-teal-soft dark:text-navy">
+                🚗 Plan a trip: best time to leave →
+              </Link>
+            )}
             <details className="mt-1 text-xs text-muted dark:text-slate-400">
               <summary className="cursor-pointer font-semibold">Why? ({a.period})</summary>
               <ul className="mt-1 list-disc pl-4">
