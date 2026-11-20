@@ -13,6 +13,8 @@ import { decayWithLeadTime } from "@/lib/weather/intelligence/confidence.service
 import { addDays, dayLabel, hhmm, todayMU } from "@/lib/time";
 import { describeCode, fmt, uvLabel } from "@/lib/weather/weather-codes";
 import { WeatherIcon } from "@/components/WeatherIcon";
+import { ExploreLink, HeatCard, SkyCard } from "@/components/WellbeingCards";
+import Link from "next/link";
 
 export default function DayPage() {
   const { location, ready } = useAppState();
@@ -74,7 +76,16 @@ export default function DayPage() {
             {ahead >= 3 && <p className="mt-3 rounded-xl bg-coral/15 p-2 text-xs">This day is {ahead} days away. Forecasts this far ahead often change — check again closer to the day.</p>}
             <DataFreshness provenance={f.provenance} savedAt={api.savedAt} stale={!!api.error} />
           </section>
-          <DecisionList items={assessDay(f.hourly, f.daily, date, Math.max(0, ahead))} title="Your plan for the day" />
+          <div className="flex flex-col gap-4">
+            <DecisionList items={assessDay(f.hourly, f.daily, date, Math.max(0, ahead))} title="Your plan for the day" />
+            <HeatCard hours={f.hourly} date={date} />
+            {date === today && <SkyCard f={f} date={date} />}
+            <Link href="/event" className="card flex items-center justify-between font-semibold text-teal-ink hover:bg-white/80 dark:text-teal-soft">
+              <span>Further ahead? Check any date in the next year</span>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <ExploreLink />
+          </div>
         </div>
       )}
     </>

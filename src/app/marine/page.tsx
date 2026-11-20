@@ -1,5 +1,6 @@
 "use client";
 
+import { SeaWarmthCard } from "@/components/SeaWarmthCard";
 import { useState } from "react";
 import { useAppState } from "@/components/AppState";
 import { BEACH_IDS, getLocality } from "@/data/localities";
@@ -68,6 +69,8 @@ export default function BeachSeaPage() {
       <div className="mb-4 rounded-2xl bg-coral/15 px-4 py-3 text-sm">
         <strong>Good beach weather is not the same as safe swimming.</strong> Wave figures are open-sea model values; lagoons, reefs and passes can be very different. Follow lifeguard flags, local advice and official sea warnings from MMS.
       </div>
+
+      <SeaWarmthCard />
 
       <section className="card mb-4" aria-labelledby="best">
         <h2 id="best" className="label">Best beaches today</h2>

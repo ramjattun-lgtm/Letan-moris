@@ -8,6 +8,7 @@ import { DEFAULT_LOCATION } from "@/data/localities";
 import { ago, dayLabel, formatUtcAsMU } from "@/lib/time";
 import type { CycloneStatus } from "@/lib/weather/providers/gdacs.provider";
 import { SEASON, WARNING_CLASSES } from "@/data/cyclone-season";
+import { SeasonScorecard } from "@/components/SeasonScorecard";
 import dynamic from "next/dynamic";
 import { NEAR_KM, stormImpact, utcToMU } from "@/lib/weather/intelligence/storm-impact.service";
 import { addHours, hhmm } from "@/lib/time";
@@ -255,6 +256,8 @@ export default function CyclonePage() {
           </p>
         </section>
       )}
+
+      <SeasonScorecard />
 
       <section className="card mb-4" aria-labelledby="season">
         <h2 id="season" className="text-lg font-bold">Cyclone season {SEASON.name}</h2>

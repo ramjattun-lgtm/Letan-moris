@@ -16,6 +16,7 @@ import { HeavyRainCard } from "@/components/HeavyRainCard";
 import { RecentCard } from "@/components/RecentCard";
 import { CommunityCard } from "@/components/CommunityCard";
 import { ReservoirSummary } from "@/components/ReservoirSummary";
+import { ExploreLink, HeatCard, MosquitoCard } from "@/components/WellbeingCards";
 import { useState } from "react";
 
 export default function Home() {
@@ -44,6 +45,8 @@ export default function Home() {
             <CommunityCard f={f} />
             <RainOutlookCard f={f} compact />
             <HeavyRainCard />
+            <HeatCard hours={f.hourly} date={todayMU()} />
+            <MosquitoCard />
             <ReservoirSummary />
             <TrustBadges f={f} />
           </div>
@@ -60,6 +63,7 @@ export default function Home() {
               <span>My Weather Day — plan any of the next 7 days</span>
               <span aria-hidden="true">→</span>
             </Link>
+            <ExploreLink />
           </div>
           <div className="lg:col-span-2">
             <HourlyStrip f={f} />

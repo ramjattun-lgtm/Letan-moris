@@ -229,3 +229,72 @@ export async function getTrack(geometryUrl: string): Promise<StormTrack | null> 
     return null;
   }
 }
+
+// ——— This season so far ———
+
+export interface SeasonSystem {
+  id: string;
+  name: string;
+  fromDate: string | null;
+  toDate: string | null;
+  maxWindKmh: number | null;
+  alertLevel: string | null;
+  closestKm: { mauritius: number | null; rodrigues: number | null };
+}
+
+/** Tropical systems GDACS has tracked in the South-West Indian Ocean since `from` (YYYY-MM-DD). */
+export async function getSeasonSystems(from: string, to: string): Promise<{ ok: boolean; systems: SeasonSystem[] }> {
+  try {
+    const res = await fetch(`${API}?eventlist=TC&fromdate=${from}&todate=${to}&alertlevel=green;orange;red`, {
+      next: { revalidate: 6 * 3600 },
+      signal: AbortSignal.timeout(12_000),
+      headers: { Accept: "application/json" },
+    });
+    if (res.status === 204 || res.status === 404) return { ok: true, systems: [] };
+    if (!res.ok) return { ok: false, systems: [] };
+    const text = await res.text();
+    const raw = (text.trim() ? JSON.parse(text) : {}) as Raw;
+    const features = (Array.isArray(raw.features) ? raw.features : []) as Raw[];
+    const seen = new Map<string, SeasonSystem & { geometryUrl: string | null }>();
+    for (const f of features) {
+      const p = (f.properties ?? {}) as Raw;
+      if (p.eventtype && p.eventtype !== "TC") continue;
+      const c = ((f.geometry ?? {}) as Raw).coordinates as unknown[] | undefined;
+      const lon = Number(c?.[0]);
+      const lat = Number(c?.[1]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || !inSouthWestIndianOcean(lat, lon)) continue;
+      const id = String(p.eventid ?? "");
+      if (!id || seen.has(id)) continue;
+      const sev = (p.severitydata ?? {}) as Raw;
+      const sevVal = Number(sev.severity);
+      const urls = (p.url ?? {}) as Raw;
+      seen.set(id, {
+        id,
+        name: String(p.name ?? p.eventname ?? "Tropical system"),
+        fromDate: typeof p.fromdate === "string" ? p.fromdate : null,
+        toDate: typeof p.todate === "string" ? p.todate : null,
+        maxWindKmh: Number.isFinite(sevVal) && String(sev.severityunit ?? "").toLowerCase().includes("km") ? Math.round(sevVal) : null,
+        alertLevel: typeof p.alertlevel === "string" ? p.alertlevel : null,
+        closestKm: { mauritius: distanceKm(MAURITIUS, { lat, lon }), rodrigues: distanceKm(RODRIGUES, { lat, lon }) },
+        geometryUrl: typeof urls.geometry === "string" && urls.geometry.startsWith("https://www.gdacs.org/") ? urls.geometry : null,
+      });
+    }
+    const list = [...seen.values()].slice(0, 15);
+    // Use the full track (if available) for the closest approach.
+    await Promise.all(
+      list.map(async (s) => {
+        const t = s.geometryUrl ? await getTrack(s.geometryUrl).catch(() => null) : null;
+        const obs = t?.points.filter((p) => p.observed) ?? [];
+        if (obs.length) {
+          s.closestKm = {
+            mauritius: Math.min(...obs.map((p) => distanceKm(MAURITIUS, p))),
+            rodrigues: Math.min(...obs.map((p) => distanceKm(RODRIGUES, p))),
+          };
+        }
+      }),
+    );
+    return { ok: true, systems: list.map((s) => ({ id: s.id, name: s.name, fromDate: s.fromDate, toDate: s.toDate, maxWindKmh: s.maxWindKmh, alertLevel: s.alertLevel, closestKm: s.closestKm })).sort((a, b) => (a.fromDate ?? "").localeCompare(b.fromDate ?? "")) };
+  } catch {
+    return { ok: false, systems: [] };
+  }
+}
