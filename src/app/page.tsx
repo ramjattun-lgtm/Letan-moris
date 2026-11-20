@@ -17,6 +17,7 @@ import { RecentCard } from "@/components/RecentCard";
 import { CommunityCard } from "@/components/CommunityCard";
 import { ReservoirSummary } from "@/components/ReservoirSummary";
 import { AboutBanner } from "@/components/AboutBanner";
+import { AlertsPanel } from "@/components/AlertsPanel";
 import { DidYouKnow } from "@/components/DidYouKnow";
 import { ExploreLink, HeatCard, MosquitoCard } from "@/components/WellbeingCards";
 import { useState } from "react";
@@ -29,8 +30,9 @@ export default function Home() {
 
   return (
     <>
-      <AboutBanner />
       <OfficialBanner />
+      {f && <AlertsPanel f={f} />}
+      <AboutBanner />
       <LocationPicker />
       <ErrorBanner error={api.error} hasData={!!f} savedAt={api.savedAt} />
       {!f ? (

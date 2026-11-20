@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useAppState } from "@/components/AppState";
 import { ErrorBanner, Skeleton } from "@/components/Status";
 import { useApi } from "@/lib/client/useApi";
@@ -12,6 +12,8 @@ import { getLocality } from "@/data/localities";
 import { ago, formatUtcAsMU } from "@/lib/time";
 import { useLapli } from "@/lib/client/useLapli";
 import { FLOOD_SITES_SOURCE, siteRisks } from "@/data/flood-sites";
+import type { ExtraMarker } from "@/components/WeatherMap";
+import type { RiverAssessment } from "@/lib/weather/intelligence/river.service";
 
 const WeatherMap = dynamic(() => import("@/components/WeatherMap").then((m) => m.WeatherMap), { ssr: false, loading: () => <Skeleton className="h-[60vh]" /> });
 
@@ -29,6 +31,11 @@ const LAYERS: { id: Layer; label: string; legend: string }[] = [
     legend:
       "Independent heavy-rain risk for the next 24 hours: Low, Moderate (amber) or High (red). Based on rain intensity per hour, 3- and 24-hour totals and how wet the ground already is. High = flash flooding possible in low-lying and flood-prone areas. Diamonds ◆ mark the flood-prone areas studied in the Land Drainage Master Plan, coloured by today's risk nearby. Not an MMS warning — always follow MMS heavy rain and torrential rain warnings. Models can miss sudden local downpours.",
   },
+  {
+    id: "rivers",
+    label: "Rivers",
+    legend: "Rain over each river's upper catchment in the last 3 hours and next 3 hours: Low, Moderate (amber) or High (red). Rivers can rise quickly downstream even when it is dry there. Estimate, not river levels — see River watch for details.",
+  },
   { id: "temperature", label: "Temperature", legend: "Current model temperature (°C). Cooler blues on high ground, warmer oranges on the coast." },
   { id: "wind", label: "Wind", legend: "Current wind speed (km/h) and the direction it blows from. Orange = 40 km/h or more." },
   { id: "cloud", label: "Cloud", legend: "Current cloud cover (%). Darker = cloudier." },
@@ -45,6 +52,18 @@ export default function MapPage() {
     .filter((p) => p.loc.island === island)
     .map((p) => ({ locationId: p.loc.id, rainProbNext3h: null, rainNext3h: null, temperature: null, windSpeed: null, windDirection: null, cloudCover: null, report: { kind: p.kind, minutesAgo: p.minutesAgo, count: p.count } }));
   const pickedLoc = getLocality(picked);
+  const riv = useApi<{ island: string; rivers: (RiverAssessment & { id: string; name: string; upstream: { lat: number; lon: number }[] })[] }>(ready && layer === "rivers" ? `/api/rivers?island=${island}` : null);
+  const riverMarkers: ExtraMarker[] = useMemo(() =>
+    layer === "rivers" && riv.data && riv.data.island === island
+      ? riv.data.rivers.map((r) => ({
+          lat: r.upstream[0].lat,
+          lon: r.upstream[0].lon,
+          text: `${r.name.replace("Rivière ", "R. ").replace("Grand River ", "GR ").replace("Grande Rivière ", "GR ")} · ${r.level === "high" ? "High" : r.level === "moderate" ? "Mod." : r.level === "low" ? "Low" : "—"}`,
+          color: r.level === "high" ? "#D9480F" : r.level === "moderate" ? "#F2A541" : "#CFEDE6",
+          dark: r.level === "high",
+          title: `${r.name}: ${r.message}`,
+        }))
+      : [], [layer, riv.data, island]);
 
   return (
     <>
@@ -57,7 +76,14 @@ export default function MapPage() {
         ))}
       </div>
       {layer !== "reports" && <ErrorBanner error={api.error} hasData={!!api.data} savedAt={api.savedAt} />}
-      {layer === "reports" ? (
+      {layer === "rivers" ? (
+        <>
+          <WeatherMap island={island} points={[]} layer={layer} onSelect={onSelect} extra={riverMarkers} />
+          <p className="mt-2 text-sm">
+            Details and safety advice: <Link href="/rivers" className="font-semibold underline">River watch</Link>
+          </p>
+        </>
+      ) : layer === "reports" ? (
         <>
           <WeatherMap island={island} points={reportPoints} layer={layer} onSelect={onSelect} />
           {lapli.places && reportPoints.length === 0 && <p className="mt-2 text-sm text-muted">No rain reports in the last 2 hours on this island.</p>}

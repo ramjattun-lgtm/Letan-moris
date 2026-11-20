@@ -37,3 +37,14 @@ export const compareFrom = (r: Reservoir) => Math.max(RECORDS_START, r.built + 1
 
 export const RESERVOIR_SOURCE =
   "Reservoir facts: Water Resources Unit, Ministry of Energy and Public Utilities. Rainfall: Open-Meteo (ERA5-Land reanalysis since 1950, ECMWF forecasts), CC BY 4.0.";
+
+/** Six inland points spread over Mauritius for an island-average rain estimate ("Where did the rain fall?").
+ *  Keep in sync with ISLAND_PTS in scripts/build-reservoir-rain.mjs. */
+export const ISLAND_PTS = [
+  { lat: -20.05, lon: 57.6 },
+  { lat: -20.2, lon: 57.7 },
+  { lat: -20.42, lon: 57.68 },
+  { lat: -20.3, lon: 57.4 },
+  { lat: -20.32, lon: 57.53 },
+  { lat: -20.17, lon: 57.52 },
+];

@@ -110,6 +110,8 @@ describe("rain share", () => {
     expect(s.islandMm3).toBe(93.3); // 50*1865/1000
     expect(s.pct).toBe(13.9);
     expect(s.areaPct).toBe(4.8);
+    expect(s.catchmentMm).toBe(144); // 13 Mm³ over 90 km²
+    expect(s.outsideMm).toBe(45); // 80.3 Mm³ over 1,775 km²
     expect(rainShare([{ mm: 1, km2: 1 }], 0)).toBeNull();
   });
 });

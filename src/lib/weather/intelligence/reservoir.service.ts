@@ -271,6 +271,8 @@ export interface RainShare {
   islandMm3: number; // million m³ of rain on the whole island
   pct: number; // share that fell on the catchments
   areaPct: number; // share of the island's land the catchments cover
+  catchmentMm: number; // average rain depth on the catchments (area-weighted)
+  outsideMm: number; // average rain depth on the rest of the island
 }
 
 /** 1 mm of rain over 1 km² = 1,000 m³. Volumes in million m³. */
@@ -284,5 +286,7 @@ export function rainShare(catchments: { mm: number; km2: number }[], islandMm: n
     islandMm3: Math.round(island * 10) / 10,
     pct: Math.round(Math.min(100, (onCatch / island) * 100) * 10) / 10,
     areaPct: Math.round((area / MAURITIUS_AREA_KM2) * 1000) / 10,
+    catchmentMm: area > 0 ? Math.round((onCatch * 1000) / area) : 0,
+    outsideMm: Math.max(0, Math.round(((island - onCatch) * 1000) / (MAURITIUS_AREA_KM2 - area))),
   };
 }

@@ -10,7 +10,15 @@ import type { Island, MapPoint } from "@/lib/weather/types";
 import { compass } from "@/lib/weather/weather-codes";
 import { siteRisks } from "@/data/flood-sites";
 
-export type Layer = "rain" | "heavy" | "reports" | "temperature" | "wind" | "cloud";
+export type Layer = "rain" | "heavy" | "reports" | "rivers" | "temperature" | "wind" | "cloud";
+export interface ExtraMarker {
+  lat: number;
+  lon: number;
+  text: string;
+  color: string;
+  dark: boolean;
+  title: string;
+}
 
 // Free, keyless vector tiles from OpenFreeMap (OpenStreetMap data). Attribution is shown on the map.
 const STYLE = "https://tiles.openfreemap.org/styles/positron";
@@ -51,12 +59,14 @@ export function labelFor(layer: Layer, p: MapPoint): { text: string; color: stri
       return { text: p.temperature === null ? "—" : `${Math.round(p.temperature)}°`, color: tempColor(p.temperature), dark: (p.temperature ?? 0) >= 31 };
     case "wind":
       return { text: p.windSpeed === null ? "—" : `${Math.round(p.windSpeed)} ${compass(p.windDirection)}`, color: (p.windSpeed ?? 0) >= 40 ? "#F2A541" : "#E7EEF2", dark: false };
+    case "rivers":
+      return { text: "", color: "#fff", dark: false };
     case "cloud":
       return { text: p.cloudCover === null ? "—" : `${p.cloudCover}%`, color: `rgba(90,110,125,${0.15 + ((p.cloudCover ?? 0) / 100) * 0.7})`, dark: (p.cloudCover ?? 0) >= 60 };
   }
 }
 
-export function WeatherMap({ island, points, layer, onSelect }: { island: Island; points: MapPoint[]; layer: Layer; onSelect: (id: string) => void }) {
+export function WeatherMap({ island, points, layer, onSelect, extra = [] }: { island: Island; points: MapPoint[]; layer: Layer; onSelect: (id: string) => void; extra?: ExtraMarker[] }) {
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<ML.Map | null>(null);
   const markers = useRef<ML.Marker[]>([]);
@@ -93,6 +103,15 @@ export function WeatherMap({ island, points, layer, onSelect }: { island: Island
       el.addEventListener("click", () => onSelect(p.locationId));
       return new maplibregl.Marker({ element: el }).setLngLat([loc?.lon ?? 0, loc?.lat ?? 0]).addTo(map.current!);
     });
+    for (const x of extra) {
+      const el = document.createElement("div");
+      el.setAttribute("role", "img");
+      el.setAttribute("aria-label", x.title);
+      el.title = x.title;
+      el.style.cssText = `background:${x.color};color:${x.dark ? "#fff" : "#0B2A3C"};border:2px solid #fff;border-radius:10px;padding:2px 7px;font:700 11px/1.2 Inter,system-ui,sans-serif;box-shadow:0 2px 6px rgba(11,42,60,.25);white-space:nowrap`;
+      el.textContent = x.text;
+      markers.current.push(new maplibregl.Marker({ element: el }).setLngLat([x.lon, x.lat]).addTo(map.current!));
+    }
     // Heavy-rain layer: also mark the flood-prone sectors from the Land Drainage Master Plan,
     // coloured by today's risk at the nearest forecast point.
     if (layer === "heavy" && island === "mauritius") {
@@ -109,7 +128,7 @@ export function WeatherMap({ island, points, layer, onSelect }: { island: Island
         markers.current.push(new maplibregl.Marker({ element: el }).setLngLat([s.lon, s.lat]).addTo(map.current!));
       }
     }
-  }, [points, layer, onSelect, island]);
+  }, [points, layer, onSelect, island, extra]);
 
   return <div ref={box} className="h-[60vh] min-h-80 w-full overflow-hidden rounded-3xl" />;
 }

@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { ok, fail } from "@/lib/api";
 import history from "@/data/reservoir-rain.json";
 import cycloneHistory from "@/data/cyclone-history.json";
-import { compareFrom, RECORDS_START, RESERVOIRS, RODRIGUES_POINT } from "@/data/reservoirs";
+import { compareFrom, ISLAND_PTS, RECORDS_START, RESERVOIRS, RODRIGUES_POINT } from "@/data/reservoirs";
 import { getEt0, getModelRain, getReanalysisRain, getSeasonalRain } from "@/lib/weather/providers/catchment.provider";
 import { averagedHistory, catchmentReport, mergeDaily, monthlyOutlook, pastRange, rainShare, weeklyOutlook, WINDOWS, type RainHistory } from "@/lib/weather/intelligence/reservoir.service";
 import {
@@ -25,15 +25,6 @@ export const maxDuration = 30;
 
 // Centre of the main catchments: island-wide seasonal outlook (36 km cells) and evaporation.
 const CENTRAL = { lat: -20.27, lon: 57.53 };
-// Spread across Mauritius (north, east, south, west, plateau, Port Louis) for an island-average rain estimate.
-const ISLAND_PTS = [
-  { lat: -20.013, lon: 57.58 },
-  { lat: -20.1897, lon: 57.7144 },
-  { lat: -20.4081, lon: 57.7 },
-  { lat: -20.2742, lon: 57.3711 },
-  { lat: -20.3163, lon: 57.5259 },
-  { lat: -20.1609, lon: 57.5012 },
-];
 const ISLAND_CENTRE = { mauritius: { lat: -20.25, lon: 57.55 }, rodrigues: { lat: -19.7, lon: 63.42 } };
 
 type Daily = Record<string, number | null>;

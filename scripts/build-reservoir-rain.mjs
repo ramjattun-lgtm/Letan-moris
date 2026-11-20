@@ -22,6 +22,16 @@ const ET0_POINTS = [
   { id: "mauritius", lat: -20.27, lon: 57.53, model: "era5_land" },
   { id: "rodrigues", lat: -19.71, lon: 63.42, model: "era5" },
 ];
+// Six inland points spread over Mauritius for an island-average rain series ("Where did the rain fall?").
+// Keep in sync with ISLAND_PTS in src/app/api/reservoirs/route.ts.
+const ISLAND_PTS = [
+  { lat: -20.05, lon: 57.6 },
+  { lat: -20.2, lon: 57.7 },
+  { lat: -20.42, lon: 57.68 },
+  { lat: -20.3, lon: 57.4 },
+  { lat: -20.32, lon: 57.53 },
+  { lat: -20.17, lon: 57.52 },
+];
 const START = 1950;
 const END = new Date().getUTCFullYear() - 1; // last complete year
 
@@ -36,7 +46,7 @@ async function get(url) {
   throw new Error(`Failed: ${url}`);
 }
 
-async function series(p, variable) {
+async function seriesOf(p, variable) {
   const years = {};
   for (let y0 = START; y0 <= END; y0 += 10) {
     const y1 = Math.min(END, y0 + 9);
@@ -60,7 +70,7 @@ async function series(p, variable) {
 }
 
 const et0 = {};
-for (const p of ET0_POINTS) et0[p.id] = await series(p, "et0_fao_evapotranspiration");
+for (const p of ET0_POINTS) et0[p.id] = await seriesOf(p, "et0_fao_evapotranspiration");
 
 const out = {};
 for (const p of POINTS) {
@@ -88,6 +98,22 @@ for (const p of POINTS) {
     await sleep(4000);
   }
   out[p.id] = years;
+}
+
+// Island average (mean of the six points), stored as rain.island.
+{
+  const series = [];
+  for (const [i, p] of ISLAND_PTS.entries()) series.push(await seriesOf({ id: `island-${i}`, ...p }, "precipitation_sum"));
+  const island = {};
+  for (let y = START; y <= END; y++) {
+    const arrs = series.map((s) => s[String(y)]);
+    if (arrs.some((a) => !a)) continue;
+    island[String(y)] = arrs[0].map((_, d) => {
+      const vs = arrs.map((a) => a[d]);
+      return vs.some((v) => v === null || v === undefined) ? null : Math.round(vs.reduce((a, b) => a + b, 0) / vs.length);
+    });
+  }
+  out.island = island;
 }
 
 const catchIds = POINTS.filter((p) => p.id !== "rodrigues").map((p) => p.id);
