@@ -12,7 +12,7 @@ export async function GET() {
   const today = todayMU();
   const y = Number(today.slice(0, 4));
   const start = Number(today.slice(5, 7)) >= 7 ? `${y}-07-01` : `${y - 1}-07-01`;
-  const [season, storms] = [await getSeasonSystems(start, today), ((history as { storms?: HistStorm[] }).storms ?? []) as HistStorm[]];
+  const [season, storms] = [await getSeasonSystems(start, today), ((history as unknown as { storms?: HistStorm[] }).storms ?? []) as HistStorm[]];
   const near = (k: "mauritius" | "rodrigues", km: number) => season.systems.filter((s) => s.closestKm[k] !== null && (s.closestKm[k] as number) <= km).length;
   return ok(
     {

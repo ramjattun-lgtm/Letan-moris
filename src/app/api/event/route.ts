@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const today = todayMU();
   if (date < today || date > addDays(today, 400)) return NextResponse.json({ error: "bad_request", message: "date must be within the next year" }, { status: 400 });
 
-  const storms = ((history as { storms?: HistStorm[] }).storms ?? []) as HistStorm[];
+  const storms = ((history as unknown as { storms?: HistStorm[] }).storms ?? []) as HistStorm[];
   const storm = storms.length ? stormChanceNear(storms, island, date) : null;
 
   let outlook: { kind: "week" | "month"; label: string; pctNormal: number | null; trend: ReturnType<typeof trendOf>; wetterChance: number | null } | null = null;

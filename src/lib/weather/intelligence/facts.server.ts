@@ -8,7 +8,7 @@ export function allFacts(today: string): Fact[] {
   return buildFacts({
     today,
     rainHours: rainHours as unknown as Parameters<typeof buildFacts>[0]["rainHours"],
-    storms: ((cycloneHistory as { storms?: HistStorm[] }).storms ?? []) as HistStorm[],
+    storms: ((cycloneHistory as unknown as { storms?: HistStorm[] }).storms ?? []) as HistStorm[],
   });
 }
 

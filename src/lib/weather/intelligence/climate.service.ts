@@ -33,7 +33,7 @@ export interface ClimateRegion {
   validation?: { days: number; skillVsFlatPct: number; bins: { from: number; to: number; said: number | null; rained: number | null; days: number }[] } | null;
 }
 
-export const CLIMATE = climate as {
+export const CLIMATE = climate as unknown as {
   period: string;
   source: string;
   sourceUrl: string;

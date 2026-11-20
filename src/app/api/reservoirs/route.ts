@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
       const lastComplete = Math.min(last, Number(seasonStart(today).slice(0, 4)));
       const et0Years = h.et0?.[island];
       const getEt = et0.status === "fulfilled" && et0Years ? getter(et0Years, et0.value) : null;
-      const storms = ((cycloneHistory as { storms?: StormTrack[] }).storms ?? []) as StormTrack[];
+      const storms = ((cycloneHistory as unknown as { storms?: StormTrack[] }).storms ?? []) as StormTrack[];
       const ranking = reservoirs
         .filter((r) => r.past.m6.pctNormal !== null)
         .map((r) => ({ id: r.id, name: r.name, pct6: r.past.m6.pctNormal!, pct1: r.past.m1.pctNormal }))
