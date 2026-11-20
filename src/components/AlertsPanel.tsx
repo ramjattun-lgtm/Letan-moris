@@ -107,8 +107,14 @@ export function AlertsPanel({ f }: { f: Forecast }) {
     alerts.push({ id: "lapli", severity: "amber", icon: "💧", title: `Heavy rain reported ${up.km} km ${up.direction} (${up.place})`, text: `Reported ${up.minutesAgo} min ago by ${up.reports} ${up.reports === 1 ? "person" : "people"}. It may reach you in about ${up.etaMin[0]}–${up.etaMin[1]} minutes.` });
 
   // Mosquito weather.
-  if (mos.data?.level === "very-favourable")
-    alerts.push({ id: "mos", severity: "info", icon: "🦟", title: "Mosquito weather", text: "Warm, wet weather favours breeding: empty standing water this week." });
+  if (mos.data?.level === "very-favourable" || mos.data?.level === "favourable")
+    alerts.push({
+      id: "mos",
+      severity: mos.data.level === "very-favourable" ? "amber" : "info",
+      icon: "🦟",
+      title: `Mosquito weather · ${mos.data.level === "very-favourable" ? "very favourable" : "favourable"}`,
+      text: "Recent rain and warm days favour mosquito breeding: empty or cover anything holding water, and use repellent at dawn and dusk.",
+    });
 
   alerts.sort((a, b) => RANK[a.severity] - RANK[b.severity]);
   const loading = cyc.loading || hr.loading || riv.loading;

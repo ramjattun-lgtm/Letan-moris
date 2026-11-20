@@ -19,6 +19,7 @@ import { ReservoirSummary } from "@/components/ReservoirSummary";
 import { AboutBanner } from "@/components/AboutBanner";
 import { AlertsPanel } from "@/components/AlertsPanel";
 import { DidYouKnow } from "@/components/DidYouKnow";
+import { YesterdayRain } from "@/components/YesterdayRain";
 import { ExploreLink, HeatCard, MosquitoCard } from "@/components/WellbeingCards";
 import { useState } from "react";
 
@@ -64,8 +65,9 @@ export default function Home() {
               Change what I see
             </button>
             <CommunityCard f={f} />
-            <DidYouKnow />
+            <YesterdayRain />
             <ReservoirSummary />
+            <DidYouKnow />
             <Link href="/day" className="card flex items-center justify-between font-semibold text-teal-ink hover:bg-white/80 dark:text-teal-soft">
               <span>My Weather Day — plan any of the next 7 days</span>
               <span aria-hidden="true">→</span>
