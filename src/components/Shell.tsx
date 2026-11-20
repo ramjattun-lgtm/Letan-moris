@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogoMark, TAGLINE, Wordmark } from "./Logo";
+import { LogoMark, POWERED, TAGLINE, Wordmark } from "./Logo";
 import { useAppState } from "./AppState";
 import type { Island } from "@/lib/weather/types";
 
@@ -56,7 +56,8 @@ export function Header() {
           <LogoMark size={36} dark={theme === "dark"} />
           <span className="leading-tight">
             <Wordmark className="block text-lg" />
-            <span className="hidden text-[11px] text-muted sm:block dark:text-slate-400">{TAGLINE}</span>
+            <span className="hidden whitespace-nowrap text-[11px] text-muted sm:block dark:text-slate-400">{TAGLINE}</span>
+            <span className="hidden whitespace-nowrap text-[10px] font-semibold text-teal-ink sm:block dark:text-teal-soft">📈 {POWERED}</span>
           </span>
         </Link>
         <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">

@@ -40,9 +40,14 @@ function Mark({ size }: { size: number }) {
       <line x1="22" y1="22" x2="17" y2="33" stroke="#5AA2FF" strokeWidth="5" strokeLinecap="round" />
       <line x1="34" y1="16" x2="29" y2="27" stroke="#5AA2FF" strokeWidth="5" strokeLinecap="round" />
       <line x1="46" y1="24" x2="41" y2="35" stroke="#5AA2FF" strokeWidth="5" strokeLinecap="round" />
+      <path d="M90 96 a15 15 0 0 1 30 0z" fill={CORAL} />
       <path d="M8 96 L40 52 L54 68 L72 34 L112 96Z" fill={TEAL_SOFT} />
       <circle cx="72" cy="27" r="7" fill="#FFFFFF" />
       <path d="M10 106 q8 -7 16 0 t16 0 t16 0 t16 0 t16 0 t16 0" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+      <path d="M86 44 c-10 -2 -14 6 -6 8 c6 1 6 -6 0 -6" fill="none" stroke="#E7EEF2" strokeWidth="3.5" strokeLinecap="round" />
+      <path d="M80 52 h22 M84 60 h16" stroke="#E7EEF2" strokeWidth="3.5" strokeLinecap="round" />
+      <path d="M44 101 q13 5 28 0 l-4 5 h-20 z" fill="#FFFFFF" stroke="#0B2A3C" strokeWidth="1.5" />
+      <path d="M57 100 L57 78 L70 98 Z" fill="#FFFFFF" stroke="#FFFFFF" strokeWidth="2.5" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -105,7 +110,10 @@ export async function renderCard(s: PostSnapshot): Promise<ImageResponse> {
             <div style={{ display: "flex", fontFamily: "Jakarta", fontSize: 46 }}>
               Letan <span style={{ color: TEAL_SOFT, marginLeft: 12 }}>Moris</span>
             </div>
-            <div style={{ display: "flex", fontSize: 24, color: "#BFD3DD" }}>Konn letan, planifie to zournee.</div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", fontSize: 24, color: "#BFD3DD" }}>Konn letan, planifie to zournee.</div>
+              <div style={{ display: "flex", fontSize: 18, color: TEAL_SOFT, fontWeight: 600 }}>Powered by 30 years of local weather history</div>
+            </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
             <div style={{ display: "flex", fontFamily: "Jakarta", fontSize: 44, color: CORAL }}>{titles[s.slot]}</div>

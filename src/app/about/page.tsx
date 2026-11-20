@@ -1,4 +1,4 @@
-import { TAGLINE } from "@/components/Logo";
+import { POWERED, TAGLINE } from "@/components/Logo";
 import { CONFIDENCE_METHOD } from "@/lib/weather/intelligence/confidence.service";
 
 export const metadata = { title: "About, data sources & privacy" };
@@ -8,6 +8,7 @@ export default function About() {
     <article className="card prose-sm mx-auto max-w-3xl space-y-4 text-sm leading-relaxed">
       <h1 className="font-[family-name:var(--font-display)] text-2xl font-extrabold">About Letan Moris</h1>
       <p className="text-lg font-semibold">{TAGLINE}</p>
+      <p className="text-sm font-semibold text-teal-ink dark:text-teal-soft">📈 {POWERED}</p>
       <p>
         Letan Moris is an independent weather service built only for the Republic of Mauritius — <strong>Moris &amp; Rodrig</strong>. It tells you when rain is likely to reach your part of the island, what that means for your plans, and how sure the forecast is.
       </p>

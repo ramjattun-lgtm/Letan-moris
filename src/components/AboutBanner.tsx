@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { TAGLINE } from "./Logo";
+import { LogoMark, POWERED, TAGLINE } from "./Logo";
 
 const DOES = [
   { icon: "🗓️", title: "Plan your day", text: "Hour-by-hour rain for your village, the last vs next 3 hours with a check of how accurate the forecast was, activity cards (commute, beach, laundry, hiking, solar…) and a trip planner that finds the best time to leave." },
@@ -42,13 +42,7 @@ export function AboutBanner() {
         aria-haspopup="dialog"
         className="relative mb-3 flex w-full items-center gap-3 overflow-hidden rounded-3xl bg-gradient-to-r from-navy via-[#0E4A5E] to-teal p-3 text-left text-white shadow-sm"
       >
-        <svg width="56" height="56" viewBox="0 0 64 64" aria-hidden="true" className="shrink-0">
-          <circle cx="44" cy="18" r="9" fill="#F2A541" />
-          <path d="M14 30a10 10 0 0 1 19-3 8 8 0 0 1 10 8H14a5 5 0 0 1 0-5Z" fill="#E7EEF2" />
-          <path d="M18 40l-2 5M26 40l-2 5M34 40l-2 5" stroke="#5AA2FF" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M4 60l14-10 7 4 9-12 10 9 6-4 10 13Z" fill="#3CCFCF" opacity="0.9" />
-          <path d="M33 42l1.5-4 1.5 4" fill="#F4F8F9" />
-        </svg>
+        <LogoMark size={56} dark className="shrink-0" />
         <span className="min-w-0 flex-1">
           <span className="block text-xs font-semibold uppercase tracking-wide text-teal-soft">What is Letan Moris?</span>
           <span className="block font-[family-name:var(--font-display)] text-base font-extrabold leading-tight">Weather that tells you what to do — village by village.</span>
@@ -65,6 +59,7 @@ export function AboutBanner() {
                 <div>
                   <h2 id="about-title" className="font-[family-name:var(--font-display)] text-2xl font-extrabold">Letan Moris</h2>
                   <p className="text-sm italic text-teal-soft">&quot;{TAGLINE}&quot;</p>
+                  <p className="text-xs font-semibold text-white/85">📈 {POWERED}</p>
                 </div>
                 <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="h-10 w-10 shrink-0 rounded-full bg-white/15 text-2xl leading-none">×</button>
               </div>
