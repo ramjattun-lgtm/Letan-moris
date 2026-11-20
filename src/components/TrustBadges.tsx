@@ -25,11 +25,11 @@ export function TrustBadges({ f }: { f: Forecast }) {
           <span aria-hidden="true" className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-coral" />
           {cmp && normal ? (
             <span>
-              <strong>{cmp.label}</strong> today (forecast high {today.tempMax?.toFixed(0)}°C; normal {normal.tmax?.toFixed(0)}°C). Rain on a day like today is usual about {normal.rainChance}% of the time.{" "}
+              <strong>{cmp.label}</strong> today (forecast high {today.tempMax?.toFixed(0)}°C; normal day high {normal.tmax?.toFixed(0)}°C). Rain on a day like today is usual about {normal.rainChance}% of the time.{" "}
               <Link href="/climate" className="font-semibold text-teal-ink underline dark:text-teal-soft">Climate</Link>
             </span>
           ) : (
-            <span className="text-muted dark:text-slate-400">Comparison with 30-year normals coming soon.</span>
+            <span className="text-muted dark:text-slate-400">Comparison with 30-year normal temperatures and rain levels coming soon.</span>
           )}
         </li>
         <li className="flex items-start gap-2">

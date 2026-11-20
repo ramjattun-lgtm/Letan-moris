@@ -81,11 +81,11 @@ export function trendOf(pct: number | null): Trend | null {
 }
 
 export const TREND_TEXT: Record<Trend, string> = {
-  "much-drier": "Much drier than normal",
-  drier: "Drier than normal",
-  normal: "Near normal",
-  wetter: "Wetter than normal",
-  "much-wetter": "Much wetter than normal",
+  "much-drier": "Well below normal rain level",
+  drier: "Below normal rain level",
+  normal: "Near normal rain level",
+  wetter: "Above normal rain level",
+  "much-wetter": "Well above normal rain level",
 };
 
 /** Compare a total with the same window in past years. Needs at least 5 past years. */

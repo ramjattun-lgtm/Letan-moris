@@ -83,7 +83,7 @@ export function normalFor(key: string, date: string) {
 export function vsNormal(forecastTmax: Maybe<number>, normalTmax: Maybe<number>) {
   if (forecastTmax === null || normalTmax === null) return null;
   const diff = Math.round((forecastTmax - normalTmax) * 10) / 10;
-  const label = Math.abs(diff) < 1 ? "Near normal" : diff > 0 ? `${diff.toFixed(1)}°C warmer than normal` : `${Math.abs(diff).toFixed(1)}°C cooler than normal`;
+  const label = Math.abs(diff) < 1 ? "Near normal temperature" : diff > 0 ? `${diff.toFixed(1)}°C warmer than the normal temperature` : `${Math.abs(diff).toFixed(1)}°C cooler than the normal temperature`;
   return { diff, label };
 }
 

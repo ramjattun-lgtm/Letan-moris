@@ -7,6 +7,7 @@ import { useAppState } from "@/components/AppState";
 import { RECORDS_START, RESERVOIR_SOURCE, type Reservoir } from "@/data/reservoirs";
 import { TREND_TEXT, type Comparison, type OutlookPeriod, type Trend } from "@/lib/weather/intelligence/reservoir.service";
 import { ago, formatUtcAsMU } from "@/lib/time";
+import { ReservoirInsights, type Insights } from "@/components/ReservoirInsights";
 
 type Win = "d7" | "m1" | "m6";
 interface Data {
@@ -19,6 +20,7 @@ interface Data {
   overall: { past: Record<Win, Comparison>; next7: Comparison | null };
   reservoirs: (Reservoir & { compareFrom: number; past: Record<Win, Comparison>; next7: Comparison | null })[];
   outlook: { weeks: OutlookPeriod | null; months: { months: OutlookPeriod[]; total: OutlookPeriod } | null };
+  insights?: Insights | null;
   retrievedAt: string;
 }
 
@@ -49,7 +51,7 @@ function Row({ label, c, future }: { label: string; c: Comparison | null; future
       <p className="text-sm text-muted dark:text-slate-400">
         {c === null || c.mm === null
           ? "Not enough data."
-          : `${future ? "About " : ""}${Math.round(c.mm)} mm${future ? " expected" : ""}${c.normalMm !== null ? ` · normal ${Math.round(c.normalMm)} mm` : ""}${c.trend ? ` · ${TREND_TEXT[c.trend]}` : ""}`}
+          : `${future ? "About " : ""}${Math.round(c.mm)} mm${future ? " expected" : ""}${c.normalMm !== null ? ` · normal rain level ${Math.round(c.normalMm)} mm` : ""}${c.trend ? ` · ${TREND_TEXT[c.trend]}` : ""}`}
         {c?.rank ? ` · ${c.rank}` : ""}
       </p>
       {c && c.drierYears !== null && c.years > 0 && (
@@ -70,7 +72,7 @@ function Outlook({ o, title }: { o: OutlookPeriod | null; title: string }) {
       </div>
       <p className="text-sm text-muted dark:text-slate-400">
         {o?.trend ? TREND_TEXT[o.trend] : "Outlook not available right now."}
-        {o?.wetterChance != null ? ` · ${o.wetterChance}% chance of a wetter-than-normal week, on average` : ""}
+        {o?.wetterChance != null ? ` · ${o.wetterChance}% chance of a week above normal rain level, on average` : ""}
       </p>
     </li>
   );
@@ -88,6 +90,8 @@ export default function ReservoirsPage() {
       <p className="mb-3 text-sm text-muted dark:text-slate-400">
         {rod ? "Is it raining enough to refill tanks, rivers and groundwater?" : "Is nature refilling our reservoirs faster or slower than usual?"}
       </p>
+
+      <NotLevels rod={rod} />
 
       <section className="card mb-3 text-sm" aria-labelledby="what">
         <h2 id="what" className="label">What this shows</h2>
@@ -154,7 +158,20 @@ export default function ReservoirsPage() {
             </p>
           </section>
 
-          {!rod && <h2 className="mb-2 mt-4 text-lg font-bold">Each reservoir</h2>}
+          {d.insights && (
+            <>
+              <h2 className="mb-2 mt-4 text-lg font-bold">{rod ? "Rain insights" : "Rain insights · all catchments"}</h2>
+              <NotLevels rod={rod} compact />
+              <ReservoirInsights i={d.insights} rod={rod} />
+            </>
+          )}
+
+          {!rod && (
+            <>
+              <h2 className="mb-2 mt-4 text-lg font-bold">Each reservoir</h2>
+              <NotLevels rod={rod} compact />
+            </>
+          )}
           <div className="grid gap-3 lg:grid-cols-2">
             {d.reservoirs.map((r) => (
               <details key={r.id} className="card group" open={r.id === "mare-aux-vacoas"}>
@@ -192,7 +209,7 @@ export default function ReservoirsPage() {
                 Rain is estimated {rod ? "for the island" : "for the centre of each catchment"} from weather models, not measured by rain gauges. Models under-estimate the total rain on high ground, so the % of normal rain level is more reliable than the mm figures.
               </li>
               <li>Past rain: ERA5-Land reanalysis (from {RECORDS_START}).{d.filledDays > 0 ? ` The last ${d.filledDays} days are not in the reanalysis yet and come from the forecast model.` : ""}</li>
-              <li>&quot;Normal&quot; is the middle value of the same dates in past years. Each reservoir is compared only with years after it was built.</li>
+              <li>&quot;Normal rain level&quot; is the middle value of rain over the same dates in past years. Each reservoir is compared only with years after it was built.</li>
               {!rod && <li>La Nicolière gets most of its water by canal from the Midlands area, so also watch the Midlands Dam row.</li>}
               <li>{RESERVOIR_SOURCE}</li>
               <li>
@@ -203,5 +220,17 @@ export default function ReservoirsPage() {
         </>
       )}
     </>
+  );
+}
+
+/** Big red reminder: rain over catchments, never reservoir levels. */
+function NotLevels({ rod, compact }: { rod: boolean; compact?: boolean }) {
+  return (
+    <div role="note" className={`mb-3 rounded-2xl border-2 border-[#C92A2A] bg-[#FFF0F0] text-[#A61E1E] dark:bg-[#3A1212] dark:text-[#FFB4B4] ${compact ? "p-2 text-xs" : "p-3 text-sm"}`}>
+      <strong className="block uppercase tracking-wide">⚠ Rain, not reservoir levels</strong>
+      {rod
+        ? "Everything here is about how much RAIN falls over Rodrigues. It does not show how much water is stored in tanks or reservoirs."
+        : "Everything here is about how much RAIN falls over the catchment areas of the reservoirs. It does NOT show how full the reservoirs are. For reservoir levels, see the Central Water Authority (CWA)."}
+    </div>
   );
 }

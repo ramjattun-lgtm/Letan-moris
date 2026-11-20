@@ -40,7 +40,7 @@ export default function ClimatePage() {
   return (
     <>
       <h1 className="mb-1 font-[family-name:var(--font-display)] text-2xl font-extrabold">Climate — 30 years of weather</h1>
-      <p className="mb-3 text-sm text-muted dark:text-slate-400">What is normal, what has changed, and the best times to plan — {CLIMATE.period}.</p>
+      <p className="mb-3 text-sm text-muted dark:text-slate-400">Normal temperatures and rain levels, what has changed, and the best times to plan — {CLIMATE.period}.</p>
       <ReservoirLink />
       <div role="group" aria-label="Region" className="scroll-x mb-4">
         {CLIMATE.regions.map((x) => (
@@ -52,7 +52,7 @@ export default function ClimatePage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="card">
-          <h2 className="label">Normal for today · {r.label} ({r.place})</h2>
+          <h2 className="label">Normal temperatures and rain for today · {r.label} ({r.place})</h2>
           {n ? (
             <div className="mt-2 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-2xl bg-mist p-2 dark:bg-white/5"><div className="text-xs text-muted">Day high</div><div className="text-2xl font-extrabold">{n.tmax?.toFixed(0)}°</div></div>
@@ -112,7 +112,7 @@ export default function ClimatePage() {
         <section className="card">
           <h2 className="label">El Niño summers · {r.label}</h2>
           <p className="mt-2 text-sm">
-            In past El Niño summers ({r.elNino.summers.map((y) => `${y - 1}–${String(y).slice(2)}`).join(", ")}), December–February rain was <strong>{signed(r.elNino.rainVsNormalPct, "%")}</strong> compared with a normal summer, and days were{" "}
+            In past El Niño summers ({r.elNino.summers.map((y) => `${y - 1}–${String(y).slice(2)}`).join(", ")}), December–February rain was <strong>{signed(r.elNino.rainVsNormalPct, "%")}</strong> compared with the normal rain level of a summer, and days were{" "}
             <strong>{signed(r.elNino.tmaxVsNormal, "°C")}</strong>.
           </p>
           <p className="mt-2 text-sm">A strong El Niño is expected this summer (2026–27). Past summers give a hint, not a forecast.</p>

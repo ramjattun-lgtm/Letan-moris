@@ -58,8 +58,8 @@ describe("climate helpers", () => {
     expect(climateKeyFor(getLocality("chamarel")!)).toBe("plateau");
   });
   it("compares with normal", () => {
-    expect(vsNormal(30, 27.5)?.label).toBe("2.5°C warmer than normal");
-    expect(vsNormal(27, 27.4)?.label).toBe("Near normal");
+    expect(vsNormal(30, 27.5)?.label).toBe("2.5°C warmer than the normal temperature");
+    expect(vsNormal(27, 27.4)?.label).toBe("Near normal temperature");
     expect(vsNormal(null, 27)).toBeNull();
     expect(doyIndex("2026-01-01")).toBe(0);
     expect(doyIndex("2026-12-31")).toBe(365);

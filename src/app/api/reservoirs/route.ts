@@ -1,23 +1,58 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { ok, fail } from "@/lib/api";
 import history from "@/data/reservoir-rain.json";
+import cycloneHistory from "@/data/cyclone-history.json";
 import { compareFrom, RECORDS_START, RESERVOIRS, RODRIGUES_POINT } from "@/data/reservoirs";
-import { getModelRain, getReanalysisRain, getSeasonalRain } from "@/lib/weather/providers/catchment.provider";
+import { getEt0, getModelRain, getReanalysisRain, getSeasonalRain } from "@/lib/weather/providers/catchment.provider";
 import { averagedHistory, catchmentReport, monthlyOutlook, weeklyOutlook, type RainHistory } from "@/lib/weather/intelligence/reservoir.service";
+import {
+  analogues,
+  catchUp,
+  netWater,
+  rainDays,
+  seasonProgress,
+  seasonStart,
+  stormDays,
+  stormShare,
+  summerTrend,
+  type DayRain,
+  type StormTrack,
+} from "@/lib/weather/intelligence/reservoir-insights.service";
 import { addDays, todayMU } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
-// Centre of the main catchments, for the island-wide seasonal outlook (36 km model cells).
+// Centre of the main catchments: island-wide seasonal outlook (36 km cells) and evaporation.
 const CENTRAL = { lat: -20.27, lon: 57.53 };
+const ISLAND_CENTRE = { mauritius: { lat: -20.25, lon: 57.55 }, rodrigues: { lat: -19.7, lon: 63.42 } };
 
-const avg = (maps: Record<string, number | null>[]) => {
-  const out: Record<string, number | null> = {};
+type Daily = Record<string, number | null>;
+type Hist = RainHistory & { et0?: Record<string, Record<string, (number | null)[]>> };
+
+const avg = (maps: Daily[]) => {
+  const out: Daily = {};
   for (const d of new Set(maps.flatMap((m) => Object.keys(m)))) {
     const vs = maps.map((m) => m[d]);
     out[d] = vs.some((v) => v === null || v === undefined) ? null : (vs as number[]).reduce((a, b) => a + b, 0) / vs.length;
   }
   return out;
+};
+const merge = (a: Daily, b: Daily, before: string): Daily => {
+  const out: Daily = { ...a };
+  for (const [d, v] of Object.entries(b)) if ((out[d] === null || out[d] === undefined) && d < before) out[d] = v;
+  return out;
+};
+const doy = (d: string) => {
+  const [y, m, dd] = d.split("-").map(Number);
+  return Math.round((Date.UTC(y, m - 1, dd) - Date.UTC(y, 0, 1)) / 86_400_000);
+};
+/** Day getter: recent data first, then the stored history (tenths of mm). */
+const getter = (years: Record<string, (number | null)[]> | undefined, recent: Daily): DayRain => (d) => {
+  const r = recent[d];
+  if (r !== null && r !== undefined) return r;
+  const v = years?.[d.slice(0, 4)]?.[doy(d)];
+  return v === null || v === undefined ? null : v / 10;
 };
 
 export async function GET(req: NextRequest) {
@@ -25,15 +60,23 @@ export async function GET(req: NextRequest) {
   if (island !== "mauritius" && island !== "rodrigues") return NextResponse.json({ error: "bad_request", message: "island must be mauritius or rodrigues" }, { status: 400 });
   try {
     const today = todayMU();
-    const h = history as unknown as RainHistory;
+    const h = history as unknown as Hist;
     const rod = island === "rodrigues";
     const historyReady = !!h.builtAt && !!h.rain[rod ? RODRIGUES_POINT.id : RESERVOIRS[0].id];
     const pts = rod ? [RODRIGUES_POINT] : RESERVOIRS.map((r) => ({ lat: r.lat, lon: r.lon }));
     const centre = rod ? RODRIGUES_POINT : CENTRAL;
-    const [rea, mod, sea] = await Promise.allSettled([
-      getReanalysisRain(pts, addDays(today, -190), today, rod ? "era5" : "era5_land"),
+    const model5 = rod ? "era5" : "era5_land";
+    // Fetch recent days back to whichever is earliest: 6 months ago, the start of this wet season,
+    // or the first day after the stored history ends (so there is no gap).
+    const starts = [addDays(today, -190), seasonStart(today)];
+    if (historyReady && h.end) starts.push(`${h.end + 1}-01-01`);
+    const fetchStart = [...starts].sort()[0] < addDays(today, -400) ? addDays(today, -400) : [...starts].sort()[0];
+
+    const [rea, mod, sea, et0] = await Promise.allSettled([
+      getReanalysisRain(pts, fetchStart, today, model5),
       getModelRain(pts),
       getSeasonalRain(centre.lat, centre.lon),
+      getEt0(centre, fetchStart, today, model5),
     ]);
     if (mod.status === "rejected") throw mod.reason;
     const reanalysis = rea.status === "fulfilled" ? rea.value : pts.map(() => ({}));
@@ -49,9 +92,37 @@ export async function GET(req: NextRequest) {
         });
 
     // Mauritius: all catchments together (average of the 7 daily series). Rodrigues: the island.
+    const key = rod ? RODRIGUES_POINT.id : "all";
     const hAll = !rod && historyReady ? averagedHistory(h, RESERVOIRS.map((r) => r.id)) : h;
-    const overall = catchmentReport(hAll, rod ? RODRIGUES_POINT.id : "all", RECORDS_START, avg(reanalysis), avg(model), today);
+    const reaAvg = avg(reanalysis);
+    const modAvg = avg(model);
+    const overall = catchmentReport(hAll, key, RECORDS_START, reaAvg, modAvg, today);
     filledDays = Math.max(filledDays, overall.filledDays);
+
+    // ---- Insights (need the stored history) ----
+    let insights = null;
+    if (historyReady && h.end) {
+      const get = getter(hAll.rain[key], merge(reaAvg, modAvg, today));
+      const last = h.end + 1; // seasons must end by 30 June of this year at the latest
+      const lastComplete = Math.min(last, Number(seasonStart(today).slice(0, 4)));
+      const et0Years = h.et0?.[island];
+      const getEt = et0.status === "fulfilled" && et0Years ? getter(et0Years, et0.value) : null;
+      const storms = ((cycloneHistory as { storms?: StormTrack[] }).storms ?? []) as StormTrack[];
+      const ranking = reservoirs
+        .filter((r) => r.past.m6.pctNormal !== null)
+        .map((r) => ({ id: r.id, name: r.name, pct6: r.past.m6.pctNormal!, pct1: r.past.m1.pctNormal }))
+        .sort((a, b) => a.pct6 - b.pct6);
+      insights = {
+        catchUp: catchUp(get, today, RECORDS_START, overall.past.m6),
+        season: seasonProgress(get, today, RECORDS_START, lastComplete),
+        analogues: analogues(get, today, RECORDS_START, overall.past.m6.pctNormal),
+        rainDays: rainDays(get, today, RECORDS_START),
+        net: getEt ? netWater(get, getEt, today, RECORDS_START) : null,
+        ranking,
+        trend: summerTrend(get, RECORDS_START, lastComplete),
+        storms: storms.length ? stormShare(get, stormDays(storms, ISLAND_CENTRE[island]), 1980, lastComplete, today) : null,
+      };
+    }
 
     const outlook = sea.status === "fulfilled" ? { weeks: weeklyOutlook(sea.value, today), months: monthlyOutlook(sea.value, today) } : { weeks: null, months: null };
     return ok(
@@ -65,6 +136,7 @@ export async function GET(req: NextRequest) {
         overall: { past: overall.past, next7: overall.next7 },
         reservoirs,
         outlook,
+        insights,
         retrievedAt: new Date().toISOString(),
       },
       3 * 3600,

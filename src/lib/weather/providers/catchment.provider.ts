@@ -41,8 +41,10 @@ export async function getSeasonalRain(lat: number, lon: number): Promise<unknown
   // Ask for ~7 months so six full months after the current one are covered; fall back to the documented default.
   try {
     return await seasonal(lat, lon, 215);
-  } catch {
-    return seasonal(lat, lon, 183);
+  } catch (e) {
+    // Only retry if the request itself was refused (e.g. too many days); not on timeouts.
+    if ((e as { status?: number }).status === 400) return seasonal(lat, lon, 183);
+    throw e;
   }
 }
 
@@ -56,4 +58,20 @@ async function seasonal(lat: number, lon: number, days: number): Promise<unknown
     timezone: TZ,
   });
   return getJson(`https://seasonal-api.open-meteo.com/v1/forecast?${q}`, 12 * 3600);
+}
+
+/** Daily evaporation (FAO reference ET₀, mm) for one point: reanalysis from `start`, then forecast-model values for recent days. */
+export async function getEt0(pt: { lat: number; lon: number }, start: string, today: string, model: "era5_land" | "era5" = "era5_land"): Promise<Daily> {
+  const pick = (raw: unknown) => {
+    const d = (raw as { daily?: { time?: string[]; et0_fao_evapotranspiration?: (number | null)[] } }).daily;
+    const out: Daily = {};
+    (d?.time ?? []).forEach((t, i) => (out[t] = d?.et0_fao_evapotranspiration?.[i] ?? null));
+    return out;
+  };
+  const qa = new URLSearchParams({ ...coords([pt]), start_date: start, end_date: addDays(today, -1), daily: "et0_fao_evapotranspiration", models: model, timezone: TZ });
+  const qf = new URLSearchParams({ ...coords([pt]), daily: "et0_fao_evapotranspiration", past_days: "14", forecast_days: "1", timezone: TZ });
+  const [a, f] = await Promise.all([getJson(`https://archive-api.open-meteo.com/v1/archive?${qa}`, 6 * 3600), getJson(`https://api.open-meteo.com/v1/forecast?${qf}`, 3 * 3600)]);
+  const out = pick(a);
+  for (const [d, v] of Object.entries(pick(f))) if ((out[d] === null || out[d] === undefined) && d < today) out[d] = v;
+  return out;
 }
