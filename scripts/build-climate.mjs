@@ -2,6 +2,7 @@
 // Data: Open-Meteo Historical Weather API (reanalysis — estimated from global models, not station records).
 // Runs in GitHub Actions (internet access, free). About 400 API "call units" per place, ~2,800 in total:
 // run rarely (yearly) — the normals barely change.
+import { getWithRetry, sleep } from "./lib/http.mjs";
 import { writeFileSync } from "node:fs";
 
 const PLACES = [
@@ -18,16 +19,7 @@ const END = 2024;
 // Moderate-or-stronger El Niño summers (NOAA Oceanic Niño Index), labelled by the year the summer ends.
 const EL_NINO_SUMMERS = [1998, 2003, 2010, 2016, 2024];
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-async function get(url) {
-  for (let i = 0; i < 4; i++) {
-    const res = await fetch(url);
-    if (res.ok) return res.json();
-    console.warn(`HTTP ${res.status}, retrying…`, await res.text().catch(() => ""));
-    await sleep(15000 * (i + 1));
-  }
-  throw new Error(`Failed: ${url}`);
-}
+const get = (url) => getWithRetry(url);
 
 const r1 = (x) => (x === null || !Number.isFinite(x) ? null : Math.round(x * 10) / 10);
 const mean = (xs) => {

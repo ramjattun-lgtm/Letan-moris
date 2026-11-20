@@ -4,6 +4,7 @@
 //  • Airports: METAR weather reports (rain, drizzle, showers, thunderstorms) from the Iowa
 //    Environmental Mesonet archive, FIMP (Plaisance) and FIMR (Plaine Corail, Rodrigues). Observed.
 // Runs in GitHub Actions. Keep the places in sync with scripts/build-climate.mjs.
+import { getWithRetry, sleep } from "./lib/http.mjs";
 import { writeFileSync } from "node:fs";
 
 const PLACES = [
@@ -23,20 +24,7 @@ const START = 2005;
 const END = 2024;
 const WET_MM = 0.2; // an hour counts as "rainy" with at least 0.2 mm
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-async function get(url, asText = false) {
-  for (let i = 0; i < 5; i++) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) return asText ? res.text() : res.json();
-      console.warn(`HTTP ${res.status}, retrying…`);
-    } catch (e) {
-      console.warn("fetch failed", e.message);
-    }
-    await sleep(20000 * (i + 1));
-  }
-  throw new Error(`Failed: ${url}`);
-}
+const get = (url, asText = false) => getWithRetry(url, { asText });
 
 const grid = () => Array.from({ length: 12 }, () => Array.from({ length: 24 }, () => ({ wet: 0, n: 0, mm: 0 })));
 const finish = (g) => ({

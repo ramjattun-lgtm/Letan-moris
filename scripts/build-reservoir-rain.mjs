@@ -3,6 +3,7 @@
 // Values are tenths of a mm.
 // Runs in GitHub Actions. Fetched in 10-year chunks to stay well inside the free limits.
 // Keep these points in sync with src/data/reservoirs.ts.
+import { getWithRetry, sleep } from "./lib/http.mjs";
 import { writeFileSync } from "node:fs";
 import { validateAnalogues } from "./lib/validate-analogues.mjs";
 
@@ -35,16 +36,7 @@ const ISLAND_PTS = [
 const START = 1950;
 const END = new Date().getUTCFullYear() - 1; // last complete year
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-async function get(url) {
-  for (let i = 0; i < 5; i++) {
-    const res = await fetch(url);
-    if (res.ok) return res.json();
-    console.warn(`HTTP ${res.status}, retrying…`, await res.text().catch(() => ""));
-    await sleep(20000 * (i + 1));
-  }
-  throw new Error(`Failed: ${url}`);
-}
+const get = (url) => getWithRetry(url);
 
 async function seriesOf(p, variable) {
   const years = {};
@@ -64,7 +56,7 @@ async function seriesOf(p, variable) {
     const v = j.daily[variable];
     for (let i = 0; i < t.length; i++) (years[t[i].slice(0, 4)] ??= []).push(v[i] === null ? null : Math.round(v[i] * 10));
     console.log(p.id, variable, y0, y1, t.length, "days");
-    await sleep(4000);
+    await sleep(6000);
   }
   return years;
 }
@@ -95,7 +87,7 @@ for (const p of POINTS) {
       (years[y] ??= []).push(v[i] === null ? null : Math.round(v[i] * 10));
     }
     console.log(p.id, y0, y1, t.length, "days");
-    await sleep(4000);
+    await sleep(6000);
   }
   out[p.id] = years;
 }
