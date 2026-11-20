@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAppState } from "@/components/AppState";
 import { MonthlyChart, TrendChart } from "@/components/ClimateCharts";
@@ -25,6 +26,7 @@ export default function ClimatePage() {
         <div className="card">
           The 30-year climate data is being prepared. It appears here once the &quot;Climate history&quot; job has run on GitHub (about 10 minutes).
         </div>
+        <ReservoirLink />
       </>
     );
   }
@@ -39,6 +41,7 @@ export default function ClimatePage() {
     <>
       <h1 className="mb-1 font-[family-name:var(--font-display)] text-2xl font-extrabold">Climate — 30 years of weather</h1>
       <p className="mb-3 text-sm text-muted dark:text-slate-400">What is normal, what has changed, and the best times to plan — {CLIMATE.period}.</p>
+      <ReservoirLink />
       <div role="group" aria-label="Region" className="scroll-x mb-4">
         {CLIMATE.regions.map((x) => (
           <button key={x.key} type="button" aria-pressed={x.key === r.key} onClick={() => setKey(x.key)} className={`min-h-10 shrink-0 rounded-full px-4 text-sm font-semibold ${x.key === r.key ? "bg-navy text-white dark:bg-teal-soft dark:text-navy" : "bg-white text-muted ring-1 ring-navy/10 dark:bg-night-card dark:text-slate-300"}`}>
@@ -155,5 +158,17 @@ export default function ClimatePage() {
         </section>
       </div>
     </>
+  );
+}
+
+function ReservoirLink() {
+  return (
+    <Link href="/reservoirs" className="card mb-4 mt-3 flex items-center justify-between gap-3 ring-1 ring-teal/30 hover:ring-teal">
+      <span>
+        <span className="block font-bold">💧 Reservoirs — rain over the catchments</span>
+        <span className="text-sm text-muted dark:text-slate-400">Last 7 days to 6 months vs past years, and the outlook up to 6 months.</span>
+      </span>
+      <span aria-hidden>›</span>
+    </Link>
   );
 }

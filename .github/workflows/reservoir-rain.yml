@@ -1,0 +1,29 @@
+# Builds the daily rainfall history (since 1950) over each reservoir catchment, used by the
+# Reservoirs page to compare recent rain with past years. Run once by hand, then it refreshes every January.
+name: Reservoir rain history
+
+on:
+  schedule:
+    - cron: "41 22 3 1 *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build reservoir rain history
+        run: node scripts/build-reservoir-rain.mjs
+      - name: Commit if changed
+        run: |
+          git config user.name "letan-moris-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/data/reservoir-rain.json
+          git diff --cached --quiet || (git commit -m "Update reservoir rain history" && git push)

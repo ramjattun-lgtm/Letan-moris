@@ -189,7 +189,7 @@ export function normaliseMapPoint(locationId: string, raw: Raw, now: string = no
   };
 }
 
-async function getJson(url: string, ttl: number): Promise<unknown> {
+export async function getJson(url: string, ttl: number): Promise<unknown> {
   let res: Response;
   try {
     res = await fetch(url, {
