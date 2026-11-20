@@ -30,6 +30,9 @@ export default function About() {
           Forecasts and marine data: <a className="underline" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo.com</a>, licensed CC BY 4.0, used under its free non-commercial terms. Open-Meteo combines forecasts from national weather services.
         </li>
         <li>Map: OpenStreetMap contributors (ODbL), tiles by OpenFreeMap.</li>
+        <li>
+          Known flood-prone areas: the sectors studied in the Land Drainage Master Plan prepared for the Land Drainage Authority (AdaptAction / AFD, report D5.2 Vol. 2, 2022). Map positions are approximate area centres, not official flood boundaries.
+        </li>
         <li>Place list: compiled for Letan Moris with reference to OpenStreetMap.</li>
       </ul>
       <h2 className="text-lg font-bold">Limits you should know</h2>

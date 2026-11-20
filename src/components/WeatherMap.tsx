@@ -8,6 +8,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { getLocality, ISLAND_VIEW } from "@/data/localities";
 import type { Island, MapPoint } from "@/lib/weather/types";
 import { compass } from "@/lib/weather/weather-codes";
+import { siteRisks } from "@/data/flood-sites";
 
 export type Layer = "rain" | "heavy" | "reports" | "temperature" | "wind" | "cloud";
 
@@ -92,7 +93,23 @@ export function WeatherMap({ island, points, layer, onSelect }: { island: Island
       el.addEventListener("click", () => onSelect(p.locationId));
       return new maplibregl.Marker({ element: el }).setLngLat([loc?.lon ?? 0, loc?.lat ?? 0]).addTo(map.current!);
     });
-  }, [points, layer, onSelect]);
+    // Heavy-rain layer: also mark the flood-prone sectors from the Land Drainage Master Plan,
+    // coloured by today's risk at the nearest forecast point.
+    if (layer === "heavy" && island === "mauritius") {
+      for (const s of siteRisks(points)) {
+        const color = s.risk === "high" ? "#D9480F" : s.risk === "moderate" ? "#F2A541" : "#5B7083";
+        const el = document.createElement("div");
+        el.setAttribute("role", "img");
+        el.setAttribute("aria-label", `Flood-prone area (Land Drainage Master Plan): ${s.name}`);
+        el.title = `Flood-prone area: ${s.name}`;
+        // MapLibre sets `transform` on the marker element itself, so rotate an inner child instead.
+        const d = document.createElement("div");
+        d.style.cssText = `width:14px;height:14px;background:${color};border:2px solid #fff;transform:rotate(45deg);box-shadow:0 1px 4px rgba(11,42,60,.4)`;
+        el.appendChild(d);
+        markers.current.push(new maplibregl.Marker({ element: el }).setLngLat([s.lon, s.lat]).addTo(map.current!));
+      }
+    }
+  }, [points, layer, onSelect, island]);
 
   return <div ref={box} className="h-[60vh] min-h-80 w-full overflow-hidden rounded-3xl" />;
 }

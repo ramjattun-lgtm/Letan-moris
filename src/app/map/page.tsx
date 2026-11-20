@@ -11,6 +11,7 @@ import type { Layer } from "@/components/WeatherMap";
 import { getLocality } from "@/data/localities";
 import { ago, formatUtcAsMU } from "@/lib/time";
 import { useLapli } from "@/lib/client/useLapli";
+import { FLOOD_SITES_SOURCE, siteRisks } from "@/data/flood-sites";
 
 const WeatherMap = dynamic(() => import("@/components/WeatherMap").then((m) => m.WeatherMap), { ssr: false, loading: () => <Skeleton className="h-[60vh]" /> });
 
@@ -26,7 +27,7 @@ const LAYERS: { id: Layer; label: string; legend: string }[] = [
     id: "heavy",
     label: "Heavy-rain risk",
     legend:
-      "Independent heavy-rain risk for the next 24 hours: Low, Moderate (amber) or High (red). Based on rain intensity per hour, 3- and 24-hour totals and how wet the ground already is. High = flash flooding possible in low-lying and flood-prone areas. Not an MMS warning — always follow MMS heavy rain and torrential rain warnings. Models can miss sudden local downpours.",
+      "Independent heavy-rain risk for the next 24 hours: Low, Moderate (amber) or High (red). Based on rain intensity per hour, 3- and 24-hour totals and how wet the ground already is. High = flash flooding possible in low-lying and flood-prone areas. Diamonds ◆ mark the flood-prone areas studied in the Land Drainage Master Plan, coloured by today's risk nearby. Not an MMS warning — always follow MMS heavy rain and torrential rain warnings. Models can miss sudden local downpours.",
   },
   { id: "temperature", label: "Temperature", legend: "Current model temperature (°C). Cooler blues on high ground, warmer oranges on the coast." },
   { id: "wind", label: "Wind", legend: "Current wind speed (km/h) and the direction it blows from. Orange = 40 km/h or more." },
@@ -78,6 +79,7 @@ export default function MapPage() {
             </p>
           )}
         </div>
+        {layer === "heavy" && island === "mauritius" && api.data && <FloodSitesList points={api.data.points} />}
         {pickedLoc && (
           <div className="card flex items-center justify-between gap-3">
             <div>
@@ -91,5 +93,38 @@ export default function MapPage() {
         )}
       </div>
     </>
+  );
+}
+
+const RISK_TEXT = { high: "High", moderate: "Moderate", low: "Low" } as const;
+
+function FloodSitesList({ points }: { points: MapPoint[] }) {
+  const sites = siteRisks(points);
+  const raised = sites.filter((s) => s.risk === "high" || s.risk === "moderate");
+  return (
+    <div className="card text-sm">
+      <h2 className="label">Known flood-prone areas · today</h2>
+      <p className="mt-1">
+        {raised.length === 0
+          ? "No raised heavy-rain risk near any known flood-prone area in the next 24 hours."
+          : `${raised.length} of ${sites.length} known flood-prone areas have a raised heavy-rain risk in the next 24 hours.`}
+      </p>
+      <ul className="mt-2 divide-y divide-navy/5 dark:divide-white/10">
+        {sites.map((s) => (
+          <li key={s.id} className="flex items-center justify-between gap-2 py-1.5">
+            <span className="min-w-0">
+              <span className="font-semibold">{s.name}</span>
+              {s.detail && <span className="block text-[11px] text-muted dark:text-slate-400">{s.detail}</span>}
+            </span>
+            <span
+              className={`chip shrink-0 ${s.risk === "high" ? "bg-[#D9480F] text-white" : s.risk === "moderate" ? "bg-coral text-navy" : "bg-mist text-muted dark:bg-white/10 dark:text-slate-300"}`}
+            >
+              {s.risk ? RISK_TEXT[s.risk] : "—"}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-[11px] text-muted dark:text-slate-400">{FLOOD_SITES_SOURCE} Risk is our independent forecast, not an MMS warning.</p>
+    </div>
   );
 }
