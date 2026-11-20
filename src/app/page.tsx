@@ -16,6 +16,7 @@ import { HeavyRainCard } from "@/components/HeavyRainCard";
 import { RecentCard } from "@/components/RecentCard";
 import { CommunityCard } from "@/components/CommunityCard";
 import { ReservoirSummary } from "@/components/ReservoirSummary";
+import { AboutBanner } from "@/components/AboutBanner";
 import { ExploreLink, HeatCard, MosquitoCard } from "@/components/WellbeingCards";
 import { useState } from "react";
 
@@ -27,6 +28,7 @@ export default function Home() {
 
   return (
     <>
+      <AboutBanner />
       <OfficialBanner />
       <LocationPicker />
       <ErrorBanner error={api.error} hasData={!!f} savedAt={api.savedAt} />
