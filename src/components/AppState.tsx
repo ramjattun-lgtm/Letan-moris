@@ -58,14 +58,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     if (!getLocality(id)) return;
     setLocId(id);
     writeLS("letan.loc", id);
+    // Remember the last place used on each island, so switching back returns there.
+    writeLS(`letan.loc.${getLocality(id)!.island}`, id);
   }, []);
 
   const setIsland = useCallback(
     (i: Island) => {
       if (location.island === i) return;
-      setLocation(DEFAULT_LOCATION[i]);
+      writeLS(`letan.loc.${location.island}`, location.id);
+      const last = readLS<string>(`letan.loc.${i}`, DEFAULT_LOCATION[i]);
+      const ok = getLocality(last)?.island === i;
+      setLocation(ok ? last : DEFAULT_LOCATION[i]);
     },
-    [location.island, setLocation],
+    [location.island, location.id, setLocation],
   );
 
   const toggleFavourite = useCallback((id: string) => {
