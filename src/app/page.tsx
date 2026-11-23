@@ -27,6 +27,7 @@ import { NextSixHours } from "@/components/NextSixHours";
 import { YourPlaces } from "@/components/YourPlaces";
 import { AccuracyCard } from "@/components/AccuracyCard";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { WeatherMemory } from "@/components/WeatherMemory";
 
 export default function Home() {
   const { location, ready, interests, t } = useAppState();
@@ -76,6 +77,7 @@ export default function Home() {
             <RainOutlookCard f={f} compact />
             <AccuracyCard location={location} />
             <DidYouKnow />
+            <WeatherMemory />
             <div className="card grid gap-2 font-semibold text-teal-ink dark:text-teal-soft">
               <Link href="/planner" className="flex items-center justify-between">
                 <span>{t("today.planner")}</span>
