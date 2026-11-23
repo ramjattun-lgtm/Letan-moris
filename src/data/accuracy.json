@@ -1,22 +1,36 @@
 {
- "builtAt": "2026-11-23T05:18:54.416Z",
+ "builtAt": "2026-11-23T14:08:07.963Z",
  "from": "2026-10-24",
  "to": "2026-11-23",
  "days": 30,
  "method": {
-  "forecast": "The forecast issued the day before (Open-Meteo Previous Runs API).",
+  "forecast": "The forecast issued the day before (Open-Meteo Previous Runs API), sorted like the app's wording: under 0.5 mm = dry, 2 mm or more = rain likely, in between = showers possible.",
   "regions": "Compared with the model's latest estimate of what happened. A rain day = at least 1 mm. Model vs model — not rain gauges.",
-  "airports": "Compared with real METAR weather reports (Iowa Environmental Mesonet). A rain day = rain noted in at least 2 reports; forecast rain day = at least 0.5 mm."
+  "airports": "Compared with real METAR weather reports (Iowa Environmental Mesonet). A rain day = rain noted in at least 2 reports. Airport reports describe one spot every 30–60 minutes; the forecast covers a ~10–25 km area."
  },
  "regions": {
   "north": {
    "name": "North",
    "rain": {
     "days": 30,
-    "agreePct": 73,
     "rainDaysSeen": 10,
-    "missed": 2,
-    "falseAlarms": 6
+    "said": {
+     "likely": {
+      "days": 10,
+      "rained": 7
+     },
+     "possible": {
+      "days": 11,
+      "rained": 3
+     },
+     "dry": {
+      "days": 9,
+      "stayedDry": 9
+     }
+    },
+    "clearCallPct": 84,
+    "missed": 0,
+    "falseAlarms": 3
    },
    "tempMaeC": 0.7
   },
@@ -24,10 +38,24 @@
    "name": "East",
    "rain": {
     "days": 30,
-    "agreePct": 83,
     "rainDaysSeen": 18,
+    "said": {
+     "likely": {
+      "days": 17,
+      "rained": 14
+     },
+     "possible": {
+      "days": 7,
+      "rained": 4
+     },
+     "dry": {
+      "days": 6,
+      "stayedDry": 6
+     }
+    },
+    "clearCallPct": 87,
     "missed": 0,
-    "falseAlarms": 5
+    "falseAlarms": 3
    },
    "tempMaeC": 0.7
   },
@@ -35,10 +63,24 @@
    "name": "South",
    "rain": {
     "days": 30,
-    "agreePct": 77,
     "rainDaysSeen": 19,
-    "missed": 2,
-    "falseAlarms": 5
+    "said": {
+     "likely": {
+      "days": 17,
+      "rained": 15
+     },
+     "possible": {
+      "days": 9,
+      "rained": 4
+     },
+     "dry": {
+      "days": 4,
+      "stayedDry": 4
+     }
+    },
+    "clearCallPct": 90,
+    "missed": 0,
+    "falseAlarms": 2
    },
    "tempMaeC": 0.5
   },
@@ -46,10 +88,24 @@
    "name": "West",
    "rain": {
     "days": 30,
-    "agreePct": 73,
     "rainDaysSeen": 12,
+    "said": {
+     "likely": {
+      "days": 13,
+      "rained": 8
+     },
+     "possible": {
+      "days": 9,
+      "rained": 4
+     },
+     "dry": {
+      "days": 8,
+      "stayedDry": 8
+     }
+    },
+    "clearCallPct": 76,
     "missed": 0,
-    "falseAlarms": 8
+    "falseAlarms": 5
    },
    "tempMaeC": 0.9
   },
@@ -57,10 +113,24 @@
    "name": "Central Plateau",
    "rain": {
     "days": 30,
-    "agreePct": 63,
     "rainDaysSeen": 16,
-    "missed": 2,
-    "falseAlarms": 9
+    "said": {
+     "likely": {
+      "days": 16,
+      "rained": 11
+     },
+     "possible": {
+      "days": 10,
+      "rained": 5
+     },
+     "dry": {
+      "days": 4,
+      "stayedDry": 4
+     }
+    },
+    "clearCallPct": 75,
+    "missed": 0,
+    "falseAlarms": 5
    },
    "tempMaeC": 0.5
   },
@@ -68,10 +138,24 @@
    "name": "Port Louis",
    "rain": {
     "days": 30,
-    "agreePct": 70,
     "rainDaysSeen": 13,
+    "said": {
+     "likely": {
+      "days": 15,
+      "rained": 10
+     },
+     "possible": {
+      "days": 10,
+      "rained": 3
+     },
+     "dry": {
+      "days": 5,
+      "stayedDry": 5
+     }
+    },
+    "clearCallPct": 75,
     "missed": 0,
-    "falseAlarms": 9
+    "falseAlarms": 5
    },
    "tempMaeC": 0.7
   },
@@ -79,10 +163,24 @@
    "name": "Rodrigues",
    "rain": {
     "days": 30,
-    "agreePct": 80,
     "rainDaysSeen": 11,
-    "missed": 2,
-    "falseAlarms": 4
+    "said": {
+     "likely": {
+      "days": 5,
+      "rained": 5
+     },
+     "possible": {
+      "days": 10,
+      "rained": 5
+     },
+     "dry": {
+      "days": 15,
+      "stayedDry": 14
+     }
+    },
+    "clearCallPct": 95,
+    "missed": 1,
+    "falseAlarms": 0
    },
    "tempMaeC": 0.3
   }
@@ -94,10 +192,24 @@
    "reports": 719,
    "rain": {
     "days": 30,
-    "agreePct": 33,
     "rainDaysSeen": 8,
+    "said": {
+     "likely": {
+      "days": 17,
+      "rained": 3
+     },
+     "possible": {
+      "days": 9,
+      "rained": 4
+     },
+     "dry": {
+      "days": 4,
+      "stayedDry": 3
+     }
+    },
+    "clearCallPct": 29,
     "missed": 1,
-    "falseAlarms": 19
+    "falseAlarms": 14
    },
    "tempMaeC": 1.4
   },
@@ -107,10 +219,24 @@
    "reports": 688,
    "rain": {
     "days": 30,
-    "agreePct": 57,
     "rainDaysSeen": 4,
+    "said": {
+     "likely": {
+      "days": 5,
+      "rained": 2
+     },
+     "possible": {
+      "days": 12,
+      "rained": 2
+     },
+     "dry": {
+      "days": 13,
+      "stayedDry": 13
+     }
+    },
+    "clearCallPct": 83,
     "missed": 0,
-    "falseAlarms": 13
+    "falseAlarms": 3
    },
    "tempMaeC": 1.6
   }
