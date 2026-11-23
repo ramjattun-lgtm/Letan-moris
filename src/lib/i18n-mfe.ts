@@ -7,6 +7,9 @@ export const MFE: Record<string, string> = {
   "Rain likely": "Kapav ena lapli",
   "Showers possible": "Kapav ena lavers",
   Today: "Zordi",
+  visitors: "vizitor",
+  "this month": "sa mwa-la",
+  today: "zordi",
   Tomorrow: "Demin",
   // Rivers
   "River watch": "Siveyans larivier",

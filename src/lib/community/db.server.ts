@@ -48,6 +48,9 @@ export function ensureSchema(): Promise<void> {
       await q`CREATE INDEX IF NOT EXISTS reports_created ON reports (created)`;
       await q`CREATE TABLE IF NOT EXISTS report_likes (report_id BIGINT NOT NULL, dev TEXT NOT NULL, PRIMARY KEY (report_id, dev))`;
       await q`CREATE TABLE IF NOT EXISTS report_flags (report_id BIGINT NOT NULL, dev TEXT NOT NULL, PRIMARY KEY (report_id, dev))`;
+      // Visitor counter: one row per phone (anonymous code), plus one row per phone per day.
+      await q`CREATE TABLE IF NOT EXISTS visitors (dev TEXT PRIMARY KEY, first_seen DATE NOT NULL DEFAULT CURRENT_DATE)`;
+      await q`CREATE TABLE IF NOT EXISTS visits (day DATE NOT NULL, dev TEXT NOT NULL, PRIMARY KEY (day, dev))`;
     })().catch((e) => {
       ready = null;
       throw e;
@@ -125,4 +128,23 @@ export async function moderate(id: string, decision: "keep" | "remove"): Promise
   await ensureSchema();
   if (decision === "keep") await db()`UPDATE reports SET hidden = false, reviewed = true WHERE id = ${id}`;
   else await db()`UPDATE reports SET hidden = true, reviewed = true WHERE id = ${id}`;
+}
+
+// ——— Visitor counter (anonymous; one count per phone per day) ———
+
+export async function recordVisit(dev: string, day: string): Promise<void> {
+  await ensureSchema();
+  const q = db();
+  await q`INSERT INTO visitors (dev) VALUES (${dev}) ON CONFLICT DO NOTHING`;
+  await q`INSERT INTO visits (day, dev) VALUES (${day}::date, ${dev}) ON CONFLICT DO NOTHING`;
+  if (Math.random() < 0.02) await q`DELETE FROM visits WHERE day < (${day}::date - 35)`;
+}
+
+export async function visitCounts(day: string): Promise<{ total: number; today: number; month: number }> {
+  await ensureSchema();
+  const [r] = (await db()`SELECT
+      (SELECT count(*) FROM visitors)::int AS total,
+      (SELECT count(*) FROM visits WHERE day = ${day}::date)::int AS today,
+      (SELECT count(DISTINCT dev) FROM visits WHERE day > (${day}::date - 30))::int AS month`) as { total: number; today: number; month: number }[];
+  return r;
 }

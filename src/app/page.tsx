@@ -29,6 +29,7 @@ import { AccuracyCard } from "@/components/AccuracyCard";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { WeatherMemory } from "@/components/WeatherMemory";
 import { CycloneReady } from "@/components/CycloneReady";
+import { VisitCounter } from "@/components/VisitCounter";
 import { tr } from "@/lib/i18n";
 
 export default function Home() {
@@ -102,6 +103,7 @@ export default function Home() {
             <DailyList f={f} />
             <DataFreshness provenance={f.provenance} savedAt={api.savedAt} stale={!!api.error} />
             <p className="mt-1 text-[11px] text-muted dark:text-slate-400">{tr(f.provenance.resolutionNote)}</p>
+            <VisitCounter />
           </div>
         </div>
       )}

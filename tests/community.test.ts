@@ -64,3 +64,15 @@ describe("/api/community without a database", () => {
     expect(res.status).toBe(503);
   });
 });
+
+describe("/api/visits without a database", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  it("stays hidden and refuses writes", async () => {
+    vi.stubEnv("DATABASE_URL", "");
+    vi.stubEnv("POSTGRES_URL", "");
+    vi.resetModules();
+    const { GET, POST } = await import("@/app/api/visits/route");
+    expect(await (await GET()).json()).toEqual({ enabled: false });
+    expect((await POST(new Request("http://x/api/visits", { method: "POST", body: "{}" }) as never)).status).toBe(503);
+  });
+});
