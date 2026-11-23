@@ -5,6 +5,7 @@ import { useApi } from "@/lib/client/useApi";
 import { useAppState } from "./AppState";
 import type { CycloneStatus } from "@/lib/weather/providers/gdacs.provider";
 import { cycloneMode } from "@/lib/weather/intelligence/cyclone-mode.service";
+import { tr } from "@/lib/i18n";
 
 /** App-wide banner shown only in cyclone mode. */
 export function CycloneModeBanner() {
@@ -15,11 +16,11 @@ export function CycloneModeBanner() {
   return (
     <div role="alert" className="bg-[#D9480F] text-white">
       <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-2 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3">
-        <strong className="uppercase tracking-wide">{m.official ? "Official MMS warning" : "Cyclone mode"}</strong>
-        <span className="sm:flex-1">{m.headline}</span>
+        <strong className="uppercase tracking-wide">{tr(m.official ? tr("Official MMS warning") : tr("Cyclone mode"))}</strong>
+        <span className="sm:flex-1">{tr(m.headline)}</span>
         <span className="flex items-center gap-3">
-        <Link href="/cyclone" className="rounded-full bg-white px-3 py-1 font-semibold text-[#D9480F]">Cyclone page</Link>
-        <a href="/lite" className="underline">Light version</a>
+        <Link href="/cyclone" className="rounded-full bg-white px-3 py-1 font-semibold text-[#D9480F]">{tr("Cyclone page")}</Link>
+        <a href="/lite" className="underline">{tr("Light version")}</a>
         </span>
       </div>
     </div>

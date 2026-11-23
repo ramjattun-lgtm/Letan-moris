@@ -8,6 +8,7 @@ import { usePlaceLabels } from "@/lib/client/placeLabels";
 import type { Forecast } from "@/lib/weather/types";
 import { nextHours, nextHoursHeadline } from "@/lib/weather/intelligence/next-hours";
 import { fmt } from "@/lib/weather/weather-codes";
+import { tr } from "@/lib/i18n";
 
 function PlaceLine({ id, label }: { id: string; label?: string }) {
   const { setLocation, t } = useAppState();
@@ -19,10 +20,10 @@ function PlaceLine({ id, label }: { id: string; label?: string }) {
     <li>
       <button type="button" onClick={() => setLocation(id)} className="w-full rounded-2xl bg-mist p-3 text-left dark:bg-white/5">
         <p className="text-sm font-bold">
-          {label && <span className="chip mr-1 bg-teal/15 text-teal-ink dark:text-teal-soft">{label}</span>}
-          {loc.name} <span className="font-normal">{f ? `· ${fmt(f.current.temperature, "°C")}` : ""}</span>
+          {label && <span className="chip mr-1 bg-teal/15 text-teal-ink dark:text-teal-soft">{tr(label)}</span>}
+          {tr(loc.name)} <span className="font-normal">{tr(f ? `· ${fmt(f.current.temperature, "°C")}` : "")}</span>
         </p>
-        <p className="text-sm text-rain dark:text-rain-soft">{f ? nextHoursHeadline(nextHours(f.hourly), t) : api.error ? "Forecast unavailable" : "Loading…"}</p>
+        <p className="text-sm text-rain dark:text-rain-soft">{tr(f ? nextHoursHeadline(nextHours(f.hourly), t) : api.error ? tr("Forecast unavailable") : "Loading…")}</p>
       </button>
     </li>
   );

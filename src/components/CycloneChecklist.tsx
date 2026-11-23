@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { readLS, writeLS } from "@/lib/client/storage";
+import { tr } from "@/lib/i18n";
 
 export const CHECKLIST = [
   "Keep a battery radio, torch, spare batteries and charged power banks.",
@@ -29,14 +30,14 @@ export function Checklist() {
   return (
     <>
       <p className="mt-1 text-xs text-muted dark:text-slate-400">
-        {done.length} of {CHECKLIST.length} done — ticks are saved on this phone.
+        {done.length} {tr("of")} {CHECKLIST.length} {tr("done — ticks are saved on this phone.")}
       </p>
       <ul className="mt-2 space-y-1">
         {CHECKLIST.map((c, i) => (
           <li key={c}>
             <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl px-2 py-2 text-sm hover:bg-mist dark:hover:bg-white/5">
               <input type="checkbox" checked={done.includes(i)} onChange={() => toggle(i)} className="mt-0.5 h-5 w-5 accent-[#0FA3A3]" />
-              <span className={done.includes(i) ? "text-muted line-through" : ""}>{c}</span>
+              <span className={done.includes(i) ? "text-muted line-through" : ""}>{tr(c)}</span>
             </label>
           </li>
         ))}

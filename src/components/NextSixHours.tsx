@@ -4,6 +4,7 @@ import type { Forecast } from "@/lib/weather/types";
 import { nextHours, nextHoursHeadline, type HourRain } from "@/lib/weather/intelligence/next-hours";
 import { useAppState } from "./AppState";
 import { trackRecord } from "./AccuracyCard";
+import { tr } from "@/lib/i18n";
 
 const COLOUR: Record<HourRain, string> = {
   likely: "bg-rain",
@@ -25,27 +26,27 @@ export function NextSixHours({ f }: { f: Forecast }) {
       <h2 id="next6-title" className="label">
         {t("next6.title")}
       </h2>
-      <p className="mt-1 font-semibold">{nextHoursHeadline(hours, t)}</p>
-      <ol className="mt-3 grid grid-cols-6 gap-1.5" aria-label="Chance of rain each hour">
+      <p className="mt-1 font-semibold">{tr(nextHoursHeadline(hours, t))}</p>
+      <ol className="mt-3 grid grid-cols-6 gap-1.5" aria-label={tr("Chance of rain each hour")}>
         {hours.map((h) => (
           <li key={h.time} className="flex flex-col items-center gap-1 text-center">
             <div className="flex h-16 w-full items-end overflow-hidden rounded-xl bg-mist dark:bg-white/5" aria-hidden="true">
               <div className={`w-full rounded-xl ${COLOUR[h.rain]}`} style={{ height: `${Math.max(8, h.pct ?? 0)}%` }} />
             </div>
-            <span className="text-[11px] font-semibold text-muted dark:text-slate-400">{h.label === "Now" ? t("next6.now") : h.label}</span>
-            <span className="text-xs font-bold text-rain dark:text-rain-soft">{h.pct === null ? "—" : `${h.pct}%`}</span>
-            <span className="text-[10px] text-muted dark:text-slate-400">{h.mm === null ? "—" : h.mm >= 0.1 ? `${h.mm} mm` : t("next6.dryShort")}</span>
-            <span className="sr-only">{WORD[h.rain]}</span>
+            <span className="text-[11px] font-semibold text-muted dark:text-slate-400">{tr(h.label === "Now" ? t("next6.now") : h.label)}</span>
+            <span className="text-xs font-bold text-rain dark:text-rain-soft">{tr(h.pct === null ? "—" : `${h.pct}%`)}</span>
+            <span className="text-[10px] text-muted dark:text-slate-400">{tr(h.mm === null ? "—" : h.mm >= 0.1 ? `${h.mm} mm` : t("next6.dryShort"))}</span>
+            <span className="sr-only">{tr(WORD[h.rain])}</span>
           </li>
         ))}
       </ol>
       <p className="mt-2 text-[11px] text-muted dark:text-slate-400">
         {record && (
           <>
-            {record}{" "}
+            {tr(record)}{" "}
           </>
         )}
-        % = chance of rain in that hour; mm = expected amount. &quot;Likely&quot; needs at least 60% and 0.5 mm. {t("next6.note")}
+        {tr("% = chance of rain in that hour; mm = expected amount. \"Likely\" needs at least 60% and 0.5 mm.")} {t("next6.note")}
       </p>
     </section>
   );

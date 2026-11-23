@@ -4,6 +4,7 @@ import { useState } from "react";
 import { flagReport, likeReport } from "@/lib/community/lapli";
 import { readLS, writeLS } from "@/lib/client/storage";
 import { useAppState } from "./AppState";
+import { tr } from "@/lib/i18n";
 
 /** "Useful" and "Report a problem" for one community report (database mode only). */
 export function ReportActions({ id, likes }: { id: string; likes: number }) {
@@ -30,15 +31,15 @@ export function ReportActions({ id, likes }: { id: string; likes: number }) {
   const shown = likes + bump;
   return (
     <span className="ml-1 inline-flex flex-wrap items-center gap-2 text-xs">
-      <button type="button" disabled={state !== "idle"} onClick={() => act("like")} className="rounded-full px-2 py-1 ring-1 ring-navy/15 disabled:opacity-60 dark:ring-white/20" aria-label="Mark this report as useful">
-        👍 {t("community.useful")}{shown > 0 ? ` · ${shown}` : ""}
+      <button type="button" disabled={state !== "idle"} onClick={() => act("like")} className="rounded-full px-2 py-1 ring-1 ring-navy/15 disabled:opacity-60 dark:ring-white/20" aria-label={tr("Mark this report as useful")}>
+        👍 {t("community.useful")}{tr(shown > 0 ? ` · ${shown}` : "")}
       </button>
       {state !== "flagged" && (
         <button type="button" disabled={state === "busy"} onClick={() => act("flag")} className="text-muted underline dark:text-slate-400">
           {t("community.problem")}
         </button>
       )}
-      {msg && <span role="status">{msg}</span>}
+      {msg && <span role="status">{tr(msg)}</span>}
     </span>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAppState } from "./AppState";
 import { useApi } from "@/lib/client/useApi";
 import { TREND_TEXT, type Comparison, type OutlookPeriod } from "@/lib/weather/intelligence/reservoir.service";
+import { tr } from "@/lib/i18n";
 
 interface Summary {
   island?: string;
@@ -23,9 +24,9 @@ export function ReservoirSummary() {
     return (
       <Link href="/reservoirs" className="card flex items-center justify-between gap-3 hover:bg-white/80">
         <span className="min-w-0">
-          <span className="label block">💧 {rod ? "Rain over Rodrigues" : "Rain over the reservoir catchments"}</span>
-          <span className="mt-1 block text-sm">{api.loading ? "Loading…" : "How much rain fell compared with the normal rain level, and the outlook."}</span>
-          <span className="mt-1 block text-xs font-bold text-[#C92A2A] dark:text-[#FF8A8A]">⚠ Rain over the {rod ? "island" : "catchment areas"} — not reservoir levels</span>
+          <span className="label block">💧 {tr(rod ? tr("Rain over Rodrigues") : tr("Rain over the reservoir catchments"))}</span>
+          <span className="mt-1 block text-sm">{tr(api.loading ? "Loading…" : tr("How much rain fell compared with the normal rain level, and the outlook."))}</span>
+          <span className="mt-1 block text-xs font-bold text-[#C92A2A] dark:text-[#FF8A8A]">{tr("⚠ Rain over the")} {tr(rod ? "island" : tr("catchment areas"))} {tr("— not reservoir levels")}</span>
         </span>
         <span aria-hidden="true" className="text-teal-ink dark:text-teal-soft">→</span>
       </Link>
@@ -40,12 +41,12 @@ export function ReservoirSummary() {
   return (
     <Link href="/reservoirs" className={`card flex items-center justify-between gap-3 hover:bg-white/80 ${dry ? "ring-1 ring-coral" : ""}`}>
       <span className="min-w-0">
-        <span className="label block">💧 {rod ? "Rain over Rodrigues" : "Rain over the reservoir catchments"}</span>
+        <span className="label block">💧 {tr(rod ? tr("Rain over Rodrigues") : tr("Rain over the reservoir catchments"))}</span>
         {parts.map((p) => (
-          <span key={p} className="mt-0.5 block text-sm font-semibold">{p}</span>
+          <span key={p} className="mt-0.5 block text-sm font-semibold">{tr(p)}</span>
         ))}
-        {d.outlook.weeks?.trend && <span className="block text-sm text-muted dark:text-slate-400">Next month: {TREND_TEXT[d.outlook.weeks.trend].toLowerCase()}</span>}
-        <span className="mt-1 block text-xs font-bold text-[#C92A2A] dark:text-[#FF8A8A]">⚠ Rain over the {rod ? "island" : "catchment areas"} — not reservoir levels</span>
+        {d.outlook.weeks?.trend && <span className="block text-sm text-muted dark:text-slate-400">{tr("Next month:")} {tr(TREND_TEXT[d.outlook.weeks.trend].toLowerCase())}</span>}
+        <span className="mt-1 block text-xs font-bold text-[#C92A2A] dark:text-[#FF8A8A]">{tr("⚠ Rain over the")} {tr(rod ? "island" : tr("catchment areas"))} {tr("— not reservoir levels")}</span>
       </span>
       <span aria-hidden="true" className="text-teal-ink dark:text-teal-soft">→</span>
     </Link>

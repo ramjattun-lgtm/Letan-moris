@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LogoMark, POWERED, TAGLINE } from "./Logo";
 import { Dodo } from "./Dodo";
+import { tr } from "@/lib/i18n";
 
 const DOES = [
   { icon: "🗓️", title: "Plan your day", text: "Hour-by-hour rain for your village, the last vs next 3 hours with a check of how accurate the forecast was, activity cards (commute, beach, laundry, hiking, solar…) and a trip planner that finds the best time to leave." },
@@ -45,9 +46,9 @@ export function AboutBanner() {
       >
         <LogoMark size={56} dark className="shrink-0" />
         <span className="min-w-0 flex-1">
-          <span className="block text-xs font-semibold uppercase tracking-wide text-teal-soft">What is Letan Moris?</span>
-          <span className="block font-[family-name:var(--font-display)] text-base font-extrabold leading-tight">Weather, decoded for your day and your way of life.</span>
-          <span className="block text-xs opacity-80">Tap to find out more</span>
+          <span className="block text-xs font-semibold uppercase tracking-wide text-teal-soft">{tr("What is Letan Moris?")}</span>
+          <span className="block font-[family-name:var(--font-display)] text-base font-extrabold leading-tight">{tr("Weather, decoded for your day and your way of life.")}</span>
+          <span className="block text-xs opacity-80">{tr("Tap to find out more")}</span>
         </span>
         <span aria-hidden="true" className="text-2xl opacity-80">›</span>
       </button>
@@ -58,31 +59,31 @@ export function AboutBanner() {
             <div className="sticky top-0 z-10 bg-gradient-to-r from-navy via-[#0E4A5E] to-teal px-5 pb-4 pt-3 text-white">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h2 id="about-title" className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-extrabold">Letan Moris <Dodo size={26} className="text-white/80" title="The Letan Moris Dodo" /></h2>
-                  <p className="text-sm italic text-teal-soft">&quot;{TAGLINE}&quot;</p>
-                  <p className="text-xs font-semibold text-white/85">📈 {POWERED}</p>
+                  <h2 id="about-title" className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-extrabold">{tr("Letan Moris")} <Dodo size={26} className="text-white/80" title={tr("The Letan Moris Dodo")} /></h2>
+                  <p className="text-sm italic text-teal-soft">{tr("\"")}{tr(TAGLINE)}{tr("\"")}</p>
+                  <p className="text-xs font-semibold text-white/85">📈 {tr(POWERED)}</p>
                 </div>
-                <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="h-10 w-10 shrink-0 rounded-full bg-white/15 text-2xl leading-none">×</button>
+                <button type="button" onClick={() => setOpen(false)} aria-label={tr("Close")} className="h-10 w-10 shrink-0 rounded-full bg-white/15 text-2xl leading-none">×</button>
               </div>
             </div>
 
             <div className="space-y-5 px-5 py-4 text-sm">
               <p className="text-base font-semibold">
-                A free, independent weather app for Mauritius and Rodrigues that turns forecasts into plain answers for your day: when it will rain where you are, whether it&apos;s a good day for the beach or the commute, and how this compares with what&apos;s normal.
+                {tr("A free, independent weather app for Mauritius and Rodrigues that turns forecasts into plain answers for your day: when it will rain where you are, whether it's a good day for the beach or the commute, and how this compares with what's normal.")}
               </p>
               <p>
-                Most weather apps give you numbers; Letan Moris gives you decisions. It covers about 64 places across both islands, down to village level. Every forecast is backed by 30 years of local climate history, checked against airport readings and reports from people nearby, and labelled with how confident it is. It always defers to MMS for official warnings, never invents data, and posts a daily forecast to Facebook.
+                {tr("Most weather apps give you numbers; Letan Moris gives you decisions. It covers about 64 places across both islands, down to village level. Every forecast is backed by 30 years of local climate history, checked against airport readings and reports from people nearby, and labelled with how confident it is. It always defers to MMS for official warnings, never invents data, and posts a daily forecast to Facebook.")}
               </p>
 
               <section>
-                <h3 className="label mb-2">What it does</h3>
+                <h3 className="label mb-2">{tr("What it does")}</h3>
                 <ul className="grid gap-2 sm:grid-cols-2">
                   {DOES.map((d) => (
                     <li key={d.title} className="flex gap-3 rounded-2xl bg-mist p-3 dark:bg-white/5">
-                      <span aria-hidden="true" className="text-2xl">{d.icon}</span>
+                      <span aria-hidden="true" className="text-2xl">{tr(d.icon)}</span>
                       <span>
-                        <span className="block font-bold">{d.title}</span>
-                        <span className="block text-[13px] text-muted dark:text-slate-300">{d.text}</span>
+                        <span className="block font-bold">{tr(d.title)}</span>
+                        <span className="block text-[13px] text-muted dark:text-slate-300">{tr(d.text)}</span>
                       </span>
                     </li>
                   ))}
@@ -90,13 +91,13 @@ export function AboutBanner() {
               </section>
 
               <section>
-                <h3 className="label mb-2">What makes it different</h3>
+                <h3 className="label mb-2">{tr("What makes it different")}</h3>
                 <ol className="space-y-2">
                   {DIFFERENT.map((d, i) => (
                     <li key={d.title} className="flex gap-3">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal text-sm font-bold text-white">{i + 1}</span>
                       <span>
-                        <strong>{d.title}.</strong> {d.text}
+                        <strong>{tr(d.title)}.</strong> {tr(d.text)}
                       </span>
                     </li>
                   ))}
@@ -104,14 +105,14 @@ export function AboutBanner() {
               </section>
 
               <p className="rounded-2xl border-2 border-[#C92A2A] bg-[#FFF0F0] p-3 text-[13px] text-[#A61E1E] dark:bg-[#3A1212] dark:text-[#FFB4B4]">
-                <strong>Independent forecasts — not official warnings.</strong> For cyclone and heavy-rain warnings always follow{" "}
-                <a className="underline" href="http://metservice.intnet.mu/" target="_blank" rel="noreferrer">Mauritius Meteorological Services (MMS)</a>.
+                <strong>{tr("Independent forecasts — not official warnings.")}</strong> {tr("For cyclone and heavy-rain warnings always follow")}{" "}
+                <a className="underline" href="http://metservice.intnet.mu/" target="_blank" rel="noreferrer">{tr("Mauritius Meteorological Services (MMS)")}</a>.
               </p>
 
               <div className="flex flex-wrap gap-2 pb-2">
-                <Link href="/explore" onClick={() => setOpen(false)} className="rounded-full bg-navy px-4 py-2 font-semibold text-white dark:bg-teal-soft dark:text-navy">Explore all tools</Link>
-                <Link href="/about" onClick={() => setOpen(false)} className="rounded-full px-4 py-2 font-semibold text-teal-ink ring-1 ring-teal/40 dark:text-teal-soft">Data sources &amp; privacy</Link>
-                <button type="button" onClick={() => setOpen(false)} className="rounded-full px-4 py-2 font-semibold text-muted">Close</button>
+                <Link href="/explore" onClick={() => setOpen(false)} className="rounded-full bg-navy px-4 py-2 font-semibold text-white dark:bg-teal-soft dark:text-navy">{tr("Explore all tools")}</Link>
+                <Link href="/about" onClick={() => setOpen(false)} className="rounded-full px-4 py-2 font-semibold text-teal-ink ring-1 ring-teal/40 dark:text-teal-soft">{tr("Data sources & privacy")}</Link>
+                <button type="button" onClick={() => setOpen(false)} className="rounded-full px-4 py-2 font-semibold text-muted">{tr("Close")}</button>
               </div>
             </div>
           </div>

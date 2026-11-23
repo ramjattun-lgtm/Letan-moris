@@ -16,6 +16,7 @@ import { addHours, hhmm, hourStart, nowMU, todayMU } from "@/lib/time";
 import { OFFICIAL_LINKS } from "@/data/official-status";
 import { Dodo } from "./Dodo";
 import { LocationPicker } from "./LocationPicker";
+import { tr } from "@/lib/i18n";
 
 type Severity = "red" | "amber" | "info";
 interface Alert {
@@ -125,7 +126,7 @@ export function AlertsPanel({ f }: { f: Forecast }) {
     <section className="mb-4" aria-labelledby="alerts-title">
       <div className="mb-2 flex items-baseline justify-between gap-2">
         <h2 id="alerts-title" className="font-[family-name:var(--font-display)] text-lg font-extrabold">
-          {alerts.length ? `⚠️ ${t("alerts.for", { place: location.name })}` : t("alerts.for", { place: location.name })}
+          {tr(alerts.length ? `⚠️ ${t("alerts.for", { place: location.name })}` : t("alerts.for", { place: location.name }))}
         </h2>
         <a className="shrink-0 text-xs font-semibold text-teal-ink underline dark:text-teal-soft" href={OFFICIAL_LINKS.mms.url} target="_blank" rel="noreferrer">
           {t("alerts.mms")}
@@ -148,10 +149,10 @@ export function AlertsPanel({ f }: { f: Forecast }) {
           {alerts.map((a) => {
             const body = (
               <>
-                <span aria-hidden="true" className="text-xl">{a.icon}</span>
+                <span aria-hidden="true" className="text-xl">{tr(a.icon)}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-bold">{a.title}</span>
-                  <span className="block text-sm">{a.text}</span>
+                  <span className="block font-bold">{tr(a.title)}</span>
+                  <span className="block text-sm">{tr(a.text)}</span>
                 </span>
                 {a.href && <span aria-hidden="true" className="self-center text-lg text-muted">›</span>}
               </>

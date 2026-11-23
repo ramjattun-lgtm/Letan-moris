@@ -5,7 +5,8 @@ import { DEFAULT_LOCATION, getLocality, type Locality } from "@/data/localities"
 import type { Island } from "@/lib/weather/types";
 import { readLS, writeLS } from "@/lib/client/storage";
 import type { ActivityId } from "@/lib/weather/intelligence/decision-engine.service";
-import { isLang, translate, type Key, type Lang } from "@/lib/i18n";
+import { isLang, setCurrentLang, translate, type Key, type Lang } from "@/lib/i18n";
+import { Fragment } from "react";
 
 /** Everything is shown by default; people can narrow it down with "Change what I see". */
 export const ALL_INTERESTS: ActivityId[] = ["school", "commute", "laundry", "beach", "outdoor", "gardening", "agriculture", "hiking", "kitesurf", "boating", "solar"];
@@ -50,7 +51,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     /* eslint-disable react-hooks/set-state-in-effect */
     setLocId(getLocality(saved) ? saved : DEFAULT_LOCATION.mauritius);
     const savedLang = readLS<string>("letan.lang", "en");
-    if (isLang(savedLang)) setLangState(savedLang);
+    if (isLang(savedLang)) {
+      setCurrentLang(savedLang);
+      setLangState(savedLang);
+    }
     setLocationChosen(!!fromUrl || readLS<string | null>("letan.loc", null) !== null);
     setFavourites(readLS<string[]>("letan.favs", []).filter((id) => getLocality(id)));
     setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
@@ -109,6 +113,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setLang = useCallback((l: Lang) => {
+    setCurrentLang(l);
     setLangState(l);
     writeLS("letan.lang", l);
   }, []);
@@ -121,7 +126,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     () => ({ island: location.island, location, favourites, theme, ready, interests, interestsChosen, locationChosen, lang, setLang, t, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme }),
     [location, favourites, theme, ready, interests, interestsChosen, locationChosen, lang, setLang, t, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme],
   );
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  // Keyed by language: switching language re-renders the whole app with the new words.
+  return (
+    <Ctx.Provider value={value}>
+      <Fragment key={lang}>{children}</Fragment>
+    </Ctx.Provider>
+  );
 }
 
 export function useAppState() {

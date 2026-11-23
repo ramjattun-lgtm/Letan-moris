@@ -5,6 +5,7 @@ import { useApi } from "@/lib/client/useApi";
 import { climateKeyFor } from "@/lib/weather/intelligence/climate.service";
 import { memoryFacts } from "@/lib/weather/intelligence/memory.service";
 import { todayMU } from "@/lib/time";
+import { tr } from "@/lib/i18n";
 
 interface PastDay {
   yearsAgo: number;
@@ -33,9 +34,9 @@ export function WeatherMemory() {
         <ul className="mt-2 grid grid-cols-3 gap-2 text-center">
           {past.map((y) => (
             <li key={y.yearsAgo} className="rounded-2xl bg-mist p-2 dark:bg-white/5">
-              <p className="text-xs font-semibold text-muted dark:text-slate-400">{y.date.slice(0, 4)}</p>
-              <p className="font-bold">{y.tmax !== null ? `${Math.round(y.tmax)}°` : "—"}<span className="text-sm font-normal"> / {y.tmin !== null ? `${Math.round(y.tmin)}°` : "—"}</span></p>
-              <p className="text-[11px]">{y.rainMm !== null ? rainWord(Math.round(y.rainMm * 10) / 10) : "—"}</p>
+              <p className="text-xs font-semibold text-muted dark:text-slate-400">{tr(y.date.slice(0, 4))}</p>
+              <p className="font-bold">{tr(y.tmax !== null ? `${Math.round(y.tmax)}°` : "—")}<span className="text-sm font-normal"> / {tr(y.tmin !== null ? `${Math.round(y.tmin)}°` : "—")}</span></p>
+              <p className="text-[11px]">{tr(y.rainMm !== null ? rainWord(Math.round(y.rainMm * 10) / 10) : "—")}</p>
             </li>
           ))}
         </ul>
@@ -44,13 +45,13 @@ export function WeatherMemory() {
         <ul className="mt-2 space-y-1.5 text-sm">
           {facts.map((f) => (
             <li key={f.id} className="flex gap-2">
-              <span aria-hidden="true">{f.icon}</span>
-              <span>{f.text}</span>
+              <span aria-hidden="true">{tr(f.icon)}</span>
+              <span>{tr(f.text)}</span>
             </li>
           ))}
         </ul>
       )}
-      <p className="mt-2 text-[11px] text-muted dark:text-slate-400">Past days for {location.name}: ECMWF ERA5 reanalysis via Open-Meteo (model-based, ~25 km), not station records.</p>
+      <p className="mt-2 text-[11px] text-muted dark:text-slate-400">{tr("Past days for")} {tr(location.name)}{tr(": ECMWF ERA5 reanalysis via Open-Meteo (model-based, ~25 km), not station records.")}</p>
     </section>
   );
 }

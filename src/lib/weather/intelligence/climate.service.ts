@@ -1,3 +1,4 @@
+import { currentLang } from "@/lib/i18n";
 import climate from "@/data/climate.json";
 import type { Locality } from "@/data/localities";
 import type { Maybe } from "../types";
@@ -89,7 +90,10 @@ export function vsNormal(forecastTmax: Maybe<number>, normalTmax: Maybe<number>)
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-export const monthName = (m: number) => MONTHS[m - 1];
+const MONTHS_FR = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+const MONTHS_MFE = ["Zan", "Fev", "Mar", "Avr", "Me", "Zin", "Zilye", "Out", "Sept", "Okt", "Nov", "Des"];
+/** Short month name in the current language (English on the server and in Facebook posts). */
+export const monthName = (m: number) => (currentLang() === "fr" ? MONTHS_FR : currentLang() === "mfe" ? MONTHS_MFE : MONTHS)[m - 1];
 
 /** Best / worst months for planning. */
 export function bestMonths(r: ClimateRegion) {

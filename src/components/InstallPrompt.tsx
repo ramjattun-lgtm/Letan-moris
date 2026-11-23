@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { readLS, writeLS } from "@/lib/client/storage";
 import { LogoMark } from "./Logo";
+import { tr } from "@/lib/i18n";
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
@@ -49,15 +50,15 @@ export function InstallPrompt() {
     setHidden(true);
   };
   return (
-    <section className="card flex items-center gap-3" aria-label="Install Letan Moris">
+    <section className="card flex items-center gap-3" aria-label={tr("Install Letan Moris")}>
       <LogoMark size={40} />
       <div className="min-w-0 flex-1">
-        <p className="font-bold">Add Letan Moris to your home screen</p>
+        <p className="font-bold">{tr("Add Letan Moris to your home screen")}</p>
         {evt ? (
-          <p className="text-sm text-muted dark:text-slate-400">Opens like an app, works with a weak signal, free, no account.</p>
+          <p className="text-sm text-muted dark:text-slate-400">{tr("Opens like an app, works with a weak signal, free, no account.")}</p>
         ) : (
           <p className="text-sm text-muted dark:text-slate-400">
-            Tap <strong>Share</strong> <span aria-hidden="true">⬆︎</span> at the bottom of Safari, then <strong>Add to Home Screen</strong>.
+            {tr("Tap")} <strong>{tr("Share")}</strong> <span aria-hidden="true">⬆︎</span> {tr("at the bottom of Safari, then")} <strong>{tr("Add to Home Screen")}</strong>.
           </p>
         )}
       </div>
@@ -73,11 +74,11 @@ export function InstallPrompt() {
             }}
             className="min-h-10 rounded-full bg-navy px-4 text-sm font-semibold text-white dark:bg-teal-soft dark:text-navy"
           >
-            Install
+            {tr("Install")}
           </button>
         )}
         <button type="button" onClick={dismiss} className="text-xs text-muted underline dark:text-slate-400">
-          Not now
+          {tr("Not now")}
         </button>
       </div>
     </section>

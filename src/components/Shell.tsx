@@ -6,6 +6,7 @@ import { LogoMark, POWERED, TAGLINE, Wordmark } from "./Logo";
 import { useAppState } from "./AppState";
 import type { Island } from "@/lib/weather/types";
 import { LANGS, type Key } from "@/lib/i18n";
+import { tr } from "@/lib/i18n";
 
 const NAV = [
   { href: "/", label: "Today", key: "nav.today" as Key, icon: "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" },
@@ -31,7 +32,7 @@ export function IslandSwitch() {
     { id: "rodrigues", label: t("island.rodrigues") },
   ];
   return (
-    <div role="group" aria-label="Choose island" className="inline-flex rounded-full bg-white/70 p-1 ring-1 ring-navy/10 dark:bg-white/5 dark:ring-white/10">
+    <div role="group" aria-label={tr("Choose island")} className="inline-flex rounded-full bg-white/70 p-1 ring-1 ring-navy/10 dark:bg-white/5 dark:ring-white/10">
       {opts.map((o) => (
         <button
           key={o.id}
@@ -40,7 +41,7 @@ export function IslandSwitch() {
           onClick={() => setIsland(o.id)}
           className={`min-h-9 rounded-full px-3 text-sm font-semibold transition ${island === o.id ? "bg-navy text-white dark:bg-teal-soft dark:text-navy" : "text-muted hover:text-navy dark:text-slate-300"}`}
         >
-          {o.label}
+          {tr(o.label)}
         </button>
       ))}
     </div>
@@ -55,7 +56,7 @@ export function LangSwitch() {
       <select value={lang} onChange={(e) => setLang(e.target.value as typeof lang)} className="min-h-10 rounded-full bg-transparent px-2 text-sm font-semibold text-muted ring-1 ring-navy/10 dark:text-slate-300 dark:ring-white/15" aria-label={t("lang.label")}>
         {LANGS.map((l) => (
           <option key={l.id} value={l.id}>
-            {l.name}
+            {tr(l.name)}
           </option>
         ))}
       </select>
@@ -69,15 +70,15 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-navy/5 bg-mist/85 backdrop-blur dark:border-white/5 dark:bg-night/85">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2.5">
-        <Link href="/" className="flex items-center gap-2" aria-label="Letan Moris home">
+        <Link href="/" className="flex items-center gap-2" aria-label={tr("Letan Moris home")}>
           <LogoMark size={36} dark={theme === "dark"} />
           <span className="leading-tight">
             <Wordmark className="block text-lg" />
-            <span className="hidden whitespace-nowrap text-[11px] text-muted sm:block dark:text-slate-400">{TAGLINE}</span>
-            <span className="hidden whitespace-nowrap text-[10px] font-semibold text-teal-ink sm:block dark:text-teal-soft">📈 {POWERED}</span>
+            <span className="hidden whitespace-nowrap text-[11px] text-muted sm:block dark:text-slate-400">{tr(TAGLINE)}</span>
+            <span className="hidden whitespace-nowrap text-[10px] font-semibold text-teal-ink sm:block dark:text-teal-soft">📈 {tr(POWERED)}</span>
           </span>
         </Link>
-        <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">
+        <nav aria-label={tr("Main")} className="ml-6 hidden items-center gap-1 lg:flex">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} aria-current={path === n.href ? "page" : undefined} className={`rounded-full px-3 py-2 text-sm font-semibold ${path === n.href ? "bg-white text-navy shadow-sm dark:bg-white/10 dark:text-white" : "text-muted hover:text-navy dark:text-slate-300 dark:hover:text-white"}`}>
               {t(n.key)}
@@ -105,7 +106,7 @@ export function BottomNav() {
   const path = usePathname();
   const { t } = useAppState();
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-navy/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden dark:border-white/10 dark:bg-night/95">
+    <nav aria-label={tr("Main")} className="fixed inset-x-0 bottom-0 z-30 border-t border-navy/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden dark:border-white/10 dark:bg-night/95">
       <ul className="mx-auto grid max-w-lg grid-cols-6">
         {NAV.map((n) => {
           const active = path === n.href;
@@ -129,23 +130,23 @@ export function Footer() {
     <footer className="mx-auto max-w-6xl px-4 pb-28 pt-10 text-xs leading-relaxed text-muted lg:pb-10 dark:text-slate-400">
       {lang === "mfe" && <p className="mb-2 font-semibold">{t("lang.beta")}</p>}
       <p>
-        <strong>Independent forecast — not an official warning.</strong> For official warnings see{" "}
+        <strong>{tr("Independent forecast — not an official warning.")}</strong> {tr("For official warnings see")}{" "}
         <a className="underline" href="http://metservice.intnet.mu/" target="_blank" rel="noreferrer">
-          Mauritius Meteorological Services
+          {tr("Mauritius Meteorological Services")}
         </a>
         .
       </p>
       <p className="mt-1">
         <a className="underline" href="https://open-meteo.com/" target="_blank" rel="noreferrer">
-          Weather data by Open-Meteo.com
+          {tr("Weather data by Open-Meteo.com")}
         </a>{" "}
-        (CC BY 4.0) · Map data © OpenStreetMap contributors · All times are Mauritius time (UTC+4).
+        {tr("(CC BY 4.0) · Map data © OpenStreetMap contributors · All times are Mauritius time (UTC+4).")}
       </p>
       <p className="mt-1">
         <Link className="underline" href="/about">
-          About, data sources &amp; privacy
+          {tr("About, data sources & privacy")}
         </Link>{" "}
-        · <Link className="underline" href="/rain">Rain details</Link> · <Link className="underline" href="/locations">My places</Link> · Free, non-commercial public service.
+        · <Link className="underline" href="/rain">{tr("Rain details")}</Link> · <Link className="underline" href="/locations">{tr("My places")}</Link> {tr("· Free, non-commercial public service.")}
       </p>
     </footer>
   );

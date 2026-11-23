@@ -195,9 +195,76 @@ const mfe: Dict = {
 
 const DICTS: Record<Lang, Dict> = { en, fr, mfe };
 
+const fill = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
+
 export function translate(lang: Lang, key: Key, vars: Record<string, string | number> = {}): string {
-  const s = DICTS[lang]?.[key] ?? en[key];
-  return s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
+  return fill(DICTS[lang]?.[key] ?? en[key], vars);
+}
+
+// ——— Whole-site translation: English text is the key ———
+// Every piece of on-screen English goes through tr(). French has a full catalogue; Kreol has the
+// key updates and falls back to French (most Mauritians read French), then English.
+import { FR as FR_UI } from "./i18n-fr";
+import { FR_RULES } from "./i18n-fr-rules";
+import { FR_MORE } from "./i18n-fr-more";
+const FR: Record<string, string> = { ...FR_UI, ...FR_RULES, ...FR_MORE };
+import { MFE } from "./i18n-mfe";
+import { PATTERNS } from "./i18n-patterns";
+
+let CURRENT: Lang = "en";
+/** Set by AppState when the language changes (the app then re-renders in the new language). */
+export const setCurrentLang = (l: Lang) => {
+  CURRENT = l;
+};
+export const currentLang = () => CURRENT;
+
+const CATALOG: Record<Exclude<Lang, "en">, Record<string, string>> = { fr: FR, mfe: MFE };
+
+/** Sentences the rules build with numbers and times: regex patterns, French (and Kreol) templates. */
+function byPattern(lang: Exclude<Lang, "en">, text: string): string | null {
+  for (const p of PATTERNS) {
+    const tpl = p[lang] ?? (lang === "mfe" ? p.fr : undefined);
+    if (!tpl) continue;
+    const m = text.match(p.re);
+    if (!m) continue;
+    // [[…]] marks an optional part: it is dropped when a value inside it is missing.
+    const MISSING = "\u0000";
+    const filled = tpl.replace(/\$(\d)/g, (_, i) => (m[Number(i)] === undefined ? MISSING : trInner(lang, m[Number(i)])));
+    return filled.replace(/\[\[([^\]]*)\]\]/g, (_, part: string) => (part.includes(MISSING) ? "" : part)).replace(new RegExp(MISSING, "g"), "");
+  }
+  return null;
+}
+
+function trInner(lang: Exclude<Lang, "en">, text: string): string {
+  const exact = CATALOG[lang][text] ?? (lang === "mfe" ? FR[text] : undefined);
+  if (exact !== undefined) return exact;
+  // Long texts made of several sentences: translate each sentence.
+  const parts = text.split(/(?<=[.!?])\s+(?=[A-Z0-9"“])/);
+  if (parts.length > 1) return parts.map((s) => trInner(lang, s)).join(" ");
+  // Lists joined with "; " (e.g. dark-sky spots).
+  if (text.includes("; ")) return text.split("; ").map((s) => trInner(lang, s)).join(" ; ");
+  const byP = byPattern(lang, text);
+  if (byP !== null) return byP;
+  // Same sentence with a capital first letter (e.g. "Sheltered from…" at the start of a line).
+  if (/^[A-Z][a-z]/.test(text)) {
+    const lower = text[0].toLowerCase() + text.slice(1);
+    const t3 = CATALOG[lang][lower] ?? (lang === "mfe" ? FR[lower] : undefined) ?? byPattern(lang, lower);
+    if (t3) return t3[0].toUpperCase() + t3.slice(1);
+  }
+  // A sentence whose pattern has no final full stop.
+  if (/[.!]$/.test(text)) {
+    const core = text.slice(0, -1);
+    const t2 = CATALOG[lang][core] ?? (lang === "mfe" ? FR[core] : undefined) ?? byPattern(lang, core);
+    if (t2) return `${t2}${text.slice(-1)}`;
+  }
+  return text;
+}
+
+/** Translate English UI text into the current language. `vars` fill {name} placeholders. */
+export function tr(en: string, vars: Record<string, string | number> = {}, lang: Lang = CURRENT): string {
+  if (!en) return en;
+  const out = lang === "en" ? en : trInner(lang, en);
+  return fill(out, vars);
 }
 
 export const isLang = (x: unknown): x is Lang => x === "en" || x === "fr" || x === "mfe";

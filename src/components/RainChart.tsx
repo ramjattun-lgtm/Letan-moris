@@ -3,6 +3,7 @@
 import { Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { HourlyPoint } from "@/lib/weather/types";
 import { hhmm } from "@/lib/time";
+import { tr } from "@/lib/i18n";
 
 export function RainChart({ hours }: { hours: HourlyPoint[] }) {
   const data = hours.map((h) => ({
@@ -12,7 +13,7 @@ export function RainChart({ hours }: { hours: HourlyPoint[] }) {
     mm: h.precipitation,
   }));
   return (
-    <div className="h-64 w-full" role="img" aria-label="Chart of hourly rain chance (line) and rain amount (bars)">
+    <div className="h-64 w-full" role="img" aria-label={tr("Chart of hourly rain chance (line) and rain amount (bars)")}>
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(74,91,102,0.18)" vertical={false} />
@@ -20,11 +21,11 @@ export function RainChart({ hours }: { hours: HourlyPoint[] }) {
           <YAxis yAxisId="p" domain={[0, 100]} tick={{ fontSize: 11, fill: "#7A8B96" }} unit="%" />
           <YAxis yAxisId="mm" orientation="right" tick={{ fontSize: 11, fill: "#7A8B96" }} unit="mm" allowDecimals />
           <Tooltip
-            formatter={(v, name) => (v === null || v === undefined ? ["—", name] : name === "Rain chance" ? [`${v}%`, name] : [`${v} mm`, name])}
+            formatter={(v, name, item) => (v === null || v === undefined ? ["—", name] : item?.dataKey === "prob" ? [`${v}%`, name] : [`${v} mm`, name])}
             labelFormatter={(l, p) => `${p?.[0]?.payload?.day ?? ""} ${l}`}
           />
-          <Bar yAxisId="mm" dataKey="mm" name="Rain amount" fill="#2F7DE1" radius={[4, 4, 0, 0]} />
-          <Line yAxisId="p" dataKey="prob" name="Rain chance" stroke="#0FA3A3" strokeWidth={2.5} dot={false} connectNulls={false} />
+          <Bar yAxisId="mm" dataKey="mm" name={tr("Rain amount")} fill="#2F7DE1" radius={[4, 4, 0, 0]} />
+          <Line yAxisId="p" dataKey="prob" name={tr("Rain chance")} stroke="#0FA3A3" strokeWidth={2.5} dot={false} connectNulls={false} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

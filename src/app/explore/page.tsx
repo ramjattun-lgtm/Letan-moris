@@ -1,6 +1,8 @@
-import Link from "next/link";
+"use client";
 
-export const metadata = { title: "Explore — more tools" };
+import Link from "next/link";
+import { tr } from "@/lib/i18n";
+
 
 const TOOLS = [
   { href: "/planner", icon: "🗓️", title: "Perfect Day finder", text: "Best day this week for the beach, a hike, fishing, a picnic or sunset photos." },
@@ -19,15 +21,15 @@ const TOOLS = [
 export default function ExplorePage() {
   return (
     <>
-      <h1 className="mb-3 font-[family-name:var(--font-display)] text-2xl font-extrabold">Explore</h1>
+      <h1 className="mb-3 font-[family-name:var(--font-display)] text-2xl font-extrabold">{tr("Explore")}</h1>
       <ul className="grid gap-3 sm:grid-cols-2">
         {TOOLS.map((t) => (
           <li key={t.href}>
             <Link href={t.href} className="card flex h-full items-start gap-3 hover:bg-white/80">
-              <span aria-hidden="true" className="text-2xl">{t.icon}</span>
+              <span aria-hidden="true" className="text-2xl">{tr(t.icon)}</span>
               <span>
-                <span className="block font-bold">{t.title}</span>
-                <span className="block text-sm text-muted dark:text-slate-400">{t.text}</span>
+                <span className="block font-bold">{tr(t.title)}</span>
+                <span className="block text-sm text-muted dark:text-slate-400">{tr(t.text)}</span>
               </span>
             </Link>
           </li>

@@ -5,6 +5,7 @@ import { Cell, Pie, PieChart } from "recharts";
 import { useApi } from "@/lib/client/useApi";
 import { useAppState } from "./AppState";
 import type { RainShare } from "@/lib/weather/intelligence/reservoir.service";
+import { tr } from "@/lib/i18n";
 
 interface Yesterday {
   date: string;
@@ -29,15 +30,15 @@ export function YesterdayRain() {
   const s = d.share;
   return (
     <section className="card" aria-labelledby="yday-title">
-      <h2 id="yday-title" className="label">🌧️ Rain yesterday</h2>
+      <h2 id="yday-title" className="label">{tr("🌧️ Rain yesterday")}</h2>
       <p className="mt-2 text-base font-semibold">
-        {d.place}: {mm(d.placeMm)}
-        {d.islandMm !== null ? ` · ${d.island === "rodrigues" ? "Rodrigues" : "Mauritius"} average: ${mm(d.islandMm)}` : ""}
+        {tr(d.place)}: {tr(mm(d.placeMm))}
+        {tr(d.islandMm !== null ? ` · ${d.island === "rodrigues" ? "Rodrigues" : "Mauritius"} average: ${mm(d.islandMm)}` : "")}
       </p>
       {dry ? (
-        <p className="mt-1 text-sm">A mostly dry day across the island.</p>
+        <p className="mt-1 text-sm">{tr("A mostly dry day across the island.")}</p>
       ) : (
-        wettest && wettest.mm !== null && wettest.mm >= 0.5 && <p className="mt-1 text-sm">Wettest area: {wettest.name} ({mm(wettest.mm)}).</p>
+        wettest && wettest.mm !== null && wettest.mm >= 0.5 && <p className="mt-1 text-sm">{tr("Wettest area:")} {tr(wettest.name)} ({tr(mm(wettest.mm))}).</p>
       )}
 
       {s && !dry && (
@@ -58,21 +59,21 @@ export function YesterdayRain() {
             </Pie>
           </PieChart>
           <div className="min-w-0 text-sm">
-            <p className="font-semibold">{s.pct}% of the island&apos;s rain fell on the reservoir catchments.</p>
+            <p className="font-semibold">{s.pct}{tr("% of the island's rain fell on the reservoir catchments.")}</p>
             <p>
               <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-teal align-middle" aria-hidden="true" />
-              Catchments: {mm(s.catchmentMm)} ({s.catchmentMm3} million m³)
+              {tr("Catchments:")} {tr(mm(s.catchmentMm))} ({s.catchmentMm3} {tr("million m³)")}
             </p>
             <p>
               <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={{ background: "#9CC4F2" }} aria-hidden="true" />
-              Rest of the island: {mm(s.outsideMm)} ({Math.round((s.islandMm3 - s.catchmentMm3) * 10) / 10} million m³)
+              {tr("Rest of the island:")} {tr(mm(s.outsideMm))} ({Math.round((s.islandMm3 - s.catchmentMm3) * 10) / 10} {tr("million m³)")}
             </p>
           </div>
         </div>
       )}
-      {s && !dry && <p className="mt-1 text-[11px] font-semibold text-[#A61E1E] dark:text-[#FFB4B4]">⚠ Rain over the catchment areas — not reservoir levels.</p>}
+      {s && !dry && <p className="mt-1 text-[11px] font-semibold text-[#A61E1E] dark:text-[#FFB4B4]">{tr("⚠ Rain over the catchment areas — not reservoir levels.")}</p>}
       <p className="mt-1 text-[11px] text-muted dark:text-slate-400">
-        Model estimates of yesterday&apos;s rain (not rain-gauge readings). {d.island === "mauritius" && <Link href="/reservoirs" className="underline">More on the Reservoirs page</Link>}
+        {tr("Model estimates of yesterday's rain (not rain-gauge readings).")} {d.island === "mauritius" && <Link href="/reservoirs" className="underline">{tr("More on the Reservoirs page")}</Link>}
       </p>
     </section>
   );

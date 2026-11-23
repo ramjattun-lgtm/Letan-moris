@@ -5,6 +5,7 @@ import { useApi } from "@/lib/client/useApi";
 import { useAppState } from "./AppState";
 import type { Fact } from "@/lib/weather/intelligence/facts.service";
 import { Dodo } from "./Dodo";
+import { tr } from "@/lib/i18n";
 
 const LABEL: Record<Fact["category"], string> = {
   local: "Local climate",
@@ -28,15 +29,15 @@ export function DidYouKnow() {
   return (
     <section className="card bg-gradient-to-br from-[#FFF8EA] to-white dark:from-[#2A2414] dark:to-night-card" aria-labelledby="dyk-title" aria-live="polite">
       <div className="flex items-center justify-between gap-2">
-        <h2 id="dyk-title" className="label flex items-center gap-1.5"><Dodo size={22} className="text-coral-ink dark:text-coral" /> Did you know?</h2>
-        <span className="chip bg-coral/25 text-[11px] text-coral-ink dark:text-coral">{LABEL[f.category]}</span>
+        <h2 id="dyk-title" className="label flex items-center gap-1.5"><Dodo size={22} className="text-coral-ink dark:text-coral" /> {tr("Did you know?")}</h2>
+        <span className="chip bg-coral/25 text-[11px] text-coral-ink dark:text-coral">{tr(LABEL[f.category])}</span>
       </div>
-      <p className="mt-2 text-base font-semibold leading-snug">{f.text}</p>
+      <p className="mt-2 text-base font-semibold leading-snug">{tr(f.text)}</p>
       <div className="mt-2 flex items-center justify-between gap-2">
-        <p className="text-[11px] text-muted dark:text-slate-400">Source: {f.source}</p>
+        <p className="text-[11px] text-muted dark:text-slate-400">{tr("Source:")} {tr(f.source)}</p>
         {facts.length > 1 && (
           <button type="button" onClick={() => setI((x) => x + 1)} className="min-h-9 shrink-0 rounded-full px-3 text-sm font-semibold text-teal-ink ring-1 ring-teal/40 dark:text-teal-soft">
-            Another fact →
+            {tr("Another fact →")}
           </button>
         )}
       </div>

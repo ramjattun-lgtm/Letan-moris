@@ -15,6 +15,7 @@ import { KINDS } from "@/lib/community/lapli";
 import { FLOOD_SITES_SOURCE, siteRisks } from "@/data/flood-sites";
 import type { ExtraMarker } from "@/components/WeatherMap";
 import type { RiverAssessment } from "@/lib/weather/intelligence/river.service";
+import { tr } from "@/lib/i18n";
 
 const WeatherMap = dynamic(() => import("@/components/WeatherMap").then((m) => m.WeatherMap), { ssr: false, loading: () => <Skeleton className="h-[60vh]" /> });
 
@@ -74,11 +75,11 @@ export default function MapPage() {
 
   return (
     <>
-      <h1 className="mb-3 font-[family-name:var(--font-display)] text-2xl font-extrabold">Weather map — {island === "rodrigues" ? "Rodrigues" : "Mauritius"}</h1>
-      <div role="group" aria-label="Map layer" className="scroll-x mb-3">
+      <h1 className="mb-3 font-[family-name:var(--font-display)] text-2xl font-extrabold">{tr("Weather map —")} {tr(island === "rodrigues" ? "Rodrigues" : "Mauritius")}</h1>
+      <div role="group" aria-label={tr("Map layer")} className="scroll-x mb-3">
         {LAYERS.map((l) => (
           <button key={l.id} type="button" aria-pressed={layer === l.id} onClick={() => setLayer(l.id)} className={`min-h-10 shrink-0 rounded-full px-4 text-sm font-semibold ${layer === l.id ? "bg-navy text-white dark:bg-teal-soft dark:text-navy" : "bg-white text-muted ring-1 ring-navy/10 dark:bg-night-card dark:text-slate-300"}`}>
-            {l.label}
+            {tr(l.label)}
           </button>
         ))}
       </div>
@@ -87,14 +88,14 @@ export default function MapPage() {
         <>
           <WeatherMap island={island} points={[]} layer={layer} onSelect={onSelect} extra={riverMarkers} />
           <p className="mt-2 text-sm">
-            Details and safety advice: <Link href="/rivers" className="font-semibold underline">River watch</Link>
+            {tr("Details and safety advice:")} <Link href="/rivers" className="font-semibold underline">{tr("River watch")}</Link>
           </p>
         </>
       ) : layer === "reports" ? (
         <>
           <WeatherMap island={island} points={reportPoints} layer={layer} onSelect={onSelect} extra={hazardMarkers} />
-          {lapli.places && reportPoints.length === 0 && hazardMarkers.length === 0 && <p className="mt-2 text-sm text-muted">No community reports in the last 3 hours on this island.</p>}
-          {lapli.error && <p className="mt-2 text-sm text-muted">Community reports are unavailable right now.</p>}
+          {lapli.places && reportPoints.length === 0 && hazardMarkers.length === 0 && <p className="mt-2 text-sm text-muted">{tr("No community reports in the last 3 hours on this island.")}</p>}
+          {lapli.error && <p className="mt-2 text-sm text-muted">{tr("Community reports are unavailable right now.")}</p>}
         </>
       ) : api.data ? (
         <WeatherMap island={island} points={api.data.points} layer={layer} onSelect={onSelect} />
@@ -103,12 +104,12 @@ export default function MapPage() {
       )}
       <div className="mt-3 grid gap-3 lg:grid-cols-2">
         <div className="card text-sm">
-          <h2 className="label">Legend</h2>
-          <p className="mt-1">{LAYERS.find((l) => l.id === layer)?.legend}</p>
+          <h2 className="label">{tr("Legend")}</h2>
+          <p className="mt-1">{tr((LAYERS.find((l) => l.id === layer)?.legend) ?? "")}</p>
           {api.data && (
             <p className="mt-2 text-[11px] text-muted dark:text-slate-400">
-              Model data updated {formatUtcAsMU(api.data.retrievedAt)} ({ago(api.data.retrievedAt)}). Values are for each place shown, not a radar picture. Official warnings are on the{" "}
-              <Link href="/cyclone" className="underline">Cyclone page</Link>. Sea conditions are on the <Link href="/marine" className="underline">Marine page</Link>.
+              {tr("Model data updated")} {tr(formatUtcAsMU(api.data.retrievedAt))} ({tr(ago(api.data.retrievedAt))}{tr("). Values are for each place shown, not a radar picture. Official warnings are on the")}{" "}
+              <Link href="/cyclone" className="underline">{tr("Cyclone page")}</Link>{tr(". Sea conditions are on the")} <Link href="/marine" className="underline">{tr("Marine page")}</Link>.
             </p>
           )}
         </div>
@@ -116,11 +117,11 @@ export default function MapPage() {
         {pickedLoc && (
           <div className="card flex items-center justify-between gap-3">
             <div>
-              <p className="font-bold">{pickedLoc.name}</p>
-              <p className="text-sm text-muted dark:text-slate-400">{pickedLoc.district}</p>
+              <p className="font-bold">{tr(pickedLoc.name)}</p>
+              <p className="text-sm text-muted dark:text-slate-400">{tr(pickedLoc.district)}</p>
             </div>
             <Link href="/" onClick={() => setLocation(pickedLoc.id)} className="rounded-full bg-navy px-4 py-2 text-sm font-semibold text-white dark:bg-teal-soft dark:text-navy">
-              Open forecast
+              {tr("Open forecast")}
             </Link>
           </div>
         )}
@@ -136,28 +137,28 @@ function FloodSitesList({ points }: { points: MapPoint[] }) {
   const raised = sites.filter((s) => s.risk === "high" || s.risk === "moderate");
   return (
     <div className="card text-sm">
-      <h2 className="label">Known flood-prone areas · today</h2>
+      <h2 className="label">{tr("Known flood-prone areas · today")}</h2>
       <p className="mt-1">
-        {raised.length === 0
-          ? "No raised heavy-rain risk near any known flood-prone area in the next 24 hours."
-          : `${raised.length} of ${sites.length} known flood-prone areas have a raised heavy-rain risk in the next 24 hours.`}
+        {tr(raised.length === 0
+          ? tr("No raised heavy-rain risk near any known flood-prone area in the next 24 hours.")
+          : `${raised.length} of ${sites.length} known flood-prone areas have a raised heavy-rain risk in the next 24 hours.`)}
       </p>
       <ul className="mt-2 divide-y divide-navy/5 dark:divide-white/10">
         {sites.map((s) => (
           <li key={s.id} className="flex items-center justify-between gap-2 py-1.5">
             <span className="min-w-0">
-              <span className="font-semibold">{s.name}</span>
-              {s.detail && <span className="block text-[11px] text-muted dark:text-slate-400">{s.detail}</span>}
+              <span className="font-semibold">{tr(s.name)}</span>
+              {s.detail && <span className="block text-[11px] text-muted dark:text-slate-400">{tr(s.detail)}</span>}
             </span>
             <span
               className={`chip shrink-0 ${s.risk === "high" ? "bg-[#D9480F] text-white" : s.risk === "moderate" ? "bg-coral text-navy" : "bg-mist text-muted dark:bg-white/10 dark:text-slate-300"}`}
             >
-              {s.risk ? RISK_TEXT[s.risk] : "—"}
+              {tr(s.risk ? RISK_TEXT[s.risk] : "—")}
             </span>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-[11px] text-muted dark:text-slate-400">{FLOOD_SITES_SOURCE} Risk is our independent forecast, not an MMS warning.</p>
+      <p className="mt-2 text-[11px] text-muted dark:text-slate-400">{tr(FLOOD_SITES_SOURCE)} {tr("Risk is our independent forecast, not an MMS warning.")}</p>
     </div>
   );
 }

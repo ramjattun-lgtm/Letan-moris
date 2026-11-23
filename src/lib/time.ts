@@ -1,3 +1,4 @@
+import { currentLang } from "./i18n";
 // Mauritius time helpers. Mauritius and Rodrigues use UTC+4 all year (no daylight saving).
 // Forecast times are kept as local strings "YYYY-MM-DDTHH:mm" so the device's own
 // time zone can never shift what is displayed.
@@ -42,6 +43,16 @@ export function hourStart(local: string): string {
 }
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+// French and Kreol day and month names (the app's language is set on the phone; server output stays English).
+const DAYS_L = {
+  fr: ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"],
+  mfe: ["Dimans", "Lindi", "Mardi", "Merkredi", "Zedi", "Vandredi", "Samdi"],
+};
+const MONTHS_L = {
+  fr: ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."],
+  mfe: ["Zan", "Fev", "Mar", "Avr", "Me", "Zin", "Zilye", "Out", "Sept", "Okt", "Nov", "Des"],
+};
+const TODAY_L = { fr: ["Aujourd'hui", "Demain"], mfe: ["Zordi", "Demin"] };
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** Add hours to a local time string (handles day changes). */
@@ -62,6 +73,13 @@ export function weekday(date: string): number {
 /** "Today", "Tomorrow" or "Saturday 22 Nov". */
 export function dayLabel(date: string, now: Date = new Date()): string {
   const today = todayMU(now);
+  const l = currentLang();
+  if (l !== "en") {
+    if (date === today) return TODAY_L[l][0];
+    if (date === addDays(today, 1)) return TODAY_L[l][1];
+    const [, m, d] = date.split("-").map(Number);
+    return `${DAYS_L[l][weekday(date)]} ${d} ${MONTHS_L[l][m - 1]}`;
+  }
   if (date === today) return "Today";
   if (date === addDays(today, 1)) return "Tomorrow";
   const [, m, d] = date.split("-").map(Number);
@@ -70,6 +88,8 @@ export function dayLabel(date: string, now: Date = new Date()): string {
 
 export function shortDay(date: string, now: Date = new Date()): string {
   const today = todayMU(now);
+  const l = currentLang();
+  if (l !== "en") return date === today ? TODAY_L[l][0] : DAYS_L[l][weekday(date)].slice(0, 3);
   if (date === today) return "Today";
   return DAYS[weekday(date)].slice(0, 3);
 }
@@ -88,9 +108,12 @@ export function minutesBetween(a: string, b: string): number {
 /** Human "x min ago" / "x h ago" from an ISO UTC timestamp. */
 export function ago(isoUtc: string, now: Date = new Date()): string {
   const mins = Math.max(0, Math.round((now.getTime() - new Date(isoUtc).getTime()) / 60000));
+  const l = currentLang();
+  const h = Math.floor(mins / 60);
+  if (l === "fr") return mins < 1 ? "à l'instant" : mins < 60 ? `il y a ${mins} min` : h < 48 ? `il y a ${h} h` : `il y a ${Math.floor(h / 24)} jours`;
+  if (l === "mfe") return mins < 1 ? "aster mem" : mins < 60 ? `${mins} min desela` : h < 48 ? `${h} er desela` : `${Math.floor(h / 24)} zour desela`;
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins} min ago`;
-  const h = Math.floor(mins / 60);
   if (h < 48) return `${h} h ago`;
   return `${Math.floor(h / 24)} days ago`;
 }
@@ -99,5 +122,6 @@ export function ago(isoUtc: string, now: Date = new Date()): string {
 export function formatUtcAsMU(isoUtc: string): string {
   const local = nowMU(new Date(isoUtc));
   const [, m, d] = local.slice(0, 10).split("-").map(Number);
-  return `${local.slice(11, 16)}, ${d} ${MONTHS[m - 1]}`;
+  const l = currentLang();
+  return `${local.slice(11, 16)}, ${d} ${l === "en" ? MONTHS[m - 1] : MONTHS_L[l][m - 1]}`;
 }

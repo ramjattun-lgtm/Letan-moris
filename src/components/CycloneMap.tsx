@@ -7,6 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Feature } from "geojson";
 import type { ActiveSystem } from "@/lib/weather/providers/gdacs.provider";
 import { MAURITIUS, RODRIGUES } from "@/lib/weather/providers/gdacs.provider";
+import { tr } from "@/lib/i18n";
 
 const STYLE = "https://tiles.openfreemap.org/styles/positron";
 
@@ -78,5 +79,5 @@ export function CycloneMap({ systems }: { systems: ActiveSystem[] }) {
     return () => map.remove();
   }, [systems]);
 
-  return <div ref={box} className="h-[55vh] min-h-80 w-full overflow-hidden rounded-3xl" role="img" aria-label="Map of the storm's past track, forecast track and uncertainty cone" />;
+  return <div ref={box} className="h-[55vh] min-h-80 w-full overflow-hidden rounded-3xl" role="img" aria-label={tr("Map of the storm's past track, forecast track and uncertainty cone")} />;
 }

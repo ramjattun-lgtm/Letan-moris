@@ -5,6 +5,7 @@ import { AreaAlertsButton } from "./AreaAlertsButton";
 import { climateKeyFor } from "@/lib/weather/intelligence/climate.service";
 import { DISTRICTS, getLocality, nearestLocality, searchLocalities, REGION_LABEL } from "@/data/localities";
 import { useAppState } from "./AppState";
+import { tr } from "@/lib/i18n";
 
 /** Browser permission for location: "granted", "prompt", "denied" or null if the browser won't say. */
 function useGeoPermission() {
@@ -93,7 +94,7 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
               {t("setup.blocked")}
             </p>
           )}
-          {geoMsg && <p className="mt-2 text-xs">{geoMsg}</p>}
+          {geoMsg && <p className="mt-2 text-xs">{tr(geoMsg)}</p>}
         </div>
       )}
       <div className="flex items-center gap-2">
@@ -108,9 +109,9 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
             <circle cx="12" cy="10" r="2.5" />
           </svg>
           <span className="flex-1">
-            <span className="block font-[family-name:var(--font-display)] text-lg font-bold leading-tight">{location.name}</span>
+            <span className="block font-[family-name:var(--font-display)] text-lg font-bold leading-tight">{tr(location.name)}</span>
             <span className="block text-xs text-muted dark:text-slate-400">
-              {location.district === "Rodrigues" ? "Rodrigues" : `${location.district} · ${REGION_LABEL[location.region]}`}
+              {tr(location.district === "Rodrigues" ? "Rodrigues" : `${location.district} · ${REGION_LABEL[location.region]}`)}
             </span>
           </span>
           <span className="text-sm font-semibold text-teal-ink dark:text-teal-soft">{t("place.change")}</span>
@@ -139,7 +140,7 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
         <div className="card mt-2">
           <div className="flex flex-col gap-2 sm:flex-row">
             <label className="flex-1">
-              <span className="sr-only">Search places</span>
+              <span className="sr-only">{tr("Search places")}</span>
               <input
                 autoFocus
                 value={q}
@@ -150,29 +151,29 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
             </label>
             {island === "mauritius" && (
               <label>
-                <span className="sr-only">District</span>
+                <span className="sr-only">{tr("District")}</span>
                 <select value={district} onChange={(e) => setDistrict(e.target.value)} className="min-h-11 w-full rounded-xl bg-mist px-3 ring-1 ring-navy/10 dark:bg-night dark:ring-white/10">
-                  <option value="">All districts</option>
+                  <option value="">{tr("All districts")}</option>
                   {DISTRICTS.mauritius.map((d) => (
-                    <option key={d}>{d}</option>
+                    <option key={d}>{tr(d)}</option>
                   ))}
                 </select>
               </label>
             )}
             <button type="button" onClick={useMyLocation} className="min-h-11 rounded-xl bg-navy px-4 text-sm font-semibold text-white dark:bg-teal-soft dark:text-navy">
-              Use my location
+              {tr("Use my location")}
             </button>
           </div>
-          {geoMsg && <p className="mt-2 text-sm text-muted dark:text-slate-400">{geoMsg}</p>}
+          {geoMsg && <p className="mt-2 text-sm text-muted dark:text-slate-400">{tr(geoMsg)}</p>}
           {favourites.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold text-muted dark:text-slate-400">Saved:</span>
+              <span className="text-xs font-semibold text-muted dark:text-slate-400">{tr("Saved:")}</span>
               {favourites.map((id) => (
                 <button key={id} type="button" onClick={() => { setLocation(id); setOpen(false); }} className="min-h-9 rounded-full bg-coral/15 px-3 text-sm font-semibold">
-                  {getLocality(id)?.name}
+                  {tr((getLocality(id)?.name) ?? "")}
                 </button>
               ))}
-              <a href="/locations" className="text-sm font-semibold text-teal-ink underline dark:text-teal-soft">Compare</a>
+              <a href="/locations" className="text-sm font-semibold text-teal-ink underline dark:text-teal-soft">{tr("Compare")}</a>
             </div>
           )}
           <ul className="mt-3 grid max-h-80 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
@@ -187,12 +188,12 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
                   }}
                   className={`flex min-h-11 w-full items-center justify-between rounded-xl px-3 text-left text-sm hover:bg-mist dark:hover:bg-white/5 ${l.id === location.id ? "bg-teal/10 font-semibold" : ""}`}
                 >
-                  <span>{l.name}</span>
-                  <span className="text-xs text-muted dark:text-slate-400">{l.kind === "beach" ? "Beach · " : ""}{l.district}</span>
+                  <span>{tr(l.name)}</span>
+                  <span className="text-xs text-muted dark:text-slate-400">{tr(l.kind === "beach" ? tr("Beach · ") : "")}{tr(l.district)}</span>
                 </button>
               </li>
             ))}
-            {results.length === 0 && <li className="px-3 py-2 text-sm text-muted">No place found. Try another spelling.</li>}
+            {results.length === 0 && <li className="px-3 py-2 text-sm text-muted">{tr("No place found. Try another spelling.")}</li>}
           </ul>
         </div>
       )}

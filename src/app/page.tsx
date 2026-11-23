@@ -29,6 +29,7 @@ import { AccuracyCard } from "@/components/AccuracyCard";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { WeatherMemory } from "@/components/WeatherMemory";
 import { CycloneReady } from "@/components/CycloneReady";
+import { tr } from "@/lib/i18n";
 
 export default function Home() {
   const { location, ready, interests, t } = useAppState();
@@ -66,7 +67,7 @@ export default function Home() {
               title={t("today.forYou")}
             />
             <button type="button" onClick={() => setEditing(true)} className="-mt-2 self-start text-sm font-semibold text-teal-ink underline dark:text-teal-soft">
-              Change what I see
+              {tr("Change what I see")}
             </button>
             <CommunityCard f={f} />
           </div>
@@ -100,7 +101,7 @@ export default function Home() {
           <div className="lg:col-span-2">
             <DailyList f={f} />
             <DataFreshness provenance={f.provenance} savedAt={api.savedAt} stale={!!api.error} />
-            <p className="mt-1 text-[11px] text-muted dark:text-slate-400">{f.provenance.resolutionNote}</p>
+            <p className="mt-1 text-[11px] text-muted dark:text-slate-400">{tr(f.provenance.resolutionNote)}</p>
           </div>
         </div>
       )}
