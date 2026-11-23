@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getForecastFor } from "@/lib/weather/services/forecast.service";
 import type { Forecast } from "@/lib/weather/types";
+import { weeklyBlock } from "./content/weekly";
 import { buildSnapshot, POST_REGIONS, SITE_URL, SLOTS, type PostSnapshot, type Slot } from "./content/post-builder";
 import { checkPost, type CheckResult } from "./checker/post-validator.service";
 import { renderCard } from "./content/card-renderer";
@@ -19,7 +20,9 @@ export async function prepare(slot: Slot, planFrom?: string): Promise<{ snapshot
   // Weekly "Did you know?": added to the Sunday morning post.
   const isSunday = new Date(`${from.slice(0, 10)}T12:00:00Z`).getUTCDay() === 0;
   const didYouKnow = slot === "morning" && isSunday ? weeklyPostFact(from.slice(0, 10)) : null;
-  const snapshot = buildSnapshot(slot, forecasts, now, from, { didYouKnow });
+  // Weekly look-back and best days: added to the Sunday evening post.
+  const weekly = slot === "evening" && isSunday ? weeklyBlock(forecasts, from.slice(0, 10)) : undefined;
+  const snapshot = buildSnapshot(slot, forecasts, now, from, { didYouKnow, weekly });
   return { snapshot, check: checkPost(snapshot) };
 }
 

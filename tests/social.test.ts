@@ -66,3 +66,15 @@ describe("Facebook post builder", () => {
     expect(rainPhrase(null, null, [])).toBe("rain forecast not available");
   });
 });
+
+import { weeklyBlock } from "@/lib/social/content/weekly";
+describe("Sunday evening weekly block", () => {
+  it("adds best days and passes the post checks", () => {
+    const fc = forecasts("2026-11-20");
+    const weekly = weeklyBlock(fc, "2026-11-20");
+    expect(weekly.join("\n")).toContain("Best days this week");
+    const s = buildSnapshot("evening", fc, "2026-11-20T08:30", "2026-11-20T08:30", { weekly });
+    expect(s.text).toContain("Best beach day (west coast)");
+    expect(checkPost(s, new Date("2026-11-20T04:30:00Z")).failures).toEqual([]);
+  });
+});
