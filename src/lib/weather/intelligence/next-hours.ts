@@ -3,7 +3,10 @@ import { hhmm, hourStart, nowMU } from "@/lib/time";
 
 // Rain in the next 6 hours, from the hourly model forecast. Forecast guidance — not radar.
 export const NEXT_HOURS = 6;
-export const RAIN_LIKELY_PCT = 50; // and at least 0.2 mm in the hour
+// Calibrated against the accuracy check (Nov 2026): the models often forecast light rain that
+// does not come (many false alarms at Plaisance airport), so "likely" needs a solid signal.
+export const RAIN_LIKELY_PCT = 60; // and at least 0.5 mm in the hour
+export const LIKELY_MM = 0.5;
 export const RAIN_POSSIBLE_PCT = 30;
 export const WET_MM = 0.2;
 
@@ -21,7 +24,7 @@ export function classifyHour(h: Pick<HourlyPoint, "rainProbability" | "precipita
   const p = h.rainProbability;
   const mm = h.precipitation;
   if (p === null && mm === null) return "unknown";
-  if ((p ?? 0) >= RAIN_LIKELY_PCT && (mm ?? 0) >= WET_MM) return "likely";
+  if ((p ?? 0) >= RAIN_LIKELY_PCT && (mm ?? 0) >= LIKELY_MM) return "likely";
   if ((p ?? 0) >= RAIN_POSSIBLE_PCT || (mm ?? 0) >= WET_MM) return "possible";
   return "dry";
 }

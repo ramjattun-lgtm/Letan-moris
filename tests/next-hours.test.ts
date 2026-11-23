@@ -9,6 +9,7 @@ const day = (rows: [number | null, number | null][]) => rows.map(([p, mm], i) =>
 describe("rain in the next 6 hours", () => {
   it("classifies hours", () => {
     expect(classifyHour({ rainProbability: 70, precipitation: 1.2 })).toBe("likely");
+    expect(classifyHour({ rainProbability: 55, precipitation: 0.3 })).toBe("possible"); // light: not "likely"
     expect(classifyHour({ rainProbability: 70, precipitation: 0 })).toBe("possible");
     expect(classifyHour({ rainProbability: 10, precipitation: 0 })).toBe("dry");
     expect(classifyHour({ rainProbability: null, precipitation: null })).toBe("unknown");
@@ -28,5 +29,15 @@ describe("rain in the next 6 hours", () => {
     expect(nextHoursHeadline(wet)).toBe("Rain likely from about 11:00 (60%), easing after 12:00 — about 4 mm over 6 hours.");
     const maybe = nextHours(day([[10, 0], [35, 0.1], [20, 0], [10, 0], [5, 0], [5, 0]]), "2026-11-23T09:00");
     expect(nextHoursHeadline(maybe)).toMatch(/^A shower is possible from about 10:00 \(35%\)/);
+  });
+});
+
+import { rainOutlook } from "@/lib/weather/intelligence/rainfall-intelligence.service";
+describe("calibrated rain wording", () => {
+  it("a short light shower is 'possible', a solid spell is 'likely'", () => {
+    const light = day([[10, 0], [55, 0.3], [10, 0], [5, 0], [5, 0], [5, 0]]);
+    expect(rainOutlook(light, "2026-11-23T09:00").headline).toMatch(/^Showers possible/);
+    const solid = day([[10, 0], [70, 2], [80, 3], [10, 0], [5, 0], [5, 0]]);
+    expect(rainOutlook(solid, "2026-11-23T09:00").headline).toMatch(/^Rain likely/);
   });
 });

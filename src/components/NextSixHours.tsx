@@ -2,6 +2,8 @@
 
 import type { Forecast } from "@/lib/weather/types";
 import { nextHours, nextHoursHeadline, type HourRain } from "@/lib/weather/intelligence/next-hours";
+import { useAppState } from "./AppState";
+import { trackRecord } from "./AccuracyCard";
 
 const COLOUR: Record<HourRain, string> = {
   likely: "bg-rain",
@@ -13,7 +15,9 @@ const WORD: Record<HourRain, string> = { likely: "Rain likely", possible: "Possi
 
 /** Will it rain while I'm out? Hour by hour for the next 6 hours. */
 export function NextSixHours({ f }: { f: Forecast }) {
+  const { location } = useAppState();
   const hours = nextHours(f.hourly);
+  const record = trackRecord(location);
   if (!hours.length) return null;
   const wet = hours.some((h) => h.rain === "likely");
   return (
@@ -36,7 +40,12 @@ export function NextSixHours({ f }: { f: Forecast }) {
         ))}
       </ol>
       <p className="mt-2 text-[11px] text-muted dark:text-slate-400">
-        % = chance of rain in that hour; mm = expected amount. Forecast guidance from weather models, not radar — showers can pop up between hours. Official warnings: MMS.
+        {record && (
+          <>
+            {record}{" "}
+          </>
+        )}
+        % = chance of rain in that hour; mm = expected amount. &quot;Likely&quot; needs at least 60% and 0.5 mm. Forecast guidance from weather models, not radar — showers can pop up between hours. Official warnings: MMS.
       </p>
     </section>
   );

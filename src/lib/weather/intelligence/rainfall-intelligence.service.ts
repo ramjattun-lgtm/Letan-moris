@@ -39,6 +39,11 @@ const nextHour = (t: LocalTime) => addHours(hourStart(t), 1);
 
 const RANK: Intensity[] = ["none", "light", "moderate", "heavy"];
 
+/** "Likely" needs a solid signal: at least 60% chance and 1 mm in the period. */
+export const LIKELY_PROB = 60;
+export const LIKELY_MM = 1;
+export const solidRain = (p: Pick<RainPeriod, "maxProbability" | "totalMm">) => (p.maxProbability ?? 0) >= LIKELY_PROB && p.totalMm >= LIKELY_MM;
+
 /** Group consecutive wet hours into rain periods. */
 export function findRainPeriods(hourly: HourlyPoint[]): RainPeriod[] {
   const out: RainPeriod[] = [];
@@ -133,9 +138,12 @@ export function rainOutlook(hourly: HourlyPoint[], now: LocalTime = nowMU()): Ra
   const startsNow = first.start <= hourStart(now);
   const amount = first.totalMm >= 0.1 ? `, about ${first.totalMm} mm in total` : "";
   const intensity = first.peakIntensity === "none" ? "" : ` (${first.peakIntensity})`;
+  // Calibrated wording: forecasts here over-call light rain (see the accuracy check), so short or
+  // light rain periods are "possible", and only solid ones are "likely".
+  const word = solidRain(first) ? "Rain likely" : "Showers possible";
   const headline = startsNow
-    ? `Rain likely now, easing around ${hhmm(first.end)}`
-    : `Rain likely from about ${hhmm(first.start)} until about ${hhmm(first.end)}`;
+    ? `${word} now, easing around ${hhmm(first.end)}`
+    : `${word} from about ${hhmm(first.start)} until about ${hhmm(first.end)}`;
   return {
     headline,
     detail: `Up to ${first.maxProbability ?? "—"}% chance${intensity}${amount}.${periods.length > 1 ? ` ${periods.length - 1} more rain period${periods.length > 2 ? "s" : ""} later in the next 24 hours.` : ""}`,

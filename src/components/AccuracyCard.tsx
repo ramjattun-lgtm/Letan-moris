@@ -24,6 +24,14 @@ const ACC = data as unknown as { builtAt: string | null; from: string | null; to
 
 export const accuracyReady = () => !!ACC.builtAt && Object.keys(ACC.regions).length > 0;
 
+/** One line on how reliable rain forecasts have been in this area lately (or null). */
+export function trackRecord(location: Locality): string | null {
+  const r = accuracyReady() ? ACC.regions[climateKeyFor(location)] : undefined;
+  if (!r?.rain) return null;
+  const over = r.rain.falseAlarms >= Math.max(3, r.rain.missed * 2);
+  return `Track record in ${r.name}: rain or no rain called right on ${r.rain.agreePct}% of the last ${r.rain.days} days${over ? " — forecasts here have tended to over-call light rain" : ""}.`;
+}
+
 function Line({ r, observed }: { r: Row; observed?: boolean }) {
   if (!r.rain) return null;
   return (
