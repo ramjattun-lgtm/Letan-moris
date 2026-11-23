@@ -22,3 +22,14 @@
 4. Set `WEATHER_PRIMARY_PROVIDER=<name>`. Paid providers also need `ALLOW_PAID_PROVIDERS=true` **and** the owner's explicit authorisation.
 
 Candidates evaluated for later: Open-Meteo ensemble API (confidence), ECMWF open data, NOAA GFS, METAR (FIMP/FIMR) for verification, NASA GPM IMERG for rainfall verification.
+
+## Added since (Nov 2026)
+- **Open-Meteo Previous Runs API** — day-before forecasts for the accuracy check and "last 3 hours".
+- **Open-Meteo Historical Weather API (ERA5)** — climate, reservoir history, Weather Memory.
+- **Open-Meteo Seasonal API** — EC46 weekly and SEAS5 monthly rain outlooks for reservoirs.
+- **Iowa Environmental Mesonet (IEM) METAR archive** — observed rain and temperature at FIMP and FIMR.
+- **aviationweather.gov** — latest METAR for the 3-hour check.
+- **GDACS** and **NOAA IBTrACS** — current and past tropical cyclones.
+- **NOAA Coral Reef Watch** — lagoon heat stress.
+- **ntfy.sh** (free, public topics) — community reports fallback and area alerts.
+- **Neon Postgres** (free plan) — community reports, likes, flags. No personal data.
