@@ -1,0 +1,22 @@
+# Sends area alerts to the free ntfy app every 30 minutes. Nothing is committed.
+name: Area alerts
+
+on:
+  schedule:
+    - cron: "4,34 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Send alerts
+        run: node scripts/send-area-alerts.mjs

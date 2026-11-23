@@ -22,15 +22,21 @@ import { DidYouKnow } from "@/components/DidYouKnow";
 import { YesterdayRain } from "@/components/YesterdayRain";
 import { ExploreLink, HeatCard, MosquitoCard } from "@/components/WellbeingCards";
 import { useState } from "react";
+import { LastRefreshed } from "@/components/LastRefreshed";
+import { NextSixHours } from "@/components/NextSixHours";
+import { YourPlaces } from "@/components/YourPlaces";
+import { AccuracyCard } from "@/components/AccuracyCard";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export default function Home() {
   const { location, ready, interests } = useAppState();
   const [editing, setEditing] = useState(false);
-  const api = useApi<Forecast>(ready ? `/api/forecast?loc=${location.id}` : null);
+  const api = useApi<Forecast>(ready ? `/api/forecast?loc=${location.id}` : null, { refreshMin: 15 });
   const f = api.data;
 
   return (
     <>
+      <LastRefreshed savedAt={api.savedAt} dataAt={f?.provenance.retrievedAt} loading={api.loading} stale={!!api.error && !!f} onRefresh={api.reload} />
       <OfficialBanner />
       {f && <AlertsPanel f={f} />}
       <AboutBanner />
@@ -45,17 +51,12 @@ export default function Home() {
         ) : null
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {/* Left: what the weather is doing. Right: what it means for you. Balanced so neither column runs short on wide screens. */}
+          {/* Left: now and the next few hours (what most people open the app for). Right: the rest of the day and background. */}
           <div className="flex min-w-0 flex-col gap-4">
             <CurrentCard f={f} />
+            <NextSixHours f={f} />
             <RecentCard />
             <HeavyRainCard />
-            <HeatCard hours={f.hourly} date={todayMU()} />
-            <MosquitoCard />
-            <RainOutlookCard f={f} compact />
-            <TrustBadges f={f} />
-          </div>
-          <div className="flex min-w-0 flex-col gap-4">
             {editing && <InterestsPicker onDone={() => setEditing(false)} />}
             <DecisionList
               items={assessDay(f.hourly, f.daily, todayMU(), 0).filter((a) => a.id === "general" || interests.includes(a.id))}
@@ -65,14 +66,29 @@ export default function Home() {
               Change what I see
             </button>
             <CommunityCard f={f} />
+          </div>
+          <div className="flex min-w-0 flex-col gap-4">
+            <YourPlaces />
+            <HeatCard hours={f.hourly} date={todayMU()} />
+            <MosquitoCard />
             <YesterdayRain />
             <ReservoirSummary />
+            <RainOutlookCard f={f} compact />
+            <AccuracyCard location={location} />
             <DidYouKnow />
-            <Link href="/day" className="card flex items-center justify-between font-semibold text-teal-ink hover:bg-white/80 dark:text-teal-soft">
-              <span>My Weather Day — plan any of the next 7 days</span>
-              <span aria-hidden="true">→</span>
-            </Link>
+            <div className="card grid gap-2 font-semibold text-teal-ink dark:text-teal-soft">
+              <Link href="/planner" className="flex items-center justify-between">
+                <span>🗓️ Perfect Day finder — best day this week for…</span>
+                <span aria-hidden="true">→</span>
+              </Link>
+              <Link href="/day" className="flex items-center justify-between">
+                <span>📅 My Weather Day — plan any of the next 7 days</span>
+                <span aria-hidden="true">→</span>
+              </Link>
+            </div>
             <ExploreLink />
+            <TrustBadges f={f} />
+            <InstallPrompt />
           </div>
           <div className="lg:col-span-2">
             <HourlyStrip f={f} />

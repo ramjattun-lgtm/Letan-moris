@@ -163,7 +163,7 @@ export function DailyList({ f }: { f: Forecast }) {
   );
 }
 
-const VERDICT_STYLE: Record<Verdict, { label: string; cls: string }> = {
+export const VERDICT_STYLE: Record<Verdict, { label: string; cls: string }> = {
   good: { label: "Good", cls: "bg-teal/15 text-teal-ink dark:text-teal-soft" },
   fair: { label: "Fair", cls: "bg-coral/20 text-coral-ink dark:text-coral" },
   poor: { label: "Poor", cls: "bg-rain/15 text-rain dark:text-rain-soft" },

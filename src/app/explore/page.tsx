@@ -3,6 +3,7 @@ import Link from "next/link";
 export const metadata = { title: "Explore — more tools" };
 
 const TOOLS = [
+  { href: "/planner", icon: "🗓️", title: "Perfect Day finder", text: "Best day this week for the beach, a hike, fishing, a picnic or sunset photos." },
   { href: "/rivers", icon: "🏞️", title: "River watch", text: "Heavy rain upstream? Rivers can rise fast even when it is dry in town." },
   { href: "/drive", icon: "🚗", title: "Trip planner", text: "Best time to leave to avoid rain on your drive." },
   { href: "/event", icon: "📅", title: "Event date checker", text: "Usual weather, outlook and cyclone risk for any date in the next year." },

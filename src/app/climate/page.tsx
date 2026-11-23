@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useAppState } from "@/components/AppState";
 import { MonthlyChart, TrendChart } from "@/components/ClimateCharts";
 import { HistoryCheck, RainTiming } from "@/components/ClimateEvidence";
+import { AccuracyCard } from "@/components/AccuracyCard";
 import { bestMonths, CLIMATE, climateKeyFor, climateReady, monthName, normalFor, region } from "@/lib/weather/intelligence/climate.service";
 import { todayMU } from "@/lib/time";
 
@@ -30,6 +31,9 @@ export default function ClimatePage() {
         <ReservoirLink />
         <div className="grid gap-4 lg:grid-cols-2">
           <RainTiming regionKey={climateKeyFor(location)} regionLabel={location.name} island={location.island} />
+          <div id="accuracy" className="scroll-mt-20">
+            <AccuracyCard full />
+          </div>
         </div>
       </>
     );
@@ -157,6 +161,10 @@ export default function ClimatePage() {
         </section>
 
         <HistoryCheck v={r.validation} regionLabel={r.label} />
+
+        <div id="accuracy" className="scroll-mt-20 lg:col-span-2">
+          <AccuracyCard full />
+        </div>
 
         <section className="card text-xs text-muted lg:col-span-2 dark:text-slate-400">
           <p>

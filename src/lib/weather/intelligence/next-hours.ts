@@ -1,0 +1,53 @@
+import type { HourlyPoint } from "../types";
+import { hhmm, hourStart, nowMU } from "@/lib/time";
+
+// Rain in the next 6 hours, from the hourly model forecast. Forecast guidance — not radar.
+export const NEXT_HOURS = 6;
+export const RAIN_LIKELY_PCT = 50; // and at least 0.2 mm in the hour
+export const RAIN_POSSIBLE_PCT = 30;
+export const WET_MM = 0.2;
+
+export type HourRain = "likely" | "possible" | "dry" | "unknown";
+
+export interface NextHour {
+  time: string;
+  label: string; // "Now" or "14:00"
+  pct: number | null;
+  mm: number | null;
+  rain: HourRain;
+}
+
+export function classifyHour(h: Pick<HourlyPoint, "rainProbability" | "precipitation">): HourRain {
+  const p = h.rainProbability;
+  const mm = h.precipitation;
+  if (p === null && mm === null) return "unknown";
+  if ((p ?? 0) >= RAIN_LIKELY_PCT && (mm ?? 0) >= WET_MM) return "likely";
+  if ((p ?? 0) >= RAIN_POSSIBLE_PCT || (mm ?? 0) >= WET_MM) return "possible";
+  return "dry";
+}
+
+export function nextHours(hourly: HourlyPoint[], now: string = nowMU(), n = NEXT_HOURS): NextHour[] {
+  const start = hourStart(now);
+  return hourly
+    .filter((h) => h.time >= start)
+    .slice(0, n)
+    .map((h, i) => ({ time: h.time, label: i === 0 ? "Now" : hhmm(h.time), pct: h.rainProbability, mm: h.precipitation, rain: classifyHour(h) }));
+}
+
+/** One plain sentence for the strip. */
+export function nextHoursHeadline(hours: NextHour[]): string {
+  if (!hours.length || hours.every((h) => h.rain === "unknown")) return "Rain forecast not available right now.";
+  const total = hours.reduce((s, h) => s + (h.mm ?? 0), 0);
+  const first = hours.findIndex((h) => h.rain === "likely");
+  const maybe = hours.findIndex((h) => h.rain === "possible");
+  const when = (i: number) => (i === 0 ? "now" : `from about ${hours[i].label}`);
+  if (first >= 0) {
+    const last = hours.map((h) => h.rain).lastIndexOf("likely");
+    const dryAfter = last < hours.length - 1 && hours.slice(last + 1).every((h) => h.rain === "dry");
+    return `Rain likely ${when(first)} (${hours[first].pct}%)${dryAfter ? `, easing after ${hours[last].label}` : ""} — about ${round1(total)} mm over 6 hours.`;
+  }
+  if (maybe >= 0) return `A shower is possible ${when(maybe)} (${hours[maybe].pct ?? "—"}%). Mostly dry otherwise.`;
+  return "Dry for the next 6 hours.";
+}
+
+const round1 = (x: number) => (x < 1 ? "under 1" : String(Math.round(x * 10) / 10));
