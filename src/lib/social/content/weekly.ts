@@ -8,19 +8,21 @@ import { dayLabel } from "@/lib/time";
 
 interface Score {
   name: string;
-  rain: { agreePct: number; days: number } | null;
+  rain: { days: number; clearCallPct?: number | null; said?: { likely: { days: number; rained: number }; dry: { days: number; stayedDry: number } } } | null;
 }
 const ACC = accuracy as unknown as { builtAt: string | null; regions: Record<string, Score>; airports: Record<string, Score> };
 
 export function accuracyLine(): string | null {
   const mu = Object.entries(ACC.regions)
-    .filter(([k, r]) => k !== "rodrigues" && r.rain)
-    .map(([, r]) => r.rain!.agreePct);
+    .filter(([k, r]) => k !== "rodrigues" && r.rain?.said)
+    .map(([, r]) => r.rain!.said!);
   if (!ACC.builtAt || !mu.length) return null;
-  const ap = ACC.airports.FIMP?.rain;
-  const lo = Math.min(...mu);
-  const hi = Math.max(...mu);
-  return `📊 How right were we? Over the last 30 days, the day-before forecast called rain or no rain right on ${lo === hi ? lo : `${lo}–${hi}`}% of days across Mauritius' areas (vs the model's own estimate)${ap ? `, and ${ap.agreePct}% at Plaisance airport against real weather reports` : ""}.`;
+  const likely = mu.reduce((a, s) => ({ days: a.days + s.likely.days, rained: a.rained + s.likely.rained }), { days: 0, rained: 0 });
+  const dry = mu.reduce((a, s) => ({ days: a.days + s.dry.days, ok: a.ok + s.dry.stayedDry }), { days: 0, ok: 0 });
+  if (!likely.days && !dry.days) return null;
+  const pct = (a: number, b: number) => Math.round((a / b) * 100);
+  const parts = [likely.days ? `when we said rain likely, it rained ${pct(likely.rained, likely.days)}% of the time` : "", dry.days ? `when we said dry, it stayed dry ${pct(dry.ok, dry.days)}% of the time` : ""].filter(Boolean);
+  return `📊 How right were we? Over the last 30 days across Mauritius' areas, ${parts.join("; ")} (day-before forecast vs the model's own estimate).`;
 }
 
 const ACTS: { id: PlanActivity; label: string; locId: string }[] = [

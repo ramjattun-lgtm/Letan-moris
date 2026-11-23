@@ -6,6 +6,7 @@
 // Runs daily in GitHub Actions. Keep the places in sync with scripts/build-climate.mjs.
 import { getWithRetry, sleep } from "./lib/http.mjs";
 import { writeFileSync } from "node:fs";
+import { score, SAID_DRY_MM, SAID_LIKELY_MM } from "./lib/accuracy-score.mjs";
 
 const DAYS = 30;
 const REGIONS = [
@@ -21,8 +22,7 @@ const AIRPORTS = [
   { key: "FIMP", name: "Plaisance airport", region: "south", lat: -20.4302, lon: 57.6836 },
   { key: "FIMR", name: "Plaine Corail airport (Rodrigues)", region: "rodrigues", lat: -19.7577, lon: 63.361 },
 ];
-const MODEL_WET_MM = 1; // a "rain day" in model data: at least 1 mm
-const FORECAST_WET_MM = 0.5; // vs airport reports, which note even light rain
+const MODEL_WET_MM = 1; // a "rain day" in the model's own estimate: at least 1 mm
 const OBS_WET_REPORTS = 2; // a "rain day" at an airport: rain in at least 2 reports
 const RAIN_CODE = /(^|\s|[+-])(RA|DZ|SHRA|TSRA|SH|TS)/; // ignores "VC" (rain only in the vicinity)
 
@@ -63,25 +63,12 @@ function series(j) {
   return { days, hours };
 }
 
-function score(pairs) {
-  // pairs: [{ fcWet, obsWet }]
-  const n = pairs.length;
-  if (!n) return null;
-  const agree = pairs.filter((p) => p.fcWet === p.obsWet).length;
-  return {
-    days: n,
-    agreePct: Math.round((agree / n) * 100),
-    rainDaysSeen: pairs.filter((p) => p.obsWet).length,
-    missed: pairs.filter((p) => p.obsWet && !p.fcWet).length,
-    falseAlarms: pairs.filter((p) => !p.obsWet && p.fcWet).length,
-  };
-}
 const mae = (xs) => (xs.length ? Math.round((xs.reduce((s, x) => s + Math.abs(x), 0) / xs.length) * 10) / 10 : null);
 
 const regions = {};
 REGIONS.forEach((r, i) => {
   const { days, hours } = series(list[i]);
-  const pairs = Object.values(days).filter((d) => d.ok).map((d) => ({ fcWet: d.fc >= MODEL_WET_MM, obsWet: d.an >= MODEL_WET_MM }));
+  const pairs = Object.values(days).filter((d) => d.ok).map((d) => ({ fcMm: d.fc, obsWet: d.an >= MODEL_WET_MM }));
   const temps = Object.values(hours).filter((x) => x.fcT !== null && x.anT !== null).map((x) => x.fcT - x.anT);
   regions[r.key] = { name: r.name, rain: score(pairs), tempMaeC: mae(temps) };
 });
@@ -119,7 +106,7 @@ for (const [k, a] of AIRPORTS.entries()) {
     // Only days with a reasonable number of reports (the airports report every 30–60 min).
     const pairs = Object.entries(days)
       .filter(([d, x]) => x.ok && (reportsPerDay[d] ?? 0) >= 12)
-      .map(([d, x]) => ({ fcWet: x.fc >= FORECAST_WET_MM, obsWet: (wetReports[d] ?? 0) >= OBS_WET_REPORTS }));
+      .map(([d, x]) => ({ fcMm: x.fc, obsWet: (wetReports[d] ?? 0) >= OBS_WET_REPORTS }));
     const temps = Object.entries(hours)
       .filter(([h, x]) => x.fcT !== null && obsT[h]?.length)
       .map(([h, x]) => x.fcT - obsT[h].reduce((s, y) => s + y, 0) / obsT[h].length);
@@ -140,9 +127,9 @@ writeFileSync(
       to: today,
       days: DAYS,
       method: {
-        forecast: "The forecast issued the day before (Open-Meteo Previous Runs API).",
+        forecast: `The forecast issued the day before (Open-Meteo Previous Runs API), sorted like the app's wording: under ${SAID_DRY_MM} mm = dry, ${SAID_LIKELY_MM} mm or more = rain likely, in between = showers possible.`,
         regions: `Compared with the model's latest estimate of what happened. A rain day = at least ${MODEL_WET_MM} mm. Model vs model — not rain gauges.`,
-        airports: `Compared with real METAR weather reports (Iowa Environmental Mesonet). A rain day = rain noted in at least ${OBS_WET_REPORTS} reports; forecast rain day = at least ${FORECAST_WET_MM} mm.`,
+        airports: `Compared with real METAR weather reports (Iowa Environmental Mesonet). A rain day = rain noted in at least ${OBS_WET_REPORTS} reports. Airport reports describe one spot every 30–60 minutes; the forecast covers a ~10–25 km area.`,
       },
       regions,
       airports,

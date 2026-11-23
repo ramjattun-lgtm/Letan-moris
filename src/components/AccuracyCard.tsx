@@ -8,10 +8,14 @@ import { formatUtcAsMU } from "@/lib/time";
 
 interface RainScore {
   days: number;
-  agreePct: number;
   rainDaysSeen: number;
   missed: number;
   falseAlarms: number;
+  /** New scoring (three steps, like the app's wording). */
+  said?: { likely: { days: number; rained: number }; possible: { days: number; rained: number }; dry: { days: number; stayedDry: number } };
+  clearCallPct?: number | null;
+  /** Old scoring (two steps), kept so older files still display. */
+  agreePct?: number;
 }
 interface Row {
   name: string;
@@ -27,31 +31,51 @@ export const accuracyReady = () => !!ACC.builtAt && Object.keys(ACC.regions).len
 /** One line on how reliable rain forecasts have been in this area lately (or null). */
 export function trackRecord(location: Locality): string | null {
   const r = accuracyReady() ? ACC.regions[climateKeyFor(location)] : undefined;
-  if (!r?.rain) return null;
-  const over = r.rain.falseAlarms >= Math.max(3, r.rain.missed * 2);
-  return `Track record in ${r.name}: rain or no rain called right on ${r.rain.agreePct}% of the last ${r.rain.days} days${over ? " — forecasts here have tended to over-call light rain" : ""}.`;
+  const sd = r?.rain?.said;
+  if (!r?.rain || !sd || sd.likely.days === 0) return null;
+  return `Track record in ${r.name}, last ${r.rain.days} days: when we said rain likely, it rained on ${sd.likely.rained} of ${sd.likely.days} days.`;
 }
 
+const days = (n: number) => `${n} day${n === 1 ? "" : "s"}`;
+
 function Line({ r, observed }: { r: Row; observed?: boolean }) {
-  if (!r.rain) return null;
+  const rain = r.rain;
+  if (!rain) return null;
+  const sd = rain.said;
   return (
     <li className="rounded-2xl bg-mist p-3 dark:bg-white/5">
       <p className="text-sm font-bold">
         {r.name} <span className="font-normal text-muted dark:text-slate-400">{observed ? "· vs real airport reports" : "· vs model estimate"}</span>
+        {sd && rain.clearCallPct !== null && rain.clearCallPct !== undefined && (
+          <span className="chip ml-1 bg-teal/15 text-teal-ink dark:text-teal-soft">{rain.clearCallPct}% of clear calls right</span>
+        )}
       </p>
-      <p className="mt-1 text-sm">
-        Rain or no rain called right on <strong className="text-teal-ink dark:text-teal-soft">{r.rain.agreePct}%</strong> of {r.rain.days} days
-        {r.tempMaeC !== null ? (
-          <>
-            {" "}
-            · temperature off by <strong>{r.tempMaeC} °C</strong> on average
-          </>
-        ) : null}
-        .
-      </p>
-      <p className="text-xs text-muted dark:text-slate-400">
-        {r.rain.rainDaysSeen} rain days · {r.rain.missed} missed · {r.rain.falseAlarms} false alarm{r.rain.falseAlarms === 1 ? "" : "s"}
-      </p>
+      {sd ? (
+        <ul className="mt-1 space-y-0.5 text-sm">
+          {sd.likely.days > 0 && (
+            <li>
+              Said <strong>rain likely</strong>: it rained on {sd.likely.rained} of {days(sd.likely.days)}.
+            </li>
+          )}
+          {sd.dry.days > 0 && (
+            <li>
+              Said <strong>dry</strong>: it stayed dry on {sd.dry.stayedDry} of {days(sd.dry.days)}.
+            </li>
+          )}
+          {sd.possible.days > 0 && (
+            <li className="text-muted dark:text-slate-400">
+              Said &quot;showers possible&quot; on {days(sd.possible.days)} — rain came on {sd.possible.rained}.
+            </li>
+          )}
+        </ul>
+      ) : (
+        <p className="mt-1 text-sm">Rain or no rain called right on {rain.agreePct}% of {rain.days} days.</p>
+      )}
+      {r.tempMaeC !== null && (
+        <p className="text-xs text-muted dark:text-slate-400">
+          Temperature off by {r.tempMaeC} °C on average{observed ? " (one coastal spot vs a wider forecast area)" : ""}.
+        </p>
+      )}
     </li>
   );
 }
@@ -83,7 +107,7 @@ export function AccuracyCard({ location, full = false }: { location?: Locality; 
         ))}
       </ul>
       <p className="mt-2 text-[11px] text-muted dark:text-slate-400">
-        We check the forecast made the day before against what happened. Airport scores use real weather reports; area scores compare with the model&apos;s own latest estimate, not rain gauges. Updated {ACC.builtAt ? formatUtcAsMU(ACC.builtAt) : "—"}.{" "}
+        We check the forecast made the day before against what happened, using the same three steps as our wording: dry (under 0.5 mm), showers possible, rain likely (2 mm or more). A &quot;maybe&quot; can&apos;t be right or wrong, so clear calls are scored. Airport reports describe one spot; area scores compare with the model&apos;s own estimate, not rain gauges. Updated {ACC.builtAt ? formatUtcAsMU(ACC.builtAt) : "—"}.{" "}
         {!full && (
           <Link href="/climate#accuracy" className="underline">
             All areas
