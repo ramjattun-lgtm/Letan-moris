@@ -1,1 +1,118 @@
-{"builtAt":null,"from":null,"to":null,"days":30,"method":{},"regions":{},"airports":{}}
+{
+ "builtAt": "2026-11-23T05:18:54.416Z",
+ "from": "2026-10-24",
+ "to": "2026-11-23",
+ "days": 30,
+ "method": {
+  "forecast": "The forecast issued the day before (Open-Meteo Previous Runs API).",
+  "regions": "Compared with the model's latest estimate of what happened. A rain day = at least 1 mm. Model vs model — not rain gauges.",
+  "airports": "Compared with real METAR weather reports (Iowa Environmental Mesonet). A rain day = rain noted in at least 2 reports; forecast rain day = at least 0.5 mm."
+ },
+ "regions": {
+  "north": {
+   "name": "North",
+   "rain": {
+    "days": 30,
+    "agreePct": 73,
+    "rainDaysSeen": 10,
+    "missed": 2,
+    "falseAlarms": 6
+   },
+   "tempMaeC": 0.7
+  },
+  "east": {
+   "name": "East",
+   "rain": {
+    "days": 30,
+    "agreePct": 83,
+    "rainDaysSeen": 18,
+    "missed": 0,
+    "falseAlarms": 5
+   },
+   "tempMaeC": 0.7
+  },
+  "south": {
+   "name": "South",
+   "rain": {
+    "days": 30,
+    "agreePct": 77,
+    "rainDaysSeen": 19,
+    "missed": 2,
+    "falseAlarms": 5
+   },
+   "tempMaeC": 0.5
+  },
+  "west": {
+   "name": "West",
+   "rain": {
+    "days": 30,
+    "agreePct": 73,
+    "rainDaysSeen": 12,
+    "missed": 0,
+    "falseAlarms": 8
+   },
+   "tempMaeC": 0.9
+  },
+  "plateau": {
+   "name": "Central Plateau",
+   "rain": {
+    "days": 30,
+    "agreePct": 63,
+    "rainDaysSeen": 16,
+    "missed": 2,
+    "falseAlarms": 9
+   },
+   "tempMaeC": 0.5
+  },
+  "portlouis": {
+   "name": "Port Louis",
+   "rain": {
+    "days": 30,
+    "agreePct": 70,
+    "rainDaysSeen": 13,
+    "missed": 0,
+    "falseAlarms": 9
+   },
+   "tempMaeC": 0.7
+  },
+  "rodrigues": {
+   "name": "Rodrigues",
+   "rain": {
+    "days": 30,
+    "agreePct": 80,
+    "rainDaysSeen": 11,
+    "missed": 2,
+    "falseAlarms": 4
+   },
+   "tempMaeC": 0.3
+  }
+ },
+ "airports": {
+  "FIMP": {
+   "name": "Plaisance airport",
+   "region": "south",
+   "reports": 719,
+   "rain": {
+    "days": 30,
+    "agreePct": 33,
+    "rainDaysSeen": 8,
+    "missed": 1,
+    "falseAlarms": 19
+   },
+   "tempMaeC": 1.4
+  },
+  "FIMR": {
+   "name": "Plaine Corail airport (Rodrigues)",
+   "region": "rodrigues",
+   "reports": 688,
+   "rain": {
+    "days": 30,
+    "agreePct": 57,
+    "rainDaysSeen": 4,
+    "missed": 0,
+    "falseAlarms": 13
+   },
+   "tempMaeC": 1.6
+  }
+ }
+}
