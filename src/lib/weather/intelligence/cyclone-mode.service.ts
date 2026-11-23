@@ -32,3 +32,20 @@ export function cycloneMode(island: Island, status: CycloneStatus | null): Cyclo
   }
   return { active: false, official: false, headline: "" };
 }
+
+/** Plain lines for the Cyclone-ready card on Today (times are Mauritius local "YYYY-MM-DDTHH:mm"). */
+export function readyLines(
+  m: CycloneMode,
+  closest: { km: number; timeLocal: string; bearing: string } | null,
+  impact: { peakGust: { kmh: number; time: string } | null; totalRainMm: number | null; prepareBy: string | null } | null,
+  fmt: (local: string) => string,
+): string[] {
+  if (!m.active) return [];
+  const out: string[] = [];
+  if (closest) out.push(`Closest approach: about ${closest.km.toLocaleString()} km to the ${closest.bearing}, ${fmt(closest.timeLocal)} (forecast track).`);
+  if (impact?.prepareBy) out.push(`Be ready by ${fmt(impact.prepareBy)} — about 12 hours before gusts of 60 km/h or more are forecast here.`);
+  if (impact?.peakGust) out.push(`Strongest gust forecast here: about ${impact.peakGust.kmh} km/h, ${fmt(impact.peakGust.time)}.`);
+  if (impact?.totalRainMm !== null && impact?.totalRainMm !== undefined) out.push(`Rain expected here: about ${impact.totalRainMm} mm.`);
+  out.push("These are independent model estimates. Official cyclone warnings come only from MMS.");
+  return out;
+}

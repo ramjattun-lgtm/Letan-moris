@@ -28,6 +28,7 @@ import { YourPlaces } from "@/components/YourPlaces";
 import { AccuracyCard } from "@/components/AccuracyCard";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { WeatherMemory } from "@/components/WeatherMemory";
+import { CycloneReady } from "@/components/CycloneReady";
 
 export default function Home() {
   const { location, ready, interests, t } = useAppState();
@@ -54,6 +55,7 @@ export default function Home() {
         <div className="grid gap-4 lg:grid-cols-2">
           {/* Left: now and the next few hours (what most people open the app for). Right: the rest of the day and background. */}
           <div className="flex min-w-0 flex-col gap-4">
+            <CycloneReady f={f} />
             <CurrentCard f={f} />
             <NextSixHours f={f} />
             <RecentCard />
