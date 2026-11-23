@@ -93,16 +93,30 @@ export function AccuracyCard({ location, full = false }: { location?: Locality; 
   }
   const key = location ? climateKeyFor(location) : null;
   const regions = full ? Object.entries(ACC.regions) : Object.entries(ACC.regions).filter(([k]) => k === key);
-  const airports = Object.values(ACC.airports).filter((a) => full || (location && (a.region === key || (location.island === "rodrigues") === (a.region === "rodrigues"))));
+  // Airport comparisons are shown on the Climate page only: they describe one spot and, when they
+  // disagree strongly with the area score, they need the explanation shown there.
+  const airports = full ? Object.values(ACC.airports) : [];
   return (
     <section className="card" aria-labelledby="acc-title">
       <h2 id="acc-title" className="label">
         {tr("How right were the forecasts? · last")} {ACC.days} {tr("days")}
       </h2>
       <ul className="mt-2 space-y-2">
-        {airports.slice(0, full ? 9 : 1).map((a) => (
-          <Line key={a.name} r={a} observed />
-        ))}
+        {airports.map((a) => {
+          const area = a.region ? ACC.regions[a.region] : undefined;
+          const disagree = (a.rain?.clearCallPct ?? 100) < 50 && (area?.rain?.clearCallPct ?? 0) >= 70;
+          return (
+            <div key={a.name}>
+              <Line r={a} observed />
+              {disagree && (
+                <p className="mt-1 rounded-xl bg-coral/10 p-2 text-xs">
+                  {tr("The airport's weather reports and the forecast for the same area disagree a lot this month: the area score is")} {area?.rain?.clearCallPct}%.{" "}
+                  {tr("Airport reports are made every 30–60 minutes at one spot and can miss short showers, so this comparison is being checked before we rely on it.")}
+                </p>
+              )}
+            </div>
+          );
+        })}
         {regions.map(([k, r]) => (
           <Line key={k} r={r} />
         ))}
