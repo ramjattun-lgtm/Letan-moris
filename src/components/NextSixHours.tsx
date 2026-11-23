@@ -34,7 +34,7 @@ export function NextSixHours({ f }: { f: Forecast }) {
             </div>
             <span className="text-[11px] font-semibold text-muted dark:text-slate-400">{h.label === "Now" ? t("next6.now") : h.label}</span>
             <span className="text-xs font-bold text-rain dark:text-rain-soft">{h.pct === null ? "—" : `${h.pct}%`}</span>
-            <span className="text-[10px] text-muted dark:text-slate-400">{h.mm === null ? "—" : h.mm >= 0.1 ? `${h.mm} mm` : "dry"}</span>
+            <span className="text-[10px] text-muted dark:text-slate-400">{h.mm === null ? "—" : h.mm >= 0.1 ? `${h.mm} mm` : t("next6.dryShort")}</span>
             <span className="sr-only">{WORD[h.rain]}</span>
           </li>
         ))}
