@@ -5,6 +5,7 @@ import { DEFAULT_LOCATION, getLocality, type Locality } from "@/data/localities"
 import type { Island } from "@/lib/weather/types";
 import { readLS, writeLS } from "@/lib/client/storage";
 import type { ActivityId } from "@/lib/weather/intelligence/decision-engine.service";
+import { isLang, translate, type Key, type Lang } from "@/lib/i18n";
 
 /** Everything is shown by default; people can narrow it down with "Change what I see". */
 export const ALL_INTERESTS: ActivityId[] = ["school", "commute", "laundry", "beach", "outdoor", "gardening", "agriculture", "hiking", "kitesurf", "boating", "solar"];
@@ -20,6 +21,9 @@ interface State {
   interestsChosen: boolean;
   /** False until the person has picked a place (or used their location) on this device. */
   locationChosen: boolean;
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (key: Key, vars?: Record<string, string | number>) => string;
   setInterests: (a: ActivityId[]) => void;
   setIsland: (i: Island) => void;
   setLocation: (id: string) => void;
@@ -37,6 +41,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [interests, setInterestsState] = useState<ActivityId[]>(DEFAULT_INTERESTS);
   const [interestsChosen, setInterestsChosen] = useState(false);
   const [locationChosen, setLocationChosen] = useState(true);
+  const [lang, setLangState] = useState<Lang>("en");
 
   useEffect(() => {
     // Restore saved choices (stored on this device only).
@@ -44,6 +49,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const saved = fromUrl && getLocality(fromUrl) ? fromUrl : readLS<string>("letan.loc", DEFAULT_LOCATION.mauritius);
     /* eslint-disable react-hooks/set-state-in-effect */
     setLocId(getLocality(saved) ? saved : DEFAULT_LOCATION.mauritius);
+    const savedLang = readLS<string>("letan.lang", "en");
+    if (isLang(savedLang)) setLangState(savedLang);
     setLocationChosen(!!fromUrl || readLS<string | null>("letan.loc", null) !== null);
     setFavourites(readLS<string[]>("letan.favs", []).filter((id) => getLocality(id)));
     setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
@@ -101,9 +108,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const setLang = useCallback((l: Lang) => {
+    setLangState(l);
+    writeLS("letan.lang", l);
+  }, []);
+  useEffect(() => {
+    document.documentElement.lang = lang === "mfe" ? "mfe" : lang;
+  }, [lang]);
+  const t = useCallback((key: Key, vars?: Record<string, string | number>) => translate(lang, key, vars), [lang]);
+
   const value = useMemo(
-    () => ({ island: location.island, location, favourites, theme, ready, interests, interestsChosen, locationChosen, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme }),
-    [location, favourites, theme, ready, interests, interestsChosen, locationChosen, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme],
+    () => ({ island: location.island, location, favourites, theme, ready, interests, interestsChosen, locationChosen, lang, setLang, t, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme }),
+    [location, favourites, theme, ready, interests, interestsChosen, locationChosen, lang, setLang, t, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

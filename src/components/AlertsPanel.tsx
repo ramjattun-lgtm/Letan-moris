@@ -37,7 +37,7 @@ const RANK: Record<Severity, number> = { red: 0, amber: 1, info: 2 };
 
 /** All relevant independent alerts for the chosen place, from the latest data. Shown at the top of Today. */
 export function AlertsPanel({ f }: { f: Forecast }) {
-  const { location, island, ready } = useAppState();
+  const { location, island, ready, t } = useAppState();
   const cyc = useApi<CycloneStatus>(ready ? "/api/cyclones" : null);
   const hr = useApi<HeavyRainAssessment>(ready ? `/api/heavyrain?loc=${location.id}` : null);
   const riv = useApi<{ island: string; rivers: RiverItem[] }>(ready ? `/api/rivers?island=${island}` : null);
@@ -125,21 +125,21 @@ export function AlertsPanel({ f }: { f: Forecast }) {
     <section className="mb-4" aria-labelledby="alerts-title">
       <div className="mb-2 flex items-baseline justify-between gap-2">
         <h2 id="alerts-title" className="font-[family-name:var(--font-display)] text-lg font-extrabold">
-          {alerts.length ? `⚠️ Alerts for ${location.name}` : `Alerts for ${location.name}`}
+          {alerts.length ? `⚠️ ${t("alerts.for", { place: location.name })}` : t("alerts.for", { place: location.name })}
         </h2>
         <a className="shrink-0 text-xs font-semibold text-teal-ink underline dark:text-teal-soft" href={OFFICIAL_LINKS.mms.url} target="_blank" rel="noreferrer">
-          Official MMS warnings ↗
+          {t("alerts.mms")}
         </a>
       </div>
       <LocationPicker setup />
       {alerts.length === 0 ? (
         <div className="flex items-center gap-2 rounded-2xl border-l-4 border-l-teal bg-teal/10 px-4 py-3 text-sm">
           {loading ? (
-            "Checking the latest data…"
+            t("alerts.checking")
           ) : (
             <>
               <Dodo size={24} className="text-teal-ink dark:text-teal-soft" />
-              <span>No weather alerts for your area from the latest data.</span>
+              <span>{t("alerts.none")}</span>
             </>
           )}
         </div>
@@ -162,7 +162,7 @@ export function AlertsPanel({ f }: { f: Forecast }) {
         </ul>
       )}
       <p className="mt-1 text-[11px] text-muted dark:text-slate-400">
-        Independent alerts from the latest forecasts, storm tracks and community reports — not official warnings. For cyclone, heavy rain and sea warnings, always follow MMS.
+        {t("alerts.note")}
       </p>
     </section>
   );

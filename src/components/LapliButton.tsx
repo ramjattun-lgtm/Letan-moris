@@ -8,7 +8,7 @@ import { readLS, writeLS } from "@/lib/client/storage";
 
 /** Floating "Lapli isi!" button: one-tap community rain report for your village. */
 export function LapliButton() {
-  const { location } = useAppState();
+  const { location, t } = useAppState();
   const [open, setOpen] = useState(false);
   const [placeId, setPlaceId] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -62,7 +62,7 @@ export function LapliButton() {
         <div role="dialog" aria-modal="true" aria-labelledby="lapli-title" className="fixed inset-0 z-50 flex items-end justify-center bg-navy/40 p-3 sm:items-center" onClick={() => setOpen(false)}>
           <div className="card w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between">
-              <h2 id="lapli-title" className="font-[family-name:var(--font-display)] text-xl font-extrabold">Lapli isi? What is it like where you are?</h2>
+              <h2 id="lapli-title" className="font-[family-name:var(--font-display)] text-xl font-extrabold">{t("lapli.question")}</h2>
               <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="h-10 w-10 text-2xl leading-none">×</button>
             </div>
             <p className="mt-1 text-sm">
@@ -77,7 +77,7 @@ export function LapliButton() {
                 </button>
               ))}
             </div>
-            <p className="mt-3 text-xs font-semibold text-muted dark:text-slate-400">Something else nearby?</p>
+            <p className="mt-3 text-xs font-semibold text-muted dark:text-slate-400">{t("lapli.else")}</p>
             <div className="mt-1 grid grid-cols-3 gap-2">
               {KINDS.filter((k) => k.hazard).map((k) => (
                 <button key={k.id} type="button" disabled={busy} onClick={() => send(k.id)} className="min-h-14 rounded-2xl bg-coral/20 p-2 text-left text-sm font-bold">

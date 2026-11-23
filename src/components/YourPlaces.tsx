@@ -10,7 +10,7 @@ import { nextHours, nextHoursHeadline } from "@/lib/weather/intelligence/next-ho
 import { fmt } from "@/lib/weather/weather-codes";
 
 function PlaceLine({ id, label }: { id: string; label?: string }) {
-  const { setLocation } = useAppState();
+  const { setLocation, t } = useAppState();
   const loc = getLocality(id);
   const api = useApi<Forecast>(loc ? `/api/forecast?loc=${id}` : null, { refreshMin: 15 });
   if (!loc) return null;
@@ -22,7 +22,7 @@ function PlaceLine({ id, label }: { id: string; label?: string }) {
           {label && <span className="chip mr-1 bg-teal/15 text-teal-ink dark:text-teal-soft">{label}</span>}
           {loc.name} <span className="font-normal">{f ? `· ${fmt(f.current.temperature, "°C")}` : ""}</span>
         </p>
-        <p className="text-sm text-rain dark:text-rain-soft">{f ? nextHoursHeadline(nextHours(f.hourly)) : api.error ? "Forecast unavailable" : "Loading…"}</p>
+        <p className="text-sm text-rain dark:text-rain-soft">{f ? nextHoursHeadline(nextHours(f.hourly), t) : api.error ? "Forecast unavailable" : "Loading…"}</p>
       </button>
     </li>
   );
@@ -30,14 +30,14 @@ function PlaceLine({ id, label }: { id: string; label?: string }) {
 
 /** Saved places (home, work, school…) at a glance: rain in the next 6 hours for each. */
 export function YourPlaces() {
-  const { favourites, location, ready } = useAppState();
+  const { favourites, location, ready, t } = useAppState();
   const { labels } = usePlaceLabels();
   if (!ready) return null;
   const others = favourites.filter((id) => id !== location.id).slice(0, 4);
   return (
     <section className="card" aria-labelledby="yp-title">
       <h2 id="yp-title" className="label">
-        Your places · next 6 hours
+        {t("places.title")}
       </h2>
       {others.length ? (
         <ul className="mt-2 space-y-2">
@@ -46,10 +46,10 @@ export function YourPlaces() {
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-sm text-muted dark:text-slate-400">Save home, work or school with the ☆ star next to the place name to see them here, and get free rain alerts for their area.</p>
+        <p className="mt-2 text-sm text-muted dark:text-slate-400">{t("places.empty")}</p>
       )}
       <Link href="/locations" className="mt-2 inline-block text-sm font-semibold text-teal-ink underline dark:text-teal-soft">
-        Manage places & alerts
+        {t("places.manage")}
       </Link>
     </section>
   );

@@ -31,7 +31,7 @@ function useGeoPermission() {
  * the phone for permission), or pick from the list, and turn on free alerts for the area.
  */
 export function LocationPicker({ setup = false }: { setup?: boolean }) {
-  const { location, island, setLocation, favourites, toggleFavourite, locationChosen, ready } = useAppState();
+  const { location, island, setLocation, favourites, toggleFavourite, locationChosen, ready, t } = useAppState();
   const geo = useGeoPermission();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -75,22 +75,22 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
     <div className="mb-3">
       {showSetup && (
         <div className="mb-2 rounded-2xl border-l-4 border-l-coral bg-coral/10 p-3 text-sm" role="note">
-          <p className="font-bold">👋 First, set your place</p>
-          <p className="mt-0.5">Alerts and forecasts below are for <strong>{location.name}</strong> until you choose. Your position stays on this phone — it is only used to pick the nearest place.</p>
+          <p className="font-bold">{t("setup.title")}</p>
+          <p className="mt-0.5">{t("setup.text", { place: location.name })}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <button type="button" onClick={useMyLocation} className="min-h-10 rounded-full bg-navy px-4 font-semibold text-white dark:bg-teal-soft dark:text-navy">
-              📍 Use my location
+              {t("setup.gps")}
             </button>
             <button type="button" onClick={() => setOpen(true)} className="min-h-10 rounded-full px-4 font-semibold ring-1 ring-navy/20 dark:ring-white/20">
-              Choose from the list
+              {t("setup.list")}
             </button>
             <button type="button" onClick={() => setLocation(location.id)} className="min-h-10 px-2 text-xs text-muted underline dark:text-slate-400">
-              Keep {location.name}
+              {t("setup.keep", { place: location.name })}
             </button>
           </div>
           {geo === "denied" && (
             <p className="mt-2 text-xs">
-              Location is blocked for this site. To allow it: tap the padlock or ⓘ next to the web address → Permissions → Location → Allow, then reload.
+              {t("setup.blocked")}
             </p>
           )}
           {geoMsg && <p className="mt-2 text-xs">{geoMsg}</p>}
@@ -113,7 +113,7 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
               {location.district === "Rodrigues" ? "Rodrigues" : `${location.district} · ${REGION_LABEL[location.region]}`}
             </span>
           </span>
-          <span className="text-sm font-semibold text-teal-ink dark:text-teal-soft">Change</span>
+          <span className="text-sm font-semibold text-teal-ink dark:text-teal-soft">{t("place.change")}</span>
         </button>
         <button
           type="button"
@@ -130,7 +130,7 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
 
       {setup && !showSetup && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted dark:text-slate-400">
-          <span>Get these alerts on your phone, free:</span>
+          <span>{t("alerts.phone")}</span>
           <AreaAlertsButton areaKey={climateKeyFor(location)} />
         </div>
       )}

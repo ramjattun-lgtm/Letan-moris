@@ -14,7 +14,7 @@ const NEAR_KM = 15;
 
 /** Community reports near you (rain, rising rivers, fallen trees, rough sea), with the upwind early alert. */
 export function CommunityCard({ f }: { f: Forecast }) {
-  const { location } = useAppState();
+  const { location, t } = useAppState();
   const { places, hazards, mode, error } = useLapli();
   if (error && !places) return null;
   const isNear = (l: { island: string; lat: number; lon: number }) => l.island === location.island && distanceKm(location, l) <= NEAR_KM;
@@ -24,7 +24,7 @@ export function CommunityCard({ f }: { f: Forecast }) {
   const db = mode === "db";
   return (
     <section className={`card ${alert ? "ring-2 ring-rain" : ""}`} aria-labelledby="lapli-near">
-      <h2 id="lapli-near" className="label">Lapli isi! · community reports</h2>
+      <h2 id="lapli-near" className="label">{t("community.title")}</h2>
       {alert && (
         <p className="mt-2 rounded-2xl bg-rain/10 p-3 text-sm">
           <strong>
@@ -41,7 +41,7 @@ export function CommunityCard({ f }: { f: Forecast }) {
             <li key={`${h.loc.id}-${h.kind}`}>
               <span className="chip mr-1 bg-coral/20">{kindLabel(h.kind)?.english}</span>
               <strong>{h.loc.name}</strong> · {h.minutesAgo} min ago ·{" "}
-              {h.corroborated ? <span className="font-semibold text-teal-ink dark:text-teal-soft">{h.reporters} people agree</span> : <span className="text-muted dark:text-slate-400">1 report, unconfirmed</span>}
+              {h.corroborated ? <span className="font-semibold text-teal-ink dark:text-teal-soft">{t("community.agree", { n: h.reporters })}</span> : <span className="text-muted dark:text-slate-400">{t("community.unconfirmed")}</span>}
               {db && <ReportActions id={h.report.id} likes={h.likes} />}
             </li>
           ))}
@@ -57,9 +57,7 @@ export function CommunityCard({ f }: { f: Forecast }) {
         !alert && (
           <p className="mt-2 flex items-center gap-2 text-sm text-muted dark:text-slate-400">
             <Dodo size={26} className="text-navy/60 dark:text-slate-400" />
-            <span>
-              Nothing reported within {NEAR_KM} km in the last 3 hours. Seen rain, a rising river or a fallen tree? Tap <strong>Lapli isi!</strong>
-            </span>
+            <span>{t("community.nothing", { km: NEAR_KM })}</span>
           </p>
         )
       )}

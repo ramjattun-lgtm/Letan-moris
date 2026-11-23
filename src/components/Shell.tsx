@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation";
 import { LogoMark, POWERED, TAGLINE, Wordmark } from "./Logo";
 import { useAppState } from "./AppState";
 import type { Island } from "@/lib/weather/types";
+import { LANGS, type Key } from "@/lib/i18n";
 
 const NAV = [
-  { href: "/", label: "Today", icon: "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" },
-  { href: "/day", label: "Plan", icon: "M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm4 8 2 2 4-4" },
-  { href: "/map", label: "Map", icon: "M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" },
-  { href: "/marine", label: "Beach & Sea", icon: "M2 16c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M2 20c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M12 3v8m0-8 4 4m-4-4-4 4" },
-  { href: "/cyclone", label: "Cyclone", icon: "M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0M5 9a8 8 0 0 1 12-5M19 15a8 8 0 0 1-12 5" },
-  { href: "/climate", label: "Climate", icon: "M4 19h16M7 16V9m5 7V5m5 11v-4" },
+  { href: "/", label: "Today", key: "nav.today" as Key, icon: "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" },
+  { href: "/day", label: "Plan", key: "nav.plan" as Key, icon: "M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm4 8 2 2 4-4" },
+  { href: "/map", label: "Map", key: "nav.map" as Key, icon: "M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" },
+  { href: "/marine", label: "Beach & Sea", key: "nav.sea" as Key, icon: "M2 16c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M2 20c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2M12 3v8m0-8 4 4m-4-4-4 4" },
+  { href: "/cyclone", label: "Cyclone", key: "nav.cyclone" as Key, icon: "M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0M5 9a8 8 0 0 1 12-5M19 15a8 8 0 0 1-12 5" },
+  { href: "/climate", label: "Climate", key: "nav.climate" as Key, icon: "M4 19h16M7 16V9m5 7V5m5 11v-4" },
 ];
 
 function Icon({ d }: { d: string }) {
@@ -24,10 +25,10 @@ function Icon({ d }: { d: string }) {
 }
 
 export function IslandSwitch() {
-  const { island, setIsland } = useAppState();
+  const { island, setIsland, t } = useAppState();
   const opts: { id: Island; label: string }[] = [
-    { id: "mauritius", label: "Mauritius" },
-    { id: "rodrigues", label: "Rodrigues" },
+    { id: "mauritius", label: t("island.mauritius") },
+    { id: "rodrigues", label: t("island.rodrigues") },
   ];
   return (
     <div role="group" aria-label="Choose island" className="inline-flex rounded-full bg-white/70 p-1 ring-1 ring-navy/10 dark:bg-white/5 dark:ring-white/10">
@@ -46,8 +47,24 @@ export function IslandSwitch() {
   );
 }
 
+export function LangSwitch() {
+  const { lang, setLang, t } = useAppState();
+  return (
+    <label className="flex items-center">
+      <span className="sr-only">{t("lang.label")}</span>
+      <select value={lang} onChange={(e) => setLang(e.target.value as typeof lang)} className="min-h-10 rounded-full bg-transparent px-2 text-sm font-semibold text-muted ring-1 ring-navy/10 dark:text-slate-300 dark:ring-white/15" aria-label={t("lang.label")}>
+        {LANGS.map((l) => (
+          <option key={l.id} value={l.id}>
+            {l.name}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export function Header() {
-  const { theme, toggleTheme } = useAppState();
+  const { theme, toggleTheme, t } = useAppState();
   const path = usePathname();
   return (
     <header className="sticky top-0 z-30 border-b border-navy/5 bg-mist/85 backdrop-blur dark:border-white/5 dark:bg-night/85">
@@ -63,7 +80,7 @@ export function Header() {
         <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} aria-current={path === n.href ? "page" : undefined} className={`rounded-full px-3 py-2 text-sm font-semibold ${path === n.href ? "bg-white text-navy shadow-sm dark:bg-white/10 dark:text-white" : "text-muted hover:text-navy dark:text-slate-300 dark:hover:text-white"}`}>
-              {n.label}
+              {t(n.key)}
             </Link>
           ))}
         </nav>
@@ -71,6 +88,7 @@ export function Header() {
           <div className="hidden sm:block">
             <IslandSwitch />
           </div>
+          <LangSwitch />
           <button type="button" onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} className="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-white dark:text-slate-300 dark:hover:bg-white/10">
             <Icon d={theme === "dark" ? "M12 4V2m0 20v-2m8-8h2M2 12h2m13.7-5.7 1.4-1.4M4.9 19.1l1.4-1.4m0-11.4L4.9 4.9m14.2 14.2-1.4-1.4M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" : "M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10Z"} />
           </button>
@@ -85,6 +103,7 @@ export function Header() {
 
 export function BottomNav() {
   const path = usePathname();
+  const { t } = useAppState();
   return (
     <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-navy/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden dark:border-white/10 dark:bg-night/95">
       <ul className="mx-auto grid max-w-lg grid-cols-6">
@@ -94,7 +113,7 @@ export function BottomNav() {
             <li key={n.href}>
               <Link href={n.href} aria-current={active ? "page" : undefined} className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-center text-[11px] font-semibold leading-tight ${active ? "text-teal-ink dark:text-teal-soft" : "text-muted dark:text-slate-400"}`}>
                 <Icon d={n.icon} />
-                {n.label}
+                {t(n.key)}
               </Link>
             </li>
           );
@@ -105,8 +124,10 @@ export function BottomNav() {
 }
 
 export function Footer() {
+  const { lang, t } = useAppState();
   return (
     <footer className="mx-auto max-w-6xl px-4 pb-28 pt-10 text-xs leading-relaxed text-muted lg:pb-10 dark:text-slate-400">
+      {lang === "mfe" && <p className="mb-2 font-semibold">{t("lang.beta")}</p>}
       <p>
         <strong>Independent forecast — not an official warning.</strong> For official warnings see{" "}
         <a className="underline" href="http://metservice.intnet.mu/" target="_blank" rel="noreferrer">

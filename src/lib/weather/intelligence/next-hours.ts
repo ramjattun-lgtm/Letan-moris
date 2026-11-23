@@ -1,5 +1,9 @@
 import type { HourlyPoint } from "../types";
 import { hhmm, hourStart, nowMU } from "@/lib/time";
+import { translate, type Key } from "@/lib/i18n";
+
+type T = (key: Key, vars?: Record<string, string | number>) => string;
+const EN: T = (k, v) => translate("en", k, v);
 
 // Rain in the next 6 hours, from the hourly model forecast. Forecast guidance — not radar.
 export const NEXT_HOURS = 6;
@@ -38,19 +42,15 @@ export function nextHours(hourly: HourlyPoint[], now: string = nowMU(), n = NEXT
 }
 
 /** One plain sentence for the strip. */
-export function nextHoursHeadline(hours: NextHour[]): string {
-  if (!hours.length || hours.every((h) => h.rain === "unknown")) return "Rain forecast not available right now.";
+export function nextHoursHeadline(hours: NextHour[], t: T = EN): string {
+  if (!hours.length || hours.every((h) => h.rain === "unknown")) return t("next6.na");
   const total = hours.reduce((s, h) => s + (h.mm ?? 0), 0);
   const first = hours.findIndex((h) => h.rain === "likely");
   const maybe = hours.findIndex((h) => h.rain === "possible");
-  const when = (i: number) => (i === 0 ? "now" : `from about ${hours[i].label}`);
-  if (first >= 0) {
-    const last = hours.map((h) => h.rain).lastIndexOf("likely");
-    const dryAfter = last < hours.length - 1 && hours.slice(last + 1).every((h) => h.rain === "dry");
-    return `Rain likely ${when(first)} (${hours[first].pct}%)${dryAfter ? `, easing after ${hours[last].label}` : ""} — about ${round1(total)} mm over 6 hours.`;
-  }
-  if (maybe >= 0) return `A shower is possible ${when(maybe)} (${hours[maybe].pct ?? "—"}%). Mostly dry otherwise.`;
-  return "Dry for the next 6 hours.";
+  const when = (i: number) => (i === 0 ? t("next6.whenNow") : t("next6.whenFrom", { time: hours[i].label }));
+  if (first >= 0) return t("next6.likely", { when: when(first), pct: hours[first].pct ?? "—", mm: round1(total) });
+  if (maybe >= 0) return t("next6.possible", { when: when(maybe), pct: hours[maybe].pct ?? "—" });
+  return t("next6.dry");
 }
 
-const round1 = (x: number) => (x < 1 ? "under 1" : String(Math.round(x * 10) / 10));
+const round1 = (x: number) => (x < 1 ? "<1" : String(Math.round(x * 10) / 10));

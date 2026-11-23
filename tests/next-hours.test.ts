@@ -26,7 +26,7 @@ describe("rain in the next 6 hours", () => {
     const dry = nextHours(day([[5, 0], [5, 0], [10, 0], [10, 0], [5, 0], [5, 0]]), "2026-11-23T09:00");
     expect(nextHoursHeadline(dry)).toBe("Dry for the next 6 hours.");
     const wet = nextHours(day([[10, 0], [20, 0], [60, 1.5], [70, 2.5], [10, 0], [5, 0]]), "2026-11-23T09:00");
-    expect(nextHoursHeadline(wet)).toBe("Rain likely from about 11:00 (60%), easing after 12:00 — about 4 mm over 6 hours.");
+    expect(nextHoursHeadline(wet)).toBe("Rain likely from about 11:00 (60%) — about 4 mm over 6 hours.");
     const maybe = nextHours(day([[10, 0], [35, 0.1], [20, 0], [10, 0], [5, 0], [5, 0]]), "2026-11-23T09:00");
     expect(nextHoursHeadline(maybe)).toMatch(/^A shower is possible from about 10:00 \(35%\)/);
   });

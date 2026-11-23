@@ -29,7 +29,7 @@ import { AccuracyCard } from "@/components/AccuracyCard";
 import { InstallPrompt } from "@/components/InstallPrompt";
 
 export default function Home() {
-  const { location, ready, interests } = useAppState();
+  const { location, ready, interests, t } = useAppState();
   const [editing, setEditing] = useState(false);
   const api = useApi<Forecast>(ready ? `/api/forecast?loc=${location.id}` : null, { refreshMin: 15 });
   const f = api.data;
@@ -60,7 +60,7 @@ export default function Home() {
             {editing && <InterestsPicker onDone={() => setEditing(false)} />}
             <DecisionList
               items={assessDay(f.hourly, f.daily, todayMU(), 0).filter((a) => a.id === "general" || interests.includes(a.id))}
-              title="Today, for you"
+              title={t("today.forYou")}
             />
             <button type="button" onClick={() => setEditing(true)} className="-mt-2 self-start text-sm font-semibold text-teal-ink underline dark:text-teal-soft">
               Change what I see
@@ -78,11 +78,11 @@ export default function Home() {
             <DidYouKnow />
             <div className="card grid gap-2 font-semibold text-teal-ink dark:text-teal-soft">
               <Link href="/planner" className="flex items-center justify-between">
-                <span>🗓️ Perfect Day finder — best day this week for…</span>
+                <span>{t("today.planner")}</span>
                 <span aria-hidden="true">→</span>
               </Link>
               <Link href="/day" className="flex items-center justify-between">
-                <span>📅 My Weather Day — plan any of the next 7 days</span>
+                <span>{t("today.day")}</span>
                 <span aria-hidden="true">→</span>
               </Link>
             </div>

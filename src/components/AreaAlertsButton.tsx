@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import { areaName, areaTopic } from "@/lib/community/area-alerts";
+import { useAppState } from "./AppState";
 
 /** Follow free ntfy alerts for an area. No account, no phone number, no email. */
 export function AreaAlertsButton({ areaKey }: { areaKey: string }) {
+  const { t } = useAppState();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const topic = areaTopic(areaKey);
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className="rounded-full px-4 py-2 text-sm font-semibold text-teal-ink ring-1 ring-teal/40 dark:text-teal-soft">
-        🔔 Alerts for {areaName(areaKey)}
+        🔔 {t("alerts.button", { area: areaName(areaKey) })}
       </button>
       {open && (
         <div role="dialog" aria-modal="true" aria-labelledby={`al-${areaKey}`} className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 sm:items-center" onClick={() => setOpen(false)}>
