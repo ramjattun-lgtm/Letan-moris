@@ -62,7 +62,7 @@ export function LapliButton() {
         <div role="dialog" aria-modal="true" aria-labelledby="lapli-title" className="fixed inset-0 z-50 flex items-end justify-center bg-navy/40 p-3 sm:items-center" onClick={() => setOpen(false)}>
           <div className="card w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between">
-              <h2 id="lapli-title" className="font-[family-name:var(--font-display)] text-xl font-extrabold">Lapli isi? Is it raining where you are?</h2>
+              <h2 id="lapli-title" className="font-[family-name:var(--font-display)] text-xl font-extrabold">Lapli isi? What is it like where you are?</h2>
               <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="h-10 w-10 text-2xl leading-none">×</button>
             </div>
             <p className="mt-1 text-sm">
@@ -70,16 +70,25 @@ export function LapliButton() {
               <button type="button" onClick={useGps} className="ml-1 font-semibold text-teal-ink underline dark:text-teal-soft">Use my location</button>
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {KINDS.map((k) => (
+              {KINDS.filter((k) => !k.hazard).map((k) => (
                 <button key={k.id} type="button" disabled={busy} onClick={() => send(k.id)} className={`min-h-16 rounded-2xl p-2 text-left font-bold ${k.id === "flooding" ? "bg-[#D9480F] text-white" : k.id === "heavy" ? "bg-rain text-white" : k.id === "stopped" ? "bg-mist dark:bg-white/10" : "bg-rain/15"}`}>
                   {k.kreol}
                   <span className="block text-xs font-normal opacity-80">{k.english}</span>
                 </button>
               ))}
             </div>
+            <p className="mt-3 text-xs font-semibold text-muted dark:text-slate-400">Something else nearby?</p>
+            <div className="mt-1 grid grid-cols-3 gap-2">
+              {KINDS.filter((k) => k.hazard).map((k) => (
+                <button key={k.id} type="button" disabled={busy} onClick={() => send(k.id)} className="min-h-14 rounded-2xl bg-coral/20 p-2 text-left text-sm font-bold">
+                  {k.kreol}
+                  <span className="block text-[11px] font-normal opacity-80">{k.english}</span>
+                </button>
+              ))}
+            </div>
             {msg && <p role="status" className="mt-3 text-sm font-semibold">{msg}</p>}
             <p className="mt-3 text-[11px] text-muted dark:text-slate-400">
-              Only your village name and the kind of rain are shared — no GPS position, no name. Reports are public, unverified, and disappear after a few hours. In danger? Call 999 / 112.
+              Only your village name and what you saw are shared — no GPS position, no name, no account. Reports are public, unverified, and disappear after 3 hours. In danger? Call 999 / 112.
             </p>
           </div>
         </div>

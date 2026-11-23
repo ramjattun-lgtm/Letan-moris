@@ -14,6 +14,7 @@ import { getLocality } from "@/data/localities";
 import { distanceKm } from "@/lib/weather/providers/gdacs.provider";
 import { addHours, hhmm, hourStart, nowMU, todayMU } from "@/lib/time";
 import { OFFICIAL_LINKS } from "@/data/official-status";
+import { Dodo } from "./Dodo";
 
 type Severity = "red" | "amber" | "info";
 interface Alert {
@@ -130,8 +131,15 @@ export function AlertsPanel({ f }: { f: Forecast }) {
         </a>
       </div>
       {alerts.length === 0 ? (
-        <div className="rounded-2xl border-l-4 border-l-teal bg-teal/10 px-4 py-3 text-sm">
-          {loading ? "Checking the latest data…" : "✅ No weather alerts for your area from the latest data."}
+        <div className="flex items-center gap-2 rounded-2xl border-l-4 border-l-teal bg-teal/10 px-4 py-3 text-sm">
+          {loading ? (
+            "Checking the latest data…"
+          ) : (
+            <>
+              <Dodo size={24} className="text-teal-ink dark:text-teal-soft" />
+              <span>No weather alerts for your area from the latest data.</span>
+            </>
+          )}
         </div>
       ) : (
         <ul className="space-y-2">

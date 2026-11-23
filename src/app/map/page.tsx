@@ -11,6 +11,7 @@ import type { Layer } from "@/components/WeatherMap";
 import { getLocality } from "@/data/localities";
 import { ago, formatUtcAsMU } from "@/lib/time";
 import { useLapli } from "@/lib/client/useLapli";
+import { KINDS } from "@/lib/community/lapli";
 import { FLOOD_SITES_SOURCE, siteRisks } from "@/data/flood-sites";
 import type { ExtraMarker } from "@/components/WeatherMap";
 import type { RiverAssessment } from "@/lib/weather/intelligence/river.service";
@@ -23,7 +24,7 @@ const LAYERS: { id: Layer; label: string; legend: string }[] = [
     id: "reports",
     label: "Rain reports",
     legend:
-      "Lapli isi! — rain reported by people in the last 2 hours (minutes ago, and number of reports). Unverified community observations; tap Lapli isi! to add yours.",
+      "Lapli isi! — rain, rising rivers, fallen trees and rough sea reported by people in the last 3 hours (minutes ago, and number of reports). Unverified community observations; tap Lapli isi! to add yours.",
   },
   {
     id: "heavy",
@@ -51,6 +52,12 @@ export default function MapPage() {
   const reportPoints: MapPoint[] = (lapli.places ?? [])
     .filter((p) => p.loc.island === island)
     .map((p) => ({ locationId: p.loc.id, rainProbNext3h: null, rainNext3h: null, temperature: null, windSpeed: null, windDirection: null, cloudCover: null, report: { kind: p.kind, minutesAgo: p.minutesAgo, count: p.count } }));
+  const hazardMarkers: ExtraMarker[] = lapli.hazards
+    .filter((h) => h.loc.island === island)
+    .map((h) => {
+      const k = KINDS.find((x) => x.id === h.kind)!;
+      return { lat: h.loc.lat, lon: h.loc.lon, text: `${k.english} · ${h.minutesAgo} min`, color: "#F2A541", dark: false, title: `${k.english} reported in ${h.loc.name}, ${h.minutesAgo} min ago${h.corroborated ? ` — ${h.reporters} people agree` : " — 1 report, unconfirmed"}` };
+    });
   const pickedLoc = getLocality(picked);
   const riv = useApi<{ island: string; rivers: (RiverAssessment & { id: string; name: string; upstream: { lat: number; lon: number }[] })[] }>(ready && layer === "rivers" ? `/api/rivers?island=${island}` : null);
   const riverMarkers: ExtraMarker[] = useMemo(() =>
@@ -85,8 +92,8 @@ export default function MapPage() {
         </>
       ) : layer === "reports" ? (
         <>
-          <WeatherMap island={island} points={reportPoints} layer={layer} onSelect={onSelect} />
-          {lapli.places && reportPoints.length === 0 && <p className="mt-2 text-sm text-muted">No rain reports in the last 2 hours on this island.</p>}
+          <WeatherMap island={island} points={reportPoints} layer={layer} onSelect={onSelect} extra={hazardMarkers} />
+          {lapli.places && reportPoints.length === 0 && hazardMarkers.length === 0 && <p className="mt-2 text-sm text-muted">No community reports in the last 3 hours on this island.</p>}
           {lapli.error && <p className="mt-2 text-sm text-muted">Community reports are unavailable right now.</p>}
         </>
       ) : api.data ? (

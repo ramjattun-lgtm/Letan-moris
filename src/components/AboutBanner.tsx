@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LogoMark, POWERED, TAGLINE } from "./Logo";
+import { Dodo } from "./Dodo";
 
 const DOES = [
   { icon: "🗓️", title: "Plan your day", text: "Hour-by-hour rain for your village, the last vs next 3 hours with a check of how accurate the forecast was, activity cards (commute, beach, laundry, hiking, solar…) and a trip planner that finds the best time to leave." },
@@ -57,7 +58,7 @@ export function AboutBanner() {
             <div className="sticky top-0 z-10 bg-gradient-to-r from-navy via-[#0E4A5E] to-teal px-5 pb-4 pt-3 text-white">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h2 id="about-title" className="font-[family-name:var(--font-display)] text-2xl font-extrabold">Letan Moris</h2>
+                  <h2 id="about-title" className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-extrabold">Letan Moris <Dodo size={26} className="text-white/80" title="The Letan Moris Dodo" /></h2>
                   <p className="text-sm italic text-teal-soft">&quot;{TAGLINE}&quot;</p>
                   <p className="text-xs font-semibold text-white/85">📈 {POWERED}</p>
                 </div>

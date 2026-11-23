@@ -1,16 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { fetchReports, summariseByPlace, type PlaceSummary } from "@/lib/community/lapli";
+import { fetchReports, summariseByPlace, summariseHazards, type HazardSummary, type Mode, type PlaceSummary } from "@/lib/community/lapli";
 
-/** Polls community rain reports every 2 minutes while the page is open. */
+/** Polls community reports every 2 minutes while the page is open. */
 export function useLapli() {
   const [places, setPlaces] = useState<PlaceSummary[] | null>(null);
+  const [hazards, setHazards] = useState<HazardSummary[]>([]);
+  const [mode, setMode] = useState<Mode | null>(null);
   const [error, setError] = useState<string | null>(null);
   const load = useCallback(async () => {
     try {
       const r = await fetchReports();
-      setPlaces(summariseByPlace(r));
+      setPlaces(summariseByPlace(r.reports));
+      setHazards(summariseHazards(r.reports));
+      setMode(r.mode);
       setError(null);
     } catch (e) {
       setError((e as Error).message);
@@ -27,5 +31,5 @@ export function useLapli() {
       window.removeEventListener("lapli:sent", onReport);
     };
   }, [load]);
-  return { places, error, reload: load };
+  return { places, hazards, mode, error, reload: load };
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useApi } from "@/lib/client/useApi";
 import { useAppState } from "./AppState";
 import type { Fact } from "@/lib/weather/intelligence/facts.service";
+import { Dodo } from "./Dodo";
 
 const LABEL: Record<Fact["category"], string> = {
   local: "Local climate",
@@ -16,7 +17,7 @@ const LABEL: Record<Fact["category"], string> = {
   myth: "Myth buster",
 };
 
-/** "💡 Did you know?" — one fact a day for your area, with more on tap. */
+/** "Did you know?" — one fact a day for your area, with more on tap. */
 export function DidYouKnow() {
   const { location, ready } = useAppState();
   const api = useApi<{ today: string; facts: Fact[] }>(ready ? `/api/facts?loc=${location.id}` : null);
@@ -27,7 +28,7 @@ export function DidYouKnow() {
   return (
     <section className="card bg-gradient-to-br from-[#FFF8EA] to-white dark:from-[#2A2414] dark:to-night-card" aria-labelledby="dyk-title" aria-live="polite">
       <div className="flex items-center justify-between gap-2">
-        <h2 id="dyk-title" className="label">💡 Did you know?</h2>
+        <h2 id="dyk-title" className="label flex items-center gap-1.5"><Dodo size={22} className="text-coral-ink dark:text-coral" /> Did you know?</h2>
         <span className="chip bg-coral/25 text-[11px] text-coral-ink dark:text-coral">{LABEL[f.category]}</span>
       </div>
       <p className="mt-2 text-base font-semibold leading-snug">{f.text}</p>
