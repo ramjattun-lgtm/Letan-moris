@@ -15,6 +15,7 @@ import { distanceKm } from "@/lib/weather/providers/gdacs.provider";
 import { addHours, hhmm, hourStart, nowMU, todayMU } from "@/lib/time";
 import { OFFICIAL_LINKS } from "@/data/official-status";
 import { Dodo } from "./Dodo";
+import { LocationPicker } from "./LocationPicker";
 
 type Severity = "red" | "amber" | "info";
 interface Alert {
@@ -130,6 +131,7 @@ export function AlertsPanel({ f }: { f: Forecast }) {
           Official MMS warnings ↗
         </a>
       </div>
+      <LocationPicker setup />
       {alerts.length === 0 ? (
         <div className="flex items-center gap-2 rounded-2xl border-l-4 border-l-teal bg-teal/10 px-4 py-3 text-sm">
           {loading ? (

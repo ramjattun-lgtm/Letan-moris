@@ -38,9 +38,9 @@ export default function Home() {
     <>
       <LastRefreshed savedAt={api.savedAt} dataAt={f?.provenance.retrievedAt} loading={api.loading} stale={!!api.error && !!f} onRefresh={api.reload} />
       <OfficialBanner />
-      {f && <AlertsPanel f={f} />}
+      {/* The place picker sits inside the Alerts section, so new visitors set their place (and location permission) first. */}
+      {f ? <AlertsPanel f={f} /> : <LocationPicker setup />}
       <AboutBanner />
-      <LocationPicker />
       <ErrorBanner error={api.error} hasData={!!f} savedAt={api.savedAt} />
       {!f ? (
         api.loading || !ready ? (

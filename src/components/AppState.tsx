@@ -18,6 +18,8 @@ interface State {
   ready: boolean;
   interests: ActivityId[];
   interestsChosen: boolean;
+  /** False until the person has picked a place (or used their location) on this device. */
+  locationChosen: boolean;
   setInterests: (a: ActivityId[]) => void;
   setIsland: (i: Island) => void;
   setLocation: (id: string) => void;
@@ -34,6 +36,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [interests, setInterestsState] = useState<ActivityId[]>(DEFAULT_INTERESTS);
   const [interestsChosen, setInterestsChosen] = useState(false);
+  const [locationChosen, setLocationChosen] = useState(true);
 
   useEffect(() => {
     // Restore saved choices (stored on this device only).
@@ -41,6 +44,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const saved = fromUrl && getLocality(fromUrl) ? fromUrl : readLS<string>("letan.loc", DEFAULT_LOCATION.mauritius);
     /* eslint-disable react-hooks/set-state-in-effect */
     setLocId(getLocality(saved) ? saved : DEFAULT_LOCATION.mauritius);
+    setLocationChosen(!!fromUrl || readLS<string | null>("letan.loc", null) !== null);
     setFavourites(readLS<string[]>("letan.favs", []).filter((id) => getLocality(id)));
     setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
     const savedInterests = readLS<ActivityId[] | null>("letan.interests", null);
@@ -57,6 +61,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const setLocation = useCallback((id: string) => {
     if (!getLocality(id)) return;
     setLocId(id);
+    setLocationChosen(true);
     writeLS("letan.loc", id);
     // Remember the last place used on each island, so switching back returns there.
     writeLS(`letan.loc.${getLocality(id)!.island}`, id);
@@ -97,8 +102,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ island: location.island, location, favourites, theme, ready, interests, interestsChosen, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme }),
-    [location, favourites, theme, ready, interests, interestsChosen, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme],
+    () => ({ island: location.island, location, favourites, theme, ready, interests, interestsChosen, locationChosen, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme }),
+    [location, favourites, theme, ready, interests, interestsChosen, locationChosen, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
