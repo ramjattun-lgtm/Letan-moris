@@ -79,7 +79,7 @@ function Icon({ kind, size }: { kind: IconKind; size: number }) {
 function Row({ r, compact }: { r: RegionSummary; compact: boolean }) {
   const rainy = r.rainWindows.length > 0;
   return (
-    <div style={{ display: "flex", alignItems: "center", background: "#FFFFFF", borderRadius: 28, padding: compact ? "5px 24px" : "16px 28px", marginBottom: compact ? 6 : 14 }}>
+    <div style={{ display: "flex", alignItems: "center", background: "#FFFFFF", borderRadius: 28, padding: compact ? "4px 24px" : "16px 28px", marginBottom: compact ? 5 : 14 }}>
       <Icon kind={r.icon} size={compact ? 48 : 80} />
       <div style={{ display: "flex", flexDirection: "column", marginLeft: 20, flexGrow: 1 }}>
         <div style={{ display: "flex", fontFamily: "Jakarta", fontSize: compact ? 28 : 36, color: NAVY }}>{r.label}</div>
@@ -129,7 +129,7 @@ export async function renderCard(s: PostSnapshot): Promise<ImageResponse> {
         {!two && (
           <div style={{ display: "flex", padding: "26px 48px 0", fontFamily: "Jakarta", fontSize: 34, color: NAVY, lineHeight: 1.25 }}>{s.headline}</div>
         )}
-        <div style={{ display: "flex", flexDirection: "column", padding: "24px 48px 0", flexGrow: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", padding: two ? "12px 48px 0" : "24px 48px 0", flexGrow: 1 }}>
           {s.sections.map((sec) => (
             <div key={sec.date} style={{ display: "flex", flexDirection: "column" }}>
               {two && <div style={{ display: "flex", fontFamily: "Jakarta", fontSize: 28, color: NAVY, marginBottom: 6 }}>{sec.label}</div>}
@@ -139,7 +139,7 @@ export async function renderCard(s: PostSnapshot): Promise<ImageResponse> {
             </div>
           ))}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", padding: "18px 48px 30px", fontSize: 21, color: "#4A5B66" }}>
+        <div style={{ display: "flex", flexDirection: "column", flexShrink: 0, padding: "14px 48px 26px", fontSize: 21, color: "#4A5B66" }}>
           <div style={{ display: "flex" }}>
             Issued {hhmm(s.issuedAtMU)} Mauritius time · letan-moris.vercel.app · Weather data by Open-Meteo.com
           </div>
