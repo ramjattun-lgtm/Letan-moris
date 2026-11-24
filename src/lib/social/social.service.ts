@@ -8,7 +8,7 @@ import { renderCard } from "./content/card-renderer";
 import { alreadyPosted, facebookConfig, publishPhoto } from "./publishers/facebook.publisher";
 import { SOCIAL } from "@/data/social-settings";
 import { weeklyPostFact } from "@/lib/weather/intelligence/facts.server";
-import { addHours, nowMU } from "@/lib/time";
+import { addDays, addHours, nowMU } from "@/lib/time";
 
 export const isSlot = (s: string | null): s is Slot => !!s && (SLOTS as string[]).includes(s);
 
@@ -21,7 +21,7 @@ export async function prepare(slot: Slot, planFrom?: string): Promise<{ snapshot
   const isSunday = new Date(`${from.slice(0, 10)}T12:00:00Z`).getUTCDay() === 0;
   const didYouKnow = slot === "morning" && isSunday ? weeklyPostFact(from.slice(0, 10)) : null;
   // Weekly look-back and best days: added to the Sunday evening post.
-  const weekly = slot === "evening" && isSunday ? weeklyBlock(forecasts, from.slice(0, 10)) : undefined;
+  const weekly = slot === "evening" && isSunday ? weeklyBlock(forecasts, addDays(from.slice(0, 10), 1)) : undefined;
   const snapshot = buildSnapshot(slot, forecasts, now, from, { didYouKnow, weekly });
   return { snapshot, check: checkPost(snapshot) };
 }

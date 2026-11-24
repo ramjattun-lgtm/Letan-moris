@@ -1,6 +1,6 @@
 import type { Forecast, HourlyPoint, Maybe } from "@/lib/weather/types";
 import { addDays, hhmm, hourOf, nowMU, weekday } from "@/lib/time";
-import { findRainPeriods } from "@/lib/weather/intelligence/rainfall-intelligence.service";
+import { findRainPeriods, solidRain } from "@/lib/weather/intelligence/rainfall-intelligence.service";
 import { confidenceForDry, confidenceForRain, decayWithLeadTime, type Confidence } from "@/lib/weather/intelligence/confidence.service";
 import { describeCode, type IconKind } from "@/lib/weather/weather-codes";
 import { assessHeavyRain, type RainRisk } from "@/lib/weather/intelligence/heavy-rain.service";
@@ -73,9 +73,11 @@ const nums = (xs: Maybe<number>[]) => xs.filter((x): x is number => x !== null);
 
 const ICON_RANK: IconKind[] = ["clear", "partly", "cloudy", "fog", "drizzle", "showers", "rain", "storm"];
 
-export function rainPhrase(maxProb: Maybe<number>, mm: Maybe<number>, windows: string[]): string {
+/** Same calibrated wording as the app: "rain likely" only for solid periods (≥ 60% and ≥ 1 mm). */
+export function rainPhrase(maxProb: Maybe<number>, mm: Maybe<number>, windows: string[], possible: string[] = []): string {
   if (maxProb === null) return "rain forecast not available";
   if (windows.length) return `rain likely about ${windows.slice(0, 2).join(" and ")} (up to ${maxProb}%)`;
+  if (possible.length) return `showers possible about ${possible.slice(0, 2).join(" and ")} (up to ${maxProb}%)`;
   if (maxProb < 30 && (mm ?? 0) < 0.5) return `mostly dry (rain chance up to ${maxProb}%)`;
   return `a few showers possible (up to ${maxProb}%)`;
 }
@@ -97,7 +99,8 @@ export function summariseRegion(
   const uv = nums(hs.map((h) => h.uvIndex));
   const complete = hs.length > 0 && probs.length === hs.length && temps.length === hs.length;
   const periods = complete ? findRainPeriods(hs) : [];
-  const windows = periods.map((p) => `${hhmm(p.start)}–${hhmm(p.end)}`);
+  const windows = periods.filter(solidRain).map((p) => `${hhmm(p.start)}–${hhmm(p.end)}`);
+  const possibleWindows = periods.filter((p) => !solidRain(p)).map((p) => `${hhmm(p.start)}–${hhmm(p.end)}`);
   const maxRainProb = complete ? Math.max(...probs) : null;
   const rainMm = mm.length ? Math.round(mm.reduce((a, b) => a + b, 0) * 10) / 10 : null;
   let icon: IconKind = "unknown";
@@ -128,7 +131,7 @@ export function summariseRegion(
     uvMax: uv.length ? Math.max(...uv) : null,
     icon,
     heavyRisk: assessHeavyRain(f.hourly.map((h) => ({ time: h.time, mm: h.precipitation })), now).level,
-    phrase: complete ? rainPhrase(maxRainProb, rainMm, windows) : "forecast not available",
+    phrase: complete ? rainPhrase(maxRainProb, rainMm, windows, possibleWindows) : "forecast not available",
     confidence: decayWithLeadTime(base, daysAhead),
   };
 }
