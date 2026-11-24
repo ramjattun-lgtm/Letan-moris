@@ -79,8 +79,8 @@ function Icon({ kind, size }: { kind: IconKind; size: number }) {
 function Row({ r, compact }: { r: RegionSummary; compact: boolean }) {
   const rainy = r.rainWindows.length > 0;
   return (
-    <div style={{ display: "flex", alignItems: "center", background: "#FFFFFF", borderRadius: 28, padding: compact ? "8px 24px" : "16px 28px", marginBottom: compact ? 8 : 14 }}>
-      <Icon kind={r.icon} size={compact ? 56 : 80} />
+    <div style={{ display: "flex", alignItems: "center", background: "#FFFFFF", borderRadius: 28, padding: compact ? "5px 24px" : "16px 28px", marginBottom: compact ? 6 : 14 }}>
+      <Icon kind={r.icon} size={compact ? 48 : 80} />
       <div style={{ display: "flex", flexDirection: "column", marginLeft: 20, flexGrow: 1 }}>
         <div style={{ display: "flex", fontFamily: "Jakarta", fontSize: compact ? 28 : 36, color: NAVY }}>{r.label}</div>
         <div style={{ display: "flex", fontSize: compact ? 20 : 24, color: "#4A5B66" }}>{r.place}</div>
@@ -89,8 +89,12 @@ function Row({ r, compact }: { r: RegionSummary; compact: boolean }) {
         <div style={{ display: "flex", fontFamily: "Jakarta", fontSize: compact ? 30 : 42, color: NAVY }}>
           {r.tempMin}–{r.tempMax}°
         </div>
-        <div style={{ display: "flex", fontSize: compact ? 22 : 26, fontWeight: 600, color: rainy ? RAIN : "#0B7F86" }}>
-          {rainy ? `Rain ${r.rainWindows[0]} · ${r.maxRainProb}%` : `Mostly dry · ${r.maxRainProb}%`}
+        <div style={{ display: "flex", fontSize: compact ? 22 : 26, fontWeight: 600, color: rainy ? RAIN : /^(showers possible|a few showers)/.test(r.phrase) ? "#3A6EA5" : "#0B7F86" }}>
+          {rainy
+            ? `Rain ${r.rainWindows[0]} · ${r.maxRainProb}%`
+            : /^(showers possible|a few showers)/.test(r.phrase)
+              ? `Showers possible · ${r.maxRainProb}%`
+              : `Mostly dry · ${r.maxRainProb}%`}
         </div>
       </div>
     </div>
@@ -104,7 +108,7 @@ export async function renderCard(s: PostSnapshot): Promise<ImageResponse> {
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", background: MIST, fontFamily: "Inter" }}>
-        <div style={{ display: "flex", alignItems: "center", background: NAVY, padding: "36px 48px", color: "#FFFFFF" }}>
+        <div style={{ display: "flex", flexShrink: 0, alignItems: "center", background: NAVY, padding: "36px 48px", color: "#FFFFFF" }}>
           <Mark size={96} />
           <div style={{ display: "flex", flexDirection: "column", marginLeft: 22, flexGrow: 1 }}>
             <div style={{ display: "flex", fontFamily: "Jakarta", fontSize: 46 }}>
@@ -112,7 +116,6 @@ export async function renderCard(s: PostSnapshot): Promise<ImageResponse> {
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", fontSize: 24, color: "#BFD3DD" }}>Konn letan, planifie to zournee.</div>
-              <div style={{ display: "flex", fontSize: 18, color: TEAL_SOFT, fontWeight: 600 }}>Powered by 30 years of local weather history from Open-Meteo (ECMWF ERA5)</div>
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
@@ -120,15 +123,18 @@ export async function renderCard(s: PostSnapshot): Promise<ImageResponse> {
             <div style={{ display: "flex", fontSize: 24, color: "#BFD3DD" }}>{two ? s.sections.map((x) => x.label).join(" & ") : fullDate(s.sections[0].date)}</div>
           </div>
         </div>
+        <div style={{ display: "flex", flexShrink: 0, background: "#0F3A55", padding: "8px 48px", fontSize: 19, color: TEAL_SOFT, fontWeight: 600 }}>
+          Powered by 30 years of local weather history from Open-Meteo (ECMWF ERA5)
+        </div>
         {!two && (
           <div style={{ display: "flex", padding: "26px 48px 0", fontFamily: "Jakarta", fontSize: 34, color: NAVY, lineHeight: 1.25 }}>{s.headline}</div>
         )}
         <div style={{ display: "flex", flexDirection: "column", padding: "24px 48px 0", flexGrow: 1 }}>
           {s.sections.map((sec) => (
             <div key={sec.date} style={{ display: "flex", flexDirection: "column" }}>
-              {two && <div style={{ display: "flex", fontFamily: "Jakarta", fontSize: 28, color: NAVY, marginBottom: 8 }}>{sec.label}</div>}
+              {two && <div style={{ display: "flex", fontFamily: "Jakarta", fontSize: 28, color: NAVY, marginBottom: 6 }}>{sec.label}</div>}
               {two
-                ? sec.regions.filter((r) => r.key !== "plateau").map((r) => <Row key={r.key} r={r} compact />)
+                ? sec.regions.map((r) => <Row key={r.key} r={r} compact />)
                 : sec.regions.map((r) => <Row key={r.key} r={r} compact={false} />)}
             </div>
           ))}
