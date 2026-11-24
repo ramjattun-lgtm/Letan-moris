@@ -17,6 +17,11 @@ const MONTH = "(January|February|March|April|May|June|July|August|September|Octo
 export const PATTERNS: Pattern[] = [
   { re: r(`Updated to (.+), nearest to you\\.`), fr: "Mis à jour : $1, le plus proche de vous.", mfe: "Mett azour: $1, pli pre kot ou." },
   { re: r(`Nearest place: (.+)`), fr: "Lieu le plus proche : $1", mfe: "Landrwa pli pre: $1" },
+  // ——— Earthquakes (check MMS; never a tsunami warning) ———
+  { re: r(`Strong earthquake: magnitude ${N}, (.+), at (.+)`), fr: "Fort séisme : magnitude $1, $2, à $3", mfe: "Gro tranbleman later: mayitid $1, $2, a $3" },
+  { re: r(`About ${N} km from (Mauritius|Rodrigues)\\.`), fr: "À environ $1 km de $2.", mfe: "Apepre $1 km ar $2." },
+  { re: r(`Tsunami warnings come only from MMS — check MMS, radio and TV now\\.`), fr: "Les alertes tsunami viennent uniquement du MMS — consultez le MMS, la radio et la télé maintenant.", mfe: "Avertisman tsunami sorti zis kot MMS — get MMS, radio ek televizion aster." },
+  { re: r(`If you are at the coast and feel strong shaking, or see the sea suddenly pull back, go to high ground or inland straight away — do not wait for a message\\.`), fr: "Si vous êtes sur la côte et sentez une forte secousse, ou voyez la mer se retirer brusquement, montez en hauteur ou allez à l'intérieur des terres immédiatement — n'attendez pas de message.", mfe: "Si ou lor lakot ek ou santi enn gro tranbleman, ouswa ou trouv lamer resi sibitman, al lao ouswa al andan tousuit — pa atann okenn mesaz." },
   // ——— Climate and Did you know? ———
   { re: r(`In ${MONTH}, rain in (.+?) is most likely around ${T} \\((\\d+)% of hours\\) and least likely around ${T} \\((\\d+)%\\) — about (\\S+) (as likely|more likely)\\.`), fr: "En $1, la pluie à $2 est la plus probable vers $3 ($4 % des heures) et la moins probable vers $5 ($6 %) — environ $7 plus probable." },
   { re: r(`In ${MONTH}, rain in (.+?) is about as likely at any time of day \\(around (\\d+)% of daytime hours\\)\\.`), fr: "En $1, la pluie à $2 est à peu près aussi probable à toute heure de la journée (environ $3 % des heures de jour)." },

@@ -16,7 +16,7 @@ for (const area of data.areas) {
     const click = `${SITE}/?${a.loc ? `loc=${a.loc}&` : ""}a=${encodeURIComponent(a.key)}`;
     const res = await fetch(`${NTFY}/${area.topic}`, {
       method: "POST",
-      headers: { Title: a.title, Priority: String(a.priority), Tags: a.priority >= 4 ? "warning" : "cloud_with_rain", Click: click },
+      headers: { Title: a.title, Priority: String(a.priority), Tags: a.priority >= 5 ? "rotating_light,ocean" : a.priority >= 4 ? "warning" : "cloud_with_rain", Click: click },
       body: `${a.body}\n\n${data.footer}`,
     });
     console.log(area.key, a.key, res.status);

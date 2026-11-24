@@ -12,9 +12,10 @@ import type { RiverAssessment } from "@/lib/weather/intelligence/river.service";
 import { heatDay, windowText, type MosquitoLevel } from "@/lib/weather/intelligence/wellbeing.service";
 import { getLocality } from "@/data/localities";
 import { distanceKm } from "@/lib/weather/providers/gdacs.provider";
-import { addHours, hhmm, hourStart, nowMU, todayMU } from "@/lib/time";
+import { addHours, formatUtcAsMU, hhmm, hourStart, nowMU, todayMU } from "@/lib/time";
 import { OFFICIAL_LINKS } from "@/data/official-status";
 import { Dodo } from "./Dodo";
+import { QUAKE_SIGNS, type Quake } from "@/lib/weather/intelligence/quake.service";
 import { LocationPicker } from "./LocationPicker";
 import { tr } from "@/lib/i18n";
 
@@ -40,6 +41,7 @@ const RANK: Record<Severity, number> = { red: 0, amber: 1, info: 2 };
 export function AlertsPanel({ f }: { f: Forecast }) {
   const { location, island, ready, t } = useAppState();
   const cyc = useApi<CycloneStatus>(ready ? "/api/cyclones" : null);
+  const qk = useApi<{ quakes: Quake[] }>(ready ? "/api/quakes" : null, { refreshMin: 5 });
   const hr = useApi<HeavyRainAssessment>(ready ? `/api/heavyrain?loc=${location.id}` : null);
   const riv = useApi<{ island: string; rivers: RiverItem[] }>(ready ? `/api/rivers?island=${island}` : null);
   const mos = useApi<{ level: MosquitoLevel | null }>(ready ? `/api/mosquito?loc=${location.id}` : null);
@@ -50,6 +52,19 @@ export function AlertsPanel({ f }: { f: Forecast }) {
   const now = hourStart(nowMU());
   const today = todayMU();
   const where = island === "rodrigues" ? "Rodrigues" : "Mauritius";
+
+  // Strong undersea earthquake in the Indian Ocean (USGS) → check MMS. Never a tsunami warning.
+  for (const q of qk.data?.quakes ?? []) {
+    const dist = island === "rodrigues" ? q.kmFromRodrigues : q.kmFromMauritius;
+    alerts.push({
+      id: `quake-${q.id}`,
+      severity: "red",
+      icon: "🌊",
+      title: `Strong earthquake: magnitude ${q.mag}, ${q.place}, at ${formatUtcAsMU(q.timeUtc)}`,
+      text: `About ${Math.round(dist / 100) * 100} km from ${where}. Tsunami warnings come only from MMS — check MMS, radio and TV now. ${QUAKE_SIGNS}`,
+      href: OFFICIAL_LINKS.mms.url,
+    });
+  }
 
   // Tropical systems nearby (GDACS).
   for (const s of cyc.data?.systems ?? []) {

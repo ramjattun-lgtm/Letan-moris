@@ -46,6 +46,7 @@ export const FR_MORE: Record<string, string> = {
   "Could not get your location. Choose a place from the list instead.": "Impossible d'obtenir votre position. Choisissez plutôt un lieu dans la liste.",
   "You are far from Mauritius and Rodrigues — keeping the last place.": "Vous êtes loin de Maurice et de Rodrigues — le dernier lieu est conservé.",
   "Location permission is off, so the place can't follow you. Allow location for this site in your browser settings.": "L'autorisation de localisation est désactivée : le lieu ne peut pas vous suivre. Autorisez la position pour ce site dans les réglages du navigateur.",
+  "You'll get a notification when heavy rain is likely in this area, when 2 or more people report a rising river, fallen tree or rough sea there, or after a strong earthquake in the Indian Ocean (to check MMS).": "Vous recevrez une notification quand de fortes pluies sont probables dans cette zone, quand 2 personnes ou plus y signalent une rivière qui monte, un arbre tombé ou une mer agitée, ou après un fort séisme dans l'océan Indien (pour consulter le MMS).",
   "Rain chance": "Risque de pluie",
   "this hour": "cette heure",
   Gusts: "Rafales",

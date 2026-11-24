@@ -2,7 +2,8 @@ import { getLocality } from "@/data/localities";
 import { climateKeyFor } from "@/lib/weather/intelligence/climate.service";
 import { assessHeavyRain, type RainHour } from "@/lib/weather/intelligence/heavy-rain.service";
 import { KINDS, summariseHazards, type Report } from "./lapli";
-import { hhmm, nowMU } from "@/lib/time";
+import { formatUtcAsMU, hhmm, nowMU } from "@/lib/time";
+import { QUAKE_SIGNS, type Quake } from "@/lib/weather/intelligence/quake.service";
 
 // Location alerts by area, sent as free ntfy notifications. People follow the area of a saved
 // place (Home, Work, School…) in the free ntfy app. Independent alerts — never MMS warnings.
@@ -24,7 +25,7 @@ export const areaName = (key: string) => ALERT_AREAS.find((a) => a.key === key)?
 
 export interface AreaAlert {
   key: string; // stable id, used so each alert is sent only once
-  priority: 3 | 4;
+  priority: 3 | 4 | 5;
   title: string;
   body: string;
   loc?: string; // locality to open when tapped
@@ -64,3 +65,14 @@ export function hazardAlerts(reports: Report[], nowSec = Math.floor(Date.now() /
 }
 
 export const knownLoc = (id?: string) => (id && getLocality(id) ? id : undefined);
+
+/** Strong Indian Ocean earthquake: urgent "check MMS" notice for every area (never a tsunami warning). */
+export function quakeAlert(q: Quake, areaKey: string): AreaAlert {
+  const dist = areaKey === "rodrigues" ? q.kmFromRodrigues : q.kmFromMauritius;
+  return {
+    key: `quake-${q.id}`,
+    priority: 5,
+    title: `Strong earthquake M${q.mag}: ${q.place} — check MMS now`,
+    body: `A magnitude ${q.mag} earthquake happened at ${formatUtcAsMU(q.timeUtc)} (Mauritius time), about ${Math.round(dist / 100) * 100} km away. Tsunami warnings for Mauritius and Rodrigues come only from MMS: check MMS, radio and TV now. ${QUAKE_SIGNS}`,
+  };
+}

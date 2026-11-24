@@ -22,7 +22,7 @@ export function AreaAlertsButton({ areaKey }: { areaKey: string }) {
             <h2 id={`al-${areaKey}`} className="font-[family-name:var(--font-display)] text-xl font-extrabold">
               {tr("Free alerts for")} {tr(areaName(areaKey))}
             </h2>
-            <p className="mt-1 text-sm">{tr("You'll get a notification when heavy rain is likely in this area, or when 2 or more people report a rising river, fallen tree or rough sea there.")}</p>
+            <p className="mt-1 text-sm">{tr("You'll get a notification when heavy rain is likely in this area, when 2 or more people report a rising river, fallen tree or rough sea there, or after a strong earthquake in the Indian Ocean (to check MMS).")}</p>
             <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm">
               <li>{tr("Install the free")} <strong>{tr("ntfy")}</strong> {tr("app (Play Store or App Store). No account needed.")}</li>
               <li>{tr("Tap the button below — or in ntfy tap")} <strong>+</strong> {tr("and type the topic name.")}</li>
