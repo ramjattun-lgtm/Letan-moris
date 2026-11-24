@@ -2,7 +2,11 @@
 // This is NOT a tsunami warning: MMS is the National Tsunami Warning Centre for Mauritius and
 // Rodrigues. We never say a tsunami is coming, never give wave heights or arrival times.
 
+// Two bars: any strong quake in the Indian Ocean, or a smaller one close to our islands.
+// (24 Nov 2026: a M6.4 quake 330 km from Rodrigues was missed by a single 6.5 bar.)
 export const QUAKE_MIN_MAG = 6.5;
+export const QUAKE_NEAR_KM = 1500;
+export const QUAKE_NEAR_MIN_MAG = 5.5;
 export const QUAKE_MAX_DEPTH_KM = 100; // deep quakes rarely cause tsunamis
 export const QUAKE_WINDOW_H = 12;
 // The Indian Ocean basin, roughly (South Africa to Western Australia, Antarctica to the Arabian Sea).
@@ -29,6 +33,8 @@ export interface Quake {
   url: string | null;
   /** USGS flag: a tsunami warning centre has issued information for this event (anywhere). */
   tsunamiInfo: boolean;
+  /** red = strong (6.5+) or close and fairly strong (6.0+ within 600 km); amber otherwise. */
+  level: "red" | "amber";
 }
 
 function km(a: { lat: number; lon: number }, b: { lat: number; lon: number }) {
@@ -46,8 +52,9 @@ export function notableQuakes(features: UsgsFeature[], nowMs = Date.now()): Quak
     .filter((f) => {
       const [lon, lat, depth] = f.geometry?.coordinates ?? [];
       const mag = f.properties?.mag ?? 0;
+      const near = Math.min(km(MAURITIUS, { lat, lon }), km(RODRIGUES, { lat, lon })) <= QUAKE_NEAR_KM;
       return (
-        mag >= QUAKE_MIN_MAG &&
+        (mag >= QUAKE_MIN_MAG || (near && mag >= QUAKE_NEAR_MIN_MAG)) &&
         depth <= QUAKE_MAX_DEPTH_KM &&
         lat >= INDIAN_OCEAN.latMin &&
         lat <= INDIAN_OCEAN.latMax &&
@@ -71,6 +78,11 @@ export function notableQuakes(features: UsgsFeature[], nowMs = Date.now()): Quak
         kmFromRodrigues: km(RODRIGUES, { lat, lon }),
         url: f.properties.url ?? null,
         tsunamiInfo: f.properties.tsunami === 1,
+        level: (() => {
+          const mag = f.properties.mag ?? 0;
+          const closest = Math.min(km(MAURITIUS, { lat, lon }), km(RODRIGUES, { lat, lon }));
+          return mag >= QUAKE_MIN_MAG || (mag >= 6 && closest <= 600) ? ("red" as const) : ("amber" as const);
+        })(),
       };
     })
     .sort((a, b) => b.mag - a.mag);

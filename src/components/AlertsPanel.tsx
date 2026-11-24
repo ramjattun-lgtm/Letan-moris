@@ -58,7 +58,7 @@ export function AlertsPanel({ f }: { f: Forecast }) {
     const dist = island === "rodrigues" ? q.kmFromRodrigues : q.kmFromMauritius;
     alerts.push({
       id: `quake-${q.id}`,
-      severity: "red",
+      severity: q.level,
       icon: "🌊",
       title: `Strong earthquake: magnitude ${q.mag}, ${q.place}, at ${formatUtcAsMU(q.timeUtc)}`,
       text: `About ${Math.round(dist / 100) * 100} km from ${where}. Tsunami warnings come only from MMS — check MMS, radio and TV now. ${QUAKE_SIGNS}`,

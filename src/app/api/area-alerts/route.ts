@@ -21,7 +21,8 @@ async function communityReports(): Promise<Report[]> {
 async function quakes(): Promise<Quake[]> {
   try {
     const j = (await getJson("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson", 120)) as { features?: UsgsFeature[] };
-    return notableQuakes(j.features ?? []);
+    // Phones get an urgent alert only while it is fresh (first 3 hours); the app shows it for 12 hours.
+    return notableQuakes(j.features ?? []).filter((q) => Date.now() - Date.parse(q.timeUtc) <= 3 * 3600e3);
   } catch {
     return [];
   }

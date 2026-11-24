@@ -71,7 +71,7 @@ export function quakeAlert(q: Quake, areaKey: string): AreaAlert {
   const dist = areaKey === "rodrigues" ? q.kmFromRodrigues : q.kmFromMauritius;
   return {
     key: `quake-${q.id}`,
-    priority: 5,
+    priority: q.level === "red" ? 5 : 4,
     title: `Strong earthquake M${q.mag}: ${q.place} — check MMS now`,
     body: `A magnitude ${q.mag} earthquake happened at ${formatUtcAsMU(q.timeUtc)} (Mauritius time), about ${Math.round(dist / 100) * 100} km away. Tsunami warnings for Mauritius and Rodrigues come only from MMS: check MMS, radio and TV now. ${QUAKE_SIGNS}`,
   };

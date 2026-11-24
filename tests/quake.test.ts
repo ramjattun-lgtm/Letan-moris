@@ -27,6 +27,20 @@ describe("strong Indian Ocean earthquakes", () => {
     expect(q[0].kmFromMauritius).toBeGreaterThan(4000);
   });
 
+  it("flags the 24 Nov 2026 M6.4 quake near Rodrigues (closer quakes have a lower bar)", () => {
+    const q = notableQuakes(
+      [
+        f("rodrigues-2026", 6.4, 65.82, -17.78, 10, 4), // the real event: ~330 km from Rodrigues
+        f("near-small", 5.0, 60, -21, 10, 1), // close but below 5.5
+        f("far-mid", 6.0, 95.9, 3.3, 30, 1), // far away and below 6.5
+      ],
+      NOW,
+    );
+    expect(q.map((x) => x.id)).toEqual(["rodrigues-2026"]);
+    expect(q[0].kmFromRodrigues).toBeLessThan(400);
+    expect(q[0].level).toBe("red");
+  });
+
   it("the phone alert says check MMS, never that a tsunami is coming", () => {
     const [q] = notableQuakes([f("sumatra", 7.8, 95.9, 3.3, 30, 1)], NOW);
     const a = quakeAlert(q, "plateau");
