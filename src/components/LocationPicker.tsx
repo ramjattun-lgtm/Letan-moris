@@ -32,7 +32,7 @@ function useGeoPermission() {
  * the phone for permission), or pick from the list, and turn on free alerts for the area.
  */
 export function LocationPicker({ setup = false }: { setup?: boolean }) {
-  const { location, island, setLocation, favourites, toggleFavourite, locationChosen, ready, t } = useAppState();
+  const { location, island, setLocation, favourites, toggleFavourite, locationChosen, ready, t, following, setFollowing, followNote } = useAppState();
   const geo = useGeoPermission();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -45,6 +45,31 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
   }, [q, island, district]);
 
   const fav = favourites.includes(location.id);
+
+  /** Turn "Follow my location" on: first fix now, then the app keeps updating as you move. */
+  function followMe() {
+    if (!navigator.geolocation) {
+      setGeoMsg("Location is not available on this device.");
+      return;
+    }
+    setGeoMsg("Finding your location…");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const near = nearestLocality(pos.coords.latitude, pos.coords.longitude);
+        setLocation(near.id);
+        setFollowing(true);
+        setGeoMsg(null);
+        setOpen(false);
+      },
+      (err) =>
+        setGeoMsg(
+          err.code === err.PERMISSION_DENIED
+            ? "Location permission is off for this site. To allow it: tap the padlock or ⓘ next to the web address → Permissions → Location → Allow. Or choose a place from the list."
+            : "Could not get your location. Choose a place from the list instead.",
+        ),
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 120_000 },
+    );
+  }
 
   function useMyLocation() {
     if (!navigator.geolocation) {
@@ -79,7 +104,7 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
           <p className="font-bold">{t("setup.title")}</p>
           <p className="mt-0.5">{t("setup.text", { place: location.name })}</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <button type="button" onClick={useMyLocation} className="min-h-10 rounded-full bg-navy px-4 font-semibold text-white dark:bg-teal-soft dark:text-navy">
+            <button type="button" onClick={followMe} className="min-h-10 rounded-full bg-navy px-4 font-semibold text-white dark:bg-teal-soft dark:text-navy">
               {t("setup.gps")}
             </button>
             <button type="button" onClick={() => setOpen(true)} className="min-h-10 rounded-full px-4 font-semibold ring-1 ring-navy/20 dark:ring-white/20">
@@ -127,6 +152,26 @@ export function LocationPicker({ setup = false }: { setup?: boolean }) {
             <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z" strokeLinejoin="round" />
           </svg>
         </button>
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+        {following ? (
+          <>
+            <span className="inline-flex items-center gap-1 rounded-full bg-teal/15 px-3 py-1.5 font-semibold text-teal-ink dark:text-teal-soft" role="status">
+              <span aria-hidden="true" className="h-2 w-2 animate-pulse rounded-full bg-teal" /> {tr("Following your location")}
+            </span>
+            <button type="button" onClick={() => setFollowing(false)} className="min-h-9 px-1 text-muted underline dark:text-slate-400">
+              {tr("Stop")}
+            </button>
+          </>
+        ) : (
+          !showSetup && (
+            <button type="button" onClick={followMe} className="min-h-9 rounded-full px-3 font-semibold text-teal-ink ring-1 ring-teal/40 dark:text-teal-soft" title={tr("The place updates by itself as you move. Your position stays on this phone.")}>
+              📍 {tr("Follow my location")}
+            </button>
+          )
+        )}
+        {(followNote || (!showSetup && geoMsg)) && <span className="text-muted dark:text-slate-400">{tr(followNote ?? geoMsg ?? "")}</span>}
       </div>
 
       {setup && !showSetup && (

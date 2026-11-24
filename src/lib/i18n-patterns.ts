@@ -15,6 +15,8 @@ const r = (s: string) => new RegExp(`^${s}$`);
 const MONTH = "(January|February|March|April|May|June|July|August|September|October|November|December)";
 
 export const PATTERNS: Pattern[] = [
+  { re: r(`Updated to (.+), nearest to you\\.`), fr: "Mis à jour : $1, le plus proche de vous.", mfe: "Mett azour: $1, pli pre kot ou." },
+  { re: r(`Nearest place: (.+)`), fr: "Lieu le plus proche : $1", mfe: "Landrwa pli pre: $1" },
   // ——— Climate and Did you know? ———
   { re: r(`In ${MONTH}, rain in (.+?) is most likely around ${T} \\((\\d+)% of hours\\) and least likely around ${T} \\((\\d+)%\\) — about (\\S+) (as likely|more likely)\\.`), fr: "En $1, la pluie à $2 est la plus probable vers $3 ($4 % des heures) et la moins probable vers $5 ($6 %) — environ $7 plus probable." },
   { re: r(`In ${MONTH}, rain in (.+?) is about as likely at any time of day \\(around (\\d+)% of daytime hours\\)\\.`), fr: "En $1, la pluie à $2 est à peu près aussi probable à toute heure de la journée (environ $3 % des heures de jour)." },

@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { DEFAULT_LOCATION, getLocality, type Locality } from "@/data/localities";
+import { createContext, useRef, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { DEFAULT_LOCATION, getLocality, nearestLocality, type Locality } from "@/data/localities";
+import { distanceKm } from "@/lib/weather/providers/gdacs.provider";
 import type { Island } from "@/lib/weather/types";
 import { readLS, writeLS } from "@/lib/client/storage";
 import type { ActivityId } from "@/lib/weather/intelligence/decision-engine.service";
@@ -22,6 +23,10 @@ interface State {
   interestsChosen: boolean;
   /** False until the person has picked a place (or used their location) on this device. */
   locationChosen: boolean;
+  /** "Follow my location": the place updates by itself as the phone moves (position stays on the phone). */
+  following: boolean;
+  setFollowing: (on: boolean) => void;
+  followNote: string | null;
   lang: Lang;
   setLang: (l: Lang) => void;
   t: (key: Key, vars?: Record<string, string | number>) => string;
@@ -42,6 +47,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [interests, setInterestsState] = useState<ActivityId[]>(DEFAULT_INTERESTS);
   const [interestsChosen, setInterestsChosen] = useState(false);
   const [locationChosen, setLocationChosen] = useState(true);
+  const [following, setFollowingState] = useState(false);
+  const [followNote, setFollowNote] = useState<string | null>(null);
   const [lang, setLangState] = useState<Lang>("en");
 
   useEffect(() => {
@@ -50,6 +57,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const saved = fromUrl && getLocality(fromUrl) ? fromUrl : readLS<string>("letan.loc", DEFAULT_LOCATION.mauritius);
     /* eslint-disable react-hooks/set-state-in-effect */
     setLocId(getLocality(saved) ? saved : DEFAULT_LOCATION.mauritius);
+    setFollowingState(readLS<boolean>("letan.follow", false));
     const savedLang = readLS<string>("letan.lang", "en");
     if (isLang(savedLang)) {
       setCurrentLang(savedLang);
@@ -69,7 +77,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const location = getLocality(locId) ?? getLocality(DEFAULT_LOCATION.mauritius)!;
 
-  const setLocation = useCallback((id: string) => {
+  // Picking a place by hand stops "Follow my location"; the automatic updates use applyLocation.
+  const applyLocation = useCallback((id: string) => {
     if (!getLocality(id)) return;
     setLocId(id);
     setLocationChosen(true);
@@ -77,6 +86,63 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // Remember the last place used on each island, so switching back returns there.
     writeLS(`letan.loc.${getLocality(id)!.island}`, id);
   }, []);
+
+  const setLocation = useCallback(
+    (id: string) => {
+      applyLocation(id);
+      setFollowingState(false);
+      writeLS("letan.follow", false);
+      setFollowNote(null);
+    },
+    [applyLocation],
+  );
+
+  const setFollowing = useCallback((on: boolean) => {
+    setFollowingState(on);
+    writeLS("letan.follow", on);
+    if (!on) setFollowNote(null);
+  }, []);
+
+  const locRef = useRef<string>("");
+  useEffect(() => {
+    locRef.current = locId;
+  }, [locId]);
+
+  // Follow my location: watch the phone's position and switch to the nearest place when it changes.
+  // Only runs while switched on; the position never leaves the phone.
+  useEffect(() => {
+    if (!following || !navigator.geolocation) return;
+    const onPos = (pos: GeolocationPosition) => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      const near = nearestLocality(lat, lon);
+      if (distanceKm({ lat, lon }, near) > 30) {
+        setFollowNote("You are far from Mauritius and Rodrigues — keeping the last place.");
+        return;
+      }
+      if (locRef.current !== near.id) {
+        applyLocation(near.id);
+        setFollowNote(`Updated to ${near.name}, nearest to you.`);
+      }
+    };
+    const onErr = (err: GeolocationPositionError) => {
+      if (err.code === err.PERMISSION_DENIED) {
+        setFollowingState(false);
+        writeLS("letan.follow", false);
+        setFollowNote("Location permission is off, so the place can't follow you. Allow location for this site in your browser settings.");
+      }
+    };
+    const opts = { enableHighAccuracy: false, maximumAge: 120_000, timeout: 20_000 };
+    const watch = navigator.geolocation.watchPosition(onPos, onErr, opts);
+    // Phones pause watching in the background: check again whenever the app comes back.
+    const onShow = () => {
+      if (document.visibilityState === "visible") navigator.geolocation.getCurrentPosition(onPos, onErr, opts);
+    };
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      navigator.geolocation.clearWatch(watch);
+      document.removeEventListener("visibilitychange", onShow);
+    };
+  }, [following, applyLocation]);
 
   const setIsland = useCallback(
     (i: Island) => {
@@ -123,8 +189,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const t = useCallback((key: Key, vars?: Record<string, string | number>) => translate(lang, key, vars), [lang]);
 
   const value = useMemo(
-    () => ({ island: location.island, location, favourites, theme, ready, interests, interestsChosen, locationChosen, lang, setLang, t, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme }),
-    [location, favourites, theme, ready, interests, interestsChosen, locationChosen, lang, setLang, t, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme],
+    () => ({ island: location.island, location, favourites, theme, ready, interests, interestsChosen, locationChosen, following, setFollowing, followNote, lang, setLang, t, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme }),
+    [location, favourites, theme, ready, interests, interestsChosen, locationChosen, following, setFollowing, followNote, lang, setLang, t, setInterests, setIsland, setLocation, toggleFavourite, toggleTheme],
   );
   // Keyed by language: switching language re-renders the whole app with the new words.
   return (
