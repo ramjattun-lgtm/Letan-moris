@@ -1,7 +1,7 @@
 {
- "builtAt": "2026-11-24T12:33:41.958Z",
- "from": "2026-10-25",
- "to": "2026-11-24",
+ "builtAt": "2026-11-25T11:23:36.202Z",
+ "from": "2026-10-26",
+ "to": "2026-11-25",
  "days": 30,
  "method": {
   "forecast": "The forecast issued the day before (Open-Meteo Previous Runs API), sorted like the app's wording: under 0.5 mm = dry, 2 mm or more = rain likely, in between = showers possible.",
@@ -16,33 +16,33 @@
     "rainDaysSeen": 10,
     "said": {
      "likely": {
-      "days": 10,
-      "rained": 7
+      "days": 9,
+      "rained": 6
      },
      "possible": {
-      "days": 11,
-      "rained": 3
+      "days": 12,
+      "rained": 4
      },
      "dry": {
       "days": 9,
       "stayedDry": 9
      }
     },
-    "clearCallPct": 84,
+    "clearCallPct": 83,
     "missed": 0,
     "falseAlarms": 3
    },
-   "tempMaeC": 0.7
+   "tempMaeC": 0.6
   },
   "east": {
    "name": "East",
    "rain": {
     "days": 30,
-    "rainDaysSeen": 19,
+    "rainDaysSeen": 20,
     "said": {
      "likely": {
       "days": 18,
-      "rained": 15
+      "rained": 16
      },
      "possible": {
       "days": 6,
@@ -53,9 +53,9 @@
       "stayedDry": 6
      }
     },
-    "clearCallPct": 88,
+    "clearCallPct": 92,
     "missed": 0,
-    "falseAlarms": 3
+    "falseAlarms": 2
    },
    "tempMaeC": 0.7
   },
@@ -66,19 +66,19 @@
     "rainDaysSeen": 19,
     "said": {
      "likely": {
-      "days": 17,
-      "rained": 15
+      "days": 18,
+      "rained": 16
      },
      "possible": {
-      "days": 9,
-      "rained": 4
+      "days": 8,
+      "rained": 3
      },
      "dry": {
       "days": 4,
       "stayedDry": 4
      }
     },
-    "clearCallPct": 90,
+    "clearCallPct": 91,
     "missed": 0,
     "falseAlarms": 2
    },
@@ -88,36 +88,36 @@
    "name": "West",
    "rain": {
     "days": 30,
-    "rainDaysSeen": 12,
+    "rainDaysSeen": 11,
     "said": {
      "likely": {
-      "days": 14,
-      "rained": 8
+      "days": 13,
+      "rained": 7
      },
      "possible": {
       "days": 8,
       "rained": 4
      },
      "dry": {
-      "days": 8,
-      "stayedDry": 8
+      "days": 9,
+      "stayedDry": 9
      }
     },
     "clearCallPct": 73,
     "missed": 0,
     "falseAlarms": 6
    },
-   "tempMaeC": 0.9
+   "tempMaeC": 0.8
   },
   "plateau": {
    "name": "Central Plateau",
    "rain": {
     "days": 30,
-    "rainDaysSeen": 16,
+    "rainDaysSeen": 17,
     "said": {
      "likely": {
       "days": 16,
-      "rained": 11
+      "rained": 12
      },
      "possible": {
       "days": 10,
@@ -128,9 +128,9 @@
       "stayedDry": 4
      }
     },
-    "clearCallPct": 75,
+    "clearCallPct": 80,
     "missed": 0,
-    "falseAlarms": 5
+    "falseAlarms": 4
    },
    "tempMaeC": 0.5
   },
@@ -141,19 +141,19 @@
     "rainDaysSeen": 13,
     "said": {
      "likely": {
-      "days": 15,
-      "rained": 10
+      "days": 14,
+      "rained": 9
      },
      "possible": {
-      "days": 10,
-      "rained": 3
+      "days": 11,
+      "rained": 4
      },
      "dry": {
       "days": 5,
       "stayedDry": 5
      }
     },
-    "clearCallPct": 75,
+    "clearCallPct": 74,
     "missed": 0,
     "falseAlarms": 5
    },
@@ -163,19 +163,19 @@
    "name": "Rodrigues",
    "rain": {
     "days": 30,
-    "rainDaysSeen": 11,
+    "rainDaysSeen": 12,
     "said": {
      "likely": {
-      "days": 5,
-      "rained": 5
+      "days": 6,
+      "rained": 6
      },
      "possible": {
       "days": 11,
       "rained": 5
      },
      "dry": {
-      "days": 14,
-      "stayedDry": 13
+      "days": 13,
+      "stayedDry": 12
      }
     },
     "clearCallPct": 95,
@@ -189,17 +189,17 @@
   "FIMP": {
    "name": "Plaisance airport",
    "region": "south",
-   "reports": 719,
+   "reports": 721,
    "rain": {
     "days": 30,
-    "rainDaysSeen": 8,
+    "rainDaysSeen": 9,
     "said": {
      "likely": {
-      "days": 17,
-      "rained": 3
+      "days": 18,
+      "rained": 4
      },
      "possible": {
-      "days": 9,
+      "days": 8,
       "rained": 4
      },
      "dry": {
@@ -207,11 +207,11 @@
       "stayedDry": 3
      }
     },
-    "clearCallPct": 29,
+    "clearCallPct": 32,
     "missed": 1,
     "falseAlarms": 14
    },
-   "tempMaeC": 1.4
+   "tempMaeC": 1.5
   },
   "FIMR": {
    "name": "Plaine Corail airport (Rodrigues)",
@@ -226,15 +226,15 @@
       "rained": 2
      },
      "possible": {
-      "days": 12,
+      "days": 13,
       "rained": 2
      },
      "dry": {
-      "days": 13,
-      "stayedDry": 13
+      "days": 12,
+      "stayedDry": 12
      }
     },
-    "clearCallPct": 83,
+    "clearCallPct": 82,
     "missed": 0,
     "falseAlarms": 3
    },
