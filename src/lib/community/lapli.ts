@@ -186,13 +186,21 @@ export type Mode = "db" | "ntfy";
 let mode: Mode | null = null;
 export const currentMode = () => mode;
 
+function uuidFallback(): string {
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
 /** Anonymous random ID for this phone, kept on the phone. No name, no account. */
 export function deviceId(): string {
   const KEY = "letan.device";
   try {
     let id = localStorage.getItem(KEY);
     if (!id || !/^[a-f0-9-]{36}$/.test(id)) {
-      id = crypto.randomUUID();
+      id = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : uuidFallback(); // randomUUID needs iOS 15.4+
       localStorage.setItem(KEY, id);
     }
     return id;

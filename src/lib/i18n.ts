@@ -239,7 +239,8 @@ function trInner(lang: Exclude<Lang, "en">, text: string): string {
   const exact = CATALOG[lang][text] ?? (lang === "mfe" ? FR[text] : undefined);
   if (exact !== undefined) return exact;
   // Long texts made of several sentences: translate each sentence.
-  const parts = text.split(/(?<=[.!?])\s+(?=[A-Z0-9"“])/);
+  // Split into sentences without a regex lookbehind (not supported before Safari 16.4 / iOS 16.4).
+  const parts = splitSentences(text);
   if (parts.length > 1) return parts.map((s) => trInner(lang, s)).join(" ");
   // Lists joined with "; " (e.g. dark-sky spots).
   if (text.includes("; ")) return text.split("; ").map((s) => trInner(lang, s)).join(" ; ");
@@ -258,6 +259,25 @@ function trInner(lang: Exclude<Lang, "en">, text: string): string {
     if (t2) return `${t2}${text.slice(-1)}`;
   }
   return text;
+}
+
+/** "One. Two." → ["One.", "Two."] — a new sentence starts after . ! ? + space + capital, digit or quote. */
+export function splitSentences(text: string): string[] {
+  const out: string[] = [];
+  let start = 0;
+  for (let i = 0; i < text.length - 2; i++) {
+    if (".!?".includes(text[i]) && /\s/.test(text[i + 1])) {
+      let j = i + 1;
+      while (j < text.length && /\s/.test(text[j])) j++;
+      if (j < text.length && /[A-Z0-9"“]/.test(text[j])) {
+        out.push(text.slice(start, i + 1));
+        start = j;
+        i = j - 1;
+      }
+    }
+  }
+  out.push(text.slice(start));
+  return out;
 }
 
 /** Translate English UI text into the current language. `vars` fill {name} placeholders. */

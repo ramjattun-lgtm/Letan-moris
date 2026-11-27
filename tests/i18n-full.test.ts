@@ -29,3 +29,12 @@ describe("whole-site translation", () => {
     );
   });
 });
+
+import { splitSentences } from "@/lib/i18n";
+describe("sentence splitting (no lookbehind, works on older iPhones)", () => {
+  it("splits like before", () => {
+    expect(splitSentences("One. Two! 3 more? \"Quote\" ok.")).toEqual(["One.", "Two!", "3 more?", '"Quote" ok.']);
+    expect(splitSentences("About 4.5 mm. not split")).toEqual(["About 4.5 mm. not split"]);
+    expect(splitSentences("No split here")).toEqual(["No split here"]);
+  });
+});
