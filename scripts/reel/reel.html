@@ -1,0 +1,173 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- Letan Moris reel template. Drawn frame by frame by render.mjs: window.draw(t) with window.__PLAN and window.__DOTS. -->
+<style>
+  html,body{margin:0;width:1080px;height:1920px;overflow:hidden;font-family:Inter,"Noto Color Emoji",system-ui,sans-serif}
+  #stage{position:absolute;inset:0;overflow:hidden}
+  .abs{position:absolute}
+  .row{position:absolute;left:70px;width:860px;height:96px;border-radius:26px;display:flex;align-items:center;padding:0 30px;box-sizing:border-box;font-size:34px}
+  .row .area{font-weight:800;width:250px;line-height:1.05}
+  .row .place{font-size:24px;font-weight:500;opacity:.75;display:block}
+  .row .temp{font-weight:700;width:190px}
+  .row .rain{font-weight:600;flex:1;text-align:right;white-space:nowrap}
+</style></head>
+<body><div id="stage"></div>
+<script>
+const P = window.__PLAN, DOTS = window.__DOTS || [];
+
+// ——— Brand: the Letan Moris logo (Pieter Both, rain, wind, setting sun, pirogue) ———
+function logo(size, dark) {
+  const fg = dark ? "#FFFFFF" : "#0B2A3C", bg = dark ? "#071C28" : "#FFFFFF", teal = dark ? "#3CCFCF" : "#0FA3A3";
+  const rain = dark ? "#5AA2FF" : "#2F7DE1", wind = dark ? "#E7EEF2" : "#7FB2F0";
+  const drops = [[22,22],[34,16],[46,24]].map(([x,y]) => `<line x1="${x}" y1="${y}" x2="${x-5}" y2="${y+11}" stroke="${rain}" stroke-width="5" stroke-linecap="round"/>`).join("");
+  return `<svg width="${size}" height="${size}" viewBox="0 0 120 120">${drops}
+    <path d="M90 96 a15 15 0 0 1 30 0z" fill="#F2A541"/><path d="M8 96 L40 52 L54 68 L72 34 L112 96Z" fill="${teal}"/>
+    <circle cx="72" cy="27" r="7" fill="${fg}"/>
+    <path d="M10 106 q8 -7 16 0 t16 0 t16 0 t16 0 t16 0 t16 0" fill="none" stroke="${fg}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M86 44 c-10 -2 -14 6 -6 8 c6 1 6 -6 0 -6" fill="none" stroke="${wind}" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M80 52 h22 M84 60 h16" stroke="${wind}" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M44 101 q13 5 28 0 l-4 5 h-20 z" fill="${fg}" stroke="${bg}" stroke-width="1.5"/>
+    <path d="M57 100 L57 78 L70 98 Z" fill="#FFFFFF" stroke="${fg}" stroke-width="2.5" stroke-linejoin="round"/></svg>`;
+}
+/** Logo on its own badge (always the light logo on white, so it reads on every theme). */
+const badge = (size, extra = "") => `<div class="abs" style="${extra};width:${size}px;height:${size}px;border-radius:${size*0.26}px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 ${size*0.06}px ${size*0.2}px rgba(0,0,0,.25)">${logo(size*0.86,false)}</div>`;
+const wordmark = (px, ink, teal) => `<span style="font-size:${px}px;font-weight:900;letter-spacing:-.02em;color:${ink}">Letan <span style="color:${teal}">Moris</span></span>`;
+
+const THEME = {
+  morning: { bg: "linear-gradient(180deg,#22325a 0%,#c86a6a 38%,#f6a96b 62%,#ffe2a6 100%)", card: "rgba(255,255,255,.86)", cardInk: "#13213f", head: "#fff", teal: "#8FF0EC", accent: "#ff8a5c", dot: "rgba(255,255,255,.55)", hot: "#ffffff" },
+  midday:  { bg: "linear-gradient(180deg,#f2fdfd 0%,#9fe6e3 40%,#2fb9c0 75%,#0a7f8f 100%)", card: "rgba(255,255,255,.92)", cardInk: "#0b3b4a", head: "#0b3b4a", teal: "#0FA3A3", accent: "#0aa5b0", dot: "rgba(11,59,74,.35)", hot: "#0b3b4a" },
+  evening: { bg: "linear-gradient(180deg,#070d24 0%,#1b1d4f 45%,#3d2a6b 80%,#6a3d7e 100%)", card: "rgba(255,255,255,.10)", cardInk: "#f4f1ff", head: "#fff", teal: "#3CCFCF", accent: "#b9a6ff", dot: "rgba(255,255,255,.35)", hot: "#ffe9a8" },
+};
+const SYM = { likely: "🌧️", possible: "🌦️", dry: "☀️" };
+const REGION_OF = { north:["north"], east:["east"], south:["south"], west:["west"], plateau:["central-plateau","high-ground"] };
+
+const clamp = (x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const ease = x => { x = clamp(x); return 1 - Math.pow(1 - x, 3); };
+const fade = (t,a,d=.4)=>ease((t-a)/d);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+
+// ——— Timeline (seconds) ———
+const INTRO = 1.4, START = 2.6, STEP = 1.3, ALERT_HOLD = 2.4, OUTRO = 2.2;
+const T_ALERT = START + (P.rows?.length ?? 0) * STEP;
+const T_OUTRO = T_ALERT + (P.alert ? ALERT_HOLD : 0.4);
+window.DURATION = P.kind === "mms" ? 11.5 : T_OUTRO + OUTRO;
+
+function rainText(r){ return r.sym === "dry" ? `${SYM.dry} mostly dry · ${r.prob}%` : `${SYM[r.sym]} ${r.window ? r.window + " · " : ""}${r.prob}%`; }
+
+function bgLayer(kind,t){
+  const th = THEME[kind];
+  let h = `<div class="abs" style="inset:0;background:${th.bg}"></div>`;
+  if (kind==="morning"){
+    const y = 520 - 260*ease(t/3.5);
+    h += `<div class="abs" style="left:640px;top:${y}px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,#fff6d0 0%,#ffd37a 45%,rgba(255,170,90,0) 70%);opacity:.9"></div>`;
+  } else if (kind==="midday"){
+    for (let k=0;k<3;k++){
+      const base=1700+k*70, amp=18-k*4, ph=t*(1.2+k*.4)+k;
+      let d=`M0 ${base}`; for(let x=0;x<=1080;x+=30) d+=` L${x} ${base+amp*Math.sin(x/120+ph)}`; d+=" L1080 1920 L0 1920 Z";
+      h += `<svg class="abs" style="left:0;top:0" width="1080" height="1920"><path d="${d}" fill="rgba(255,255,255,${.18-k*.04})"/></svg>`;
+    }
+  } else {
+    for(let i=0;i<70;i++){ const x=(i*137.5)%1080, y=(i*89.3)%900, a=clamp((t-i*0.04)/1)*(.5+.5*Math.sin(t*2+i)); h+=`<div class="abs" style="left:${x}px;top:${y}px;width:${2+(i%3)}px;height:${2+(i%3)}px;border-radius:50%;background:#fff;opacity:${a}"></div>`; }
+    h += `<div class="abs" style="left:780px;top:330px;width:130px;height:130px;border-radius:50%;box-shadow:-30px 12px 0 0 #fff3c4;opacity:${fade(t,.5,1)}"></div>`;
+  }
+  return h;
+}
+
+function introLayer(t, dark){
+  // Logo sting: badge pops in, wordmark slides up, then the whole card fades into the forecast.
+  const inA = ease(t/.45), outA = 1 - fade(t, INTRO-.3, .35);
+  if (outA <= 0) return "";
+  const s = 0.7 + 0.3*inA;
+  return `<div class="abs" style="inset:0;background:${dark};opacity:${outA}"></div>
+    <div class="abs" style="left:0;top:640px;width:1080px;display:flex;flex-direction:column;align-items:center;opacity:${outA}">
+      <div style="position:relative;width:300px;height:300px;transform:scale(${s})">${badge(300,"left:0;top:0")}</div>
+      <div style="margin-top:40px;transform:translateY(${30*(1-ease((t-.2)/.4))}px);opacity:${ease((t-.2)/.4)}">${wordmark(96,"#fff","#3CCFCF")}</div>
+      <div style="margin-top:12px;font-size:32px;font-weight:600;color:#cfe9ee;opacity:${ease((t-.4)/.4)}">Konn letan Moris ek Rodrig</div></div>`;
+}
+
+function outroLayer(t, start){
+  const o = fade(t,start,.5); if (o<=0) return "";
+  return `<div class="abs" style="inset:0;background:rgba(7,28,40,${.97*o})"></div>
+    <div class="abs" style="left:90px;top:${330+40*(1-o)}px;width:900px;opacity:${o};color:#fff">
+      <div style="display:flex;align-items:center;gap:28px"><div style="position:relative;width:150px;height:150px">${badge(150,"left:0;top:0")}</div>${wordmark(80,"#fff","#3CCFCF")}</div>
+      <div style="font-size:40px;font-weight:600;line-height:1.7;margin-top:70px">🌧️ Rain likely · Pluie probable · Kapav ena lapli<br>🌦️ Showers possible · Averses possibles · Kapav ena lavers<br>☀️ Mostly dry · Plutôt sec · Plito sek</div>
+      <div style="font-size:30px;font-weight:600;margin-top:50px;opacity:.9">Independent forecast, not an official warning.<br>Official warnings: MMS</div>
+      <div style="font-size:52px;font-weight:900;margin-top:50px;color:#3CCFCF">letan-moris.vercel.app</div></div>`;
+}
+
+function mapLayer(th,t,current){
+  const W=420,H=490,L=70,T=470, lon0=57.28,lon1=57.82,lat0=-19.95,lat1=-20.55;
+  let h = `<div class="abs" style="left:${L}px;top:${T}px;width:${W}px;height:${H}px;opacity:${fade(t,START-.6,.5)}">`;
+  const regs = REGION_OF[current] || [];
+  for (const p of DOTS.filter(l=>l.island==="mauritius")){
+    const x=(p.lon-lon0)/(lon1-lon0)*W, y=(p.lat-lat0)/(lat1-lat0)*H, on=regs.includes(p.region), s = on?26:14;
+    h += `<div class="abs" style="left:${x-s/2}px;top:${y-s/2}px;width:${s}px;height:${s}px;border-radius:50%;background:${on?th.hot:th.dot};${on?`box-shadow:0 0 24px ${th.accent}`:""}"></div>`;
+  }
+  return h + `</div>`;
+}
+
+function drawForecast(t){
+  const kind = THEME[P.slot] ? P.slot : "morning", th = THEME[kind], rows = P.rows;
+  let h = bgLayer(kind,t);
+  // Header: logo badge + wordmark, then the trilingual title
+  const tIn = fade(t,INTRO-.2,.6), tY = 40*(1-tIn);
+  const [en,fr,kr] = P.title;
+  h += `<div class="abs" style="left:70px;top:${110+tY}px;opacity:${tIn};color:${th.head}">
+    <div style="display:flex;align-items:center;gap:18px"><div style="position:relative;width:78px;height:78px">${badge(78,"left:0;top:0")}</div>${wordmark(44,th.head,th.teal)}</div>
+    <div style="font-size:96px;font-weight:900;line-height:1.05;margin-top:22px">${esc(en)}</div>
+    <div style="font-size:44px;font-weight:600;opacity:.9;margin-top:6px">${esc(fr)} · ${esc(kr)}</div>
+    <div style="font-size:30px;font-weight:500;opacity:.8;margin-top:12px">${esc(P.sub)}</div></div>`;
+  const idx = Math.floor((t-START)/STEP);
+  const cur = idx>=0 && idx<rows.length ? rows[idx] : null;
+  h += mapLayer(th,t,cur?cur.key:null);
+  if (cur){
+    const a = ease(((t-START)-idx*STEP)/.35);
+    h += `<div class="abs" style="left:520px;top:${520+30*(1-a)}px;width:490px;opacity:${a};color:${th.head}">
+      <div style="font-size:56px;font-weight:900">${esc(cur.label)}</div>
+      <div style="font-size:30px;opacity:.8">${esc(cur.place)}</div>
+      <div style="font-size:120px;margin-top:10px">${SYM[cur.sym]}</div>
+      <div style="font-size:52px;font-weight:800">${cur.tmin}–${cur.tmax}°C</div>
+      <div style="font-size:34px;font-weight:600;margin-top:6px">${cur.sym==="dry"?"mostly dry":esc(cur.window||"at times")} · ${cur.prob}%</div></div>`;
+  }
+  rows.forEach((r,i)=>{
+    const a = ease((t-START-i*STEP)/.4); if (a<=0) return;
+    h += `<div class="row" style="top:${990+i*104}px;background:${th.card};color:${th.cardInk};opacity:${a};transform:translateX(${(1-a)*-120}px)">
+      <div class="area">${esc(r.label)}<span class="place">${esc(r.place)}</span></div><div class="temp">${r.tmin}–${r.tmax}°C</div><div class="rain">${rainText(r)}</div></div>`;
+  });
+  if (P.alert){
+    const a = fade(t,T_ALERT,.4);
+    if (a>0) h += `<div class="abs" style="left:70px;top:${1615+20*(1-a)}px;width:860px;opacity:${a};background:#ffb547;color:#2b1a00;border-radius:24px;padding:18px 28px;box-sizing:border-box">
+      <div style="font-size:30px;font-weight:900">⚠️ Letan Moris alert</div>
+      ${P.alert.map(l=>`<div style="font-size:${P.alert.length>2?22:25}px;font-weight:600;margin-top:4px">${esc(l)}</div>`).join("")}
+      <div style="font-size:21px;font-weight:700;margin-top:6px;opacity:.8">Estimates from forecast rain · Official warnings: MMS</div></div>`;
+  }
+  // Brand bug: small logo badge in the top-right corner for the whole reel
+  h += badge(84, `right:44px;top:44px;opacity:${fade(t,INTRO,.4)*0.95}`);
+  h += outroLayer(t, T_OUTRO);
+  h += introLayer(t, "#071C28");
+  document.getElementById("stage").innerHTML = h;
+}
+
+const ISLAND = { mauritius: "Mauritius", rodrigues: "Rodrigues" };
+function drawMms(t){
+  const a = fade(t,.3,.8), b = fade(t,2.8,.8), c = fade(t,5.8,.8);
+  const blocks = P.official.map(o=>`<div style="margin-top:28px;border:4px solid #111827;border-radius:24px;padding:30px;background:#fff">
+      <div style="font-size:26px;font-weight:800;letter-spacing:3px;color:#4b5563">${ISLAND[o.island].toUpperCase()} · FROM MMS · ISSUED ${esc(o.issuedAtMU)}</div>
+      <div style="font-size:${o.headline.length>90?34:42}px;font-weight:800;margin-top:12px">“${esc(o.headline)}”</div></div>`).join("");
+  document.getElementById("stage").innerHTML = `
+  <div class="abs" style="inset:0;background:#f3f4f6"></div>
+  <div class="abs" style="left:80px;top:130px;width:880px;color:#111827;opacity:${a}">
+    <div style="display:flex;align-items:center;gap:18px"><div style="position:relative;width:78px;height:78px">${badge(78,"left:0;top:0")}</div>${wordmark(44,"#0B2A3C","#0FA3A3")}</div>
+    <div style="font-size:70px;font-weight:900;line-height:1.1;margin-top:36px">${esc(P.title[0])}</div>
+    <div style="font-size:40px;font-weight:600;color:#374151;margin-top:10px">${esc(P.title[1])} · ${esc(P.title[2])}</div>
+    ${blocks}</div>
+  <div class="abs" style="left:80px;top:1080px;width:880px;color:#111827;opacity:${b}">
+    <div style="font-size:42px;font-weight:900">Follow MMS · radio · TV</div>
+    <div style="font-size:36px;font-weight:600;line-height:1.7;margin-top:16px">✔ Charge phones and torches<br>✔ Water, food and medicines for 3 days<br>✔ Secure loose objects outside<br>✔ Know where you'll go if you must leave</div></div>
+  <div class="abs" style="left:80px;top:1530px;width:880px;color:#374151;opacity:${c}">
+    <div style="font-size:30px;font-weight:600">Our forecast posts are paused while the MMS warning is in force.</div>
+    <div style="font-size:44px;font-weight:900;color:#111827;margin-top:24px">metservice.intnet.mu</div></div>`;
+}
+
+window.draw = t => (P.kind === "mms" ? drawMms(t) : drawForecast(t));
+</script></body></html>

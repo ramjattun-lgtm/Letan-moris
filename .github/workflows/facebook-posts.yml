@@ -5,6 +5,12 @@
 #   18:30 MU evening  → 14:30 UTC
 #   Fri 17:00 MU weekend → Fri 13:00 UTC
 # Needs repository secret CRON_SECRET (same value as in Vercel). Without it, the job does nothing.
+#
+# Morning, midday and evening are REELS: the site sends the reel data, this job draws the video
+# (scripts/reel), stores it on the "reels" release, then the site checks it again and posts it
+# (or sends you an approval link in review mode). If drawing the reel fails, the image post is used.
+# While an MMS warning is entered in official-status.ts, only the "Follow MMS" reel is made, and it
+# always waits for your approval.
 
 name: Facebook posts
 
@@ -22,7 +28,7 @@ on:
         default: morning
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 concurrency:
@@ -32,7 +38,7 @@ concurrency:
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     env:
       SITE: https://letan-moris.vercel.app
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -50,8 +56,70 @@ jobs:
           esac
           echo "slot=$s" >> "$GITHUB_OUTPUT"
 
-      - name: Prepare or publish
+      - name: Get reel data
+        id: reel
         if: env.CRON_SECRET != ''
+        run: |
+          code=$(curl -sS -m 90 -o reel.json -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$SITE/api/social/run?slot=${{ steps.slot.outputs.slot }}&format=reel") || code=000
+          status=$(jq -r '.status // "error"' reel.json 2>/dev/null || echo error)
+          echo "HTTP $code · $status"
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" = "render" ]; then
+            jq '.bundle' reel.json > bundle.json
+            echo "asset=$(jq -r '.asset' reel.json)" >> "$GITHUB_OUTPUT"
+            echo "plan=$(jq -r '.bundle.plan.planFrom' reel.json)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.reel.outputs.status == 'render'
+        with:
+          path: repo
+          sparse-checkout: scripts/reel
+
+      - name: Draw the reel
+        id: draw
+        if: steps.reel.outputs.status == 'render'
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-noto-color-emoji fonts-inter > /dev/null
+          npm install --silent --no-save --prefix /tmp/pw playwright-core@1
+          PLAYWRIGHT_MODULE=/tmp/pw/node_modules/playwright-core node repo/scripts/reel/render.mjs bundle.json "${{ steps.reel.outputs.asset }}.mp4"
+          cp bundle.json "${{ steps.reel.outputs.asset }}.json"
+          gh release view reels --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1 || \
+            gh release create reels --repo "$GITHUB_REPOSITORY" --title "Reel videos" --latest=false \
+              --notes "Videos made for the Letan Moris Facebook reels. Files older than 3 days are removed automatically."
+          gh release upload reels --repo "$GITHUB_REPOSITORY" --clobber "${{ steps.reel.outputs.asset }}.mp4" "${{ steps.reel.outputs.asset }}.json"
+          vh=$(sha256sum "${{ steps.reel.outputs.asset }}.mp4" | cut -d' ' -f1)
+          jh=$(sha256sum "${{ steps.reel.outputs.asset }}.json" | cut -d' ' -f1)
+          sleep 5
+          code=$(curl -sS -m 120 -o out.json -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" -H "Content-Type: application/json" \
+            -d "{\"slot\":\"${{ steps.slot.outputs.slot }}\",\"plan\":\"${{ steps.reel.outputs.plan }}\",\"vh\":\"$vh\",\"jh\":\"$jh\"}" \
+            "$SITE/api/social/reel") || code=000
+          echo "HTTP $code"; cat out.json
+          status=$(jq -r '.status // "error"' out.json)
+          [ "$status" != "error" ] || exit 1
+
+      - name: Remove reel files older than 3 days
+        if: steps.reel.outputs.status == 'render'
+        continue-on-error: true
+        run: |
+          cutoff=$(date -u -d '3 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/reels" --jq ".assets[] | select(.created_at < \"$cutoff\") | .id" | \
+            while read -r id; do gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$id"; done
+
+      - name: Reel blocked by the checker
+        if: steps.reel.outputs.status == 'blocked'
+        run: |
+          { echo "The reel was NOT made or published."; echo; jq -r '(.failures // [.message])[] | "- " + .' reel.json; } > body.md
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "Facebook reel blocked (${{ steps.slot.outputs.slot }})" --body-file body.md
+          echo '{"status":"done"}' > out.json
+
+      - name: Prepare or publish the image post (weekend, or if the reel failed)
+        if: env.CRON_SECRET != '' && steps.reel.outputs.status != 'blocked' && (steps.reel.outputs.status != 'render' || steps.draw.outcome != 'success')
         run: |
           code=$(curl -sS -m 90 -o out.json -w '%{http_code}' -X POST \
             -H "Authorization: Bearer $CRON_SECRET" \
@@ -63,7 +131,23 @@ jobs:
         if: env.CRON_SECRET != '' && hashFiles('out.json') != ''
         run: |
           status=$(jq -r '.status // "error"' out.json)
-          if [ "$status" = "review" ]; then
+          if [ "$status" = "review" ] && [ "$(jq -r '.videoUrl // empty' out.json)" != "" ]; then
+            title=$(jq -r '.title' out.json)
+            {
+              if [ "$(jq -r '.kind' out.json)" = "mms" ]; then echo "### 🟥 MMS warning in force — \"Follow MMS\" reel (forecast posts are paused)"; else echo "### ✅ Checker passed — watch, then tap to post"; fi
+              echo
+              echo "**[▶️ Watch the reel]($(jq -r '.videoUrl' out.json))**"
+              echo
+              echo "**[👉 Approve and post to Facebook]($(jq -r '.approveUrl' out.json))** (link works for 3 hours; it is checked again, including the MMS status, when you tap)"
+              echo
+              echo '```'
+              jq -r '.text' out.json
+              echo '```'
+              echo
+              echo "_Ignore this issue to skip the reel. Close it when done._"
+            } > body.md
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "Approve reel: $title" --body-file body.md
+          elif [ "$status" = "review" ]; then
             title=$(jq -r '.title' out.json)
             ok=$(jq -r '.check.ok' out.json)
             {

@@ -4,6 +4,7 @@
 //
 // How to update (from a phone): open this file on GitHub › pencil icon › edit › Commit.
 // Vercel redeploys automatically in about a minute.
+// While status is "warning", Facebook forecast posts are paused and only a "Follow MMS" reel is offered for approval.
 
 export type OfficialStatus =
   | "not-entered" // we have not entered anything — users are told to check MMS

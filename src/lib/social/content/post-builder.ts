@@ -32,6 +32,7 @@ export interface RegionSummary {
   maxRainProb: Maybe<number>;
   rainMm: Maybe<number>;
   rainWindows: string[]; // e.g. ["14:00–17:00"]
+  possibleWindows: string[]; // lighter / less certain rain periods
   maxGust: Maybe<number>;
   uvMax: Maybe<number>;
   icon: IconKind;
@@ -127,6 +128,7 @@ export function summariseRegion(
     maxRainProb,
     rainMm,
     rainWindows: windows,
+    possibleWindows: complete ? possibleWindows : [],
     maxGust: gusts.length ? round(Math.max(...gusts)) : null,
     uvMax: uv.length ? Math.max(...uv) : null,
     icon,

@@ -4,6 +4,7 @@ import { assessHeavyRain, type RainHour } from "@/lib/weather/intelligence/heavy
 import { KINDS, summariseHazards, type Report } from "./lapli";
 import { formatUtcAsMU, hhmm, nowMU } from "@/lib/time";
 import { QUAKE_SIGNS, type Quake } from "@/lib/weather/intelligence/quake.service";
+import type { RiverAssessment } from "@/lib/weather/intelligence/river.service";
 
 // Location alerts by area, sent as free ntfy notifications. People follow the area of a saved
 // place (Home, Work, School…) in the free ntfy app. Independent alerts — never MMS warnings.
@@ -75,4 +76,25 @@ export function quakeAlert(q: Quake, areaKey: string): AreaAlert {
     title: `Strong earthquake M${q.mag}: ${q.place} — check MMS now`,
     body: `A magnitude ${q.mag} earthquake happened at ${formatUtcAsMU(q.timeUtc)} (Mauritius time), about ${Math.round(dist / 100) * 100} km away. Tsunami warnings for Mauritius and Rodrigues come only from MMS: check MMS, radio and TV now. ${QUAKE_SIGNS}`,
   };
+}
+
+type RiverForAlert = Pick<RiverAssessment, "level" | "message"> & { id: string; name: string; downstream: string[] };
+
+/** River watch HIGH: alert every area downstream of the river (estimate from rain, not river levels). */
+export function riverAlerts(rivers: RiverForAlert[], now = nowMU()): Record<string, AreaAlert[]> {
+  const out: Record<string, AreaAlert[]> = {};
+  for (const r of rivers) {
+    if (r.level !== "high") continue;
+    const areas = new Set(r.downstream.map((id) => getLocality(id)).filter((l) => !!l).map((l) => climateKeyFor(l!)));
+    for (const area of areas) {
+      (out[area] ??= []).push({
+        key: `river-${r.id}-${now.slice(0, 10)}-high`,
+        priority: 4,
+        title: `River watch: ${r.name} could rise fast`,
+        body: `${r.message} Estimate from rain over the hills, not a river-level measurement.`,
+        loc: knownLoc(r.downstream[0]),
+      });
+    }
+  }
+  return out;
 }

@@ -1,5 +1,7 @@
 import { type NextRequest } from "next/server";
-import { isSlot, publish, validPlan, verify } from "@/lib/social/social.service";
+import { isSlot, publish, publishStoredReel, validPlan, verify, verifyReel } from "@/lib/social/social.service";
+
+export const maxDuration = 60;
 
 const page = (title: string, body: string, ok: boolean) =>
   new Response(
@@ -13,20 +15,25 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 
 function params(req: NextRequest) {
   const q = req.nextUrl.searchParams;
-  return { slot: q.get("slot"), plan: q.get("plan"), exp: Number(q.get("exp")), sig: q.get("sig") ?? "" };
+  return { slot: q.get("slot"), plan: q.get("plan"), exp: Number(q.get("exp")), sig: q.get("sig") ?? "", reel: q.get("reel") === "1", vh: q.get("vh") ?? "", jh: q.get("jh") ?? "" };
+}
+
+function valid(p: ReturnType<typeof params>): boolean {
+  if (!isSlot(p.slot) || !validPlan(p.plan)) return false;
+  return p.reel ? verifyReel(p.slot, p.plan, p.exp, p.vh, p.jh, p.sig) : verify(p.slot, p.plan, p.exp, p.sig);
 }
 
 // Step 1 (GET): show a confirmation page. Opening the link alone never posts —
 // some email apps open links automatically to scan them.
 export async function GET(req: NextRequest) {
-  const { slot, plan, exp, sig } = params(req);
-  if (!isSlot(slot) || !validPlan(plan) || !verify(slot, plan, exp, sig)) {
+  const p = params(req);
+  if (!valid(p)) {
     return page("Link not valid", "<p>This approval link is invalid or has expired, so nothing was posted. Old forecasts are not posted on purpose.</p>", false);
   }
   const action = esc(req.nextUrl.pathname + req.nextUrl.search);
   return page(
     "Post to Facebook?",
-    `<p>The post will be rebuilt with the latest forecast and checked again before publishing.</p>
+    `<p>${p.reel ? "The reel you watched will be checked again (and the latest MMS status) before publishing." : "The post will be rebuilt with the latest forecast and checked again before publishing."}</p>
 <form method="post" action="${action}"><button style="font:600 18px system-ui;background:#0B2A3C;color:#fff;border:0;border-radius:999px;padding:14px 28px;cursor:pointer">Post now</button></form>
 <p style="font-size:13px;color:#4A5B66">Changed your mind? Just close this page — nothing will be posted.</p>`,
     true,
@@ -35,16 +42,13 @@ export async function GET(req: NextRequest) {
 
 // Step 2 (POST): rebuild with the latest data, re-check, then publish.
 export async function POST(req: NextRequest) {
-  const q = req.nextUrl.searchParams;
-  const slot = q.get("slot");
-  const plan = q.get("plan");
-  const exp = Number(q.get("exp"));
-  const sig = q.get("sig") ?? "";
-  if (!isSlot(slot) || !validPlan(plan) || !verify(slot, plan, exp, sig)) {
+  const p = params(req);
+  const { slot, plan } = p;
+  if (!valid(p) || !isSlot(slot) || !plan) {
     return page("Link not valid", "<p>This approval link is invalid or has expired, so nothing was posted. Old forecasts are not posted on purpose.</p>", false);
   }
   try {
-    const out = await publish(slot, plan);
+    const out = p.reel ? await publishStoredReel(slot, plan, p.vh, p.jh) : await publish(slot, plan);
     if (out.status === "published") return page("Posted ✓", `<p>The post is now on the Letan Moris Facebook Page.</p><pre>${esc(out.text ?? "")}</pre>`, true);
     if (out.status === "duplicate") return page("Already posted", "<p>This post was already published, so it was not posted again.</p>", true);
     if (out.status === "blocked") return page("Not posted — checker found problems", `<ul>${out.failures.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>`, false);

@@ -13,7 +13,7 @@ export interface CheckResult {
 export const MAX_DATA_AGE_MIN = 6 * 60;
 export const MAX_LENGTH = 2200;
 
-export function checkPost(s: PostSnapshot, nowUtc: Date = new Date()): CheckResult {
+export function checkPost(s: PostSnapshot, nowUtc: Date = new Date(), opts: { maxIssueLagMin?: number } = {}): CheckResult {
   const failures: string[] = [];
   const warnings: string[] = [];
   const t = s.text;
@@ -50,7 +50,7 @@ export function checkPost(s: PostSnapshot, nowUtc: Date = new Date()): CheckResu
   else if (ageMin < -10) failures.push("Data time is in the future — clock problem.");
   else if (ageMin > MAX_DATA_AGE_MIN) failures.push(`Forecast data is too old (${ageMin} minutes).`);
   const issuedLag = Math.abs(minutesBetween(s.issuedAtMU, nowMU(nowUtc)));
-  if (issuedLag > 30) failures.push("Issue time does not match the current Mauritius time.");
+  if (issuedLag > (opts.maxIssueLagMin ?? 30)) failures.push("Issue time does not match the current Mauritius time.");
 
   // 5. Length
   if (t.length > MAX_LENGTH) failures.push(`Text too long (${t.length} characters).`);
