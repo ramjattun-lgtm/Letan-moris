@@ -1,4 +1,4 @@
-// Sends Letan Moris area alerts (heavy-rain risk, confirmed community hazards) to free ntfy
+// Sends Letan Moris area alerts (heavy-rain risk, River watch high, strong earthquakes, confirmed community hazards) to free ntfy
 // topics, one per area. Each alert is sent once: we check the topic's last 24 h first.
 // Runs every 30 minutes in GitHub Actions.
 import { getWithRetry } from "./lib/http.mjs";
