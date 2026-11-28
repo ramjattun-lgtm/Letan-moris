@@ -1,7 +1,7 @@
 {
- "builtAt": "2026-11-27T10:55:57.818Z",
- "from": "2026-10-28",
- "to": "2026-11-27",
+ "builtAt": "2026-11-28T10:31:43.517Z",
+ "from": "2026-10-29",
+ "to": "2026-11-28",
  "days": 30,
  "method": {
   "forecast": "The forecast issued the day before (Open-Meteo Previous Runs API), sorted like the app's wording: under 0.5 mm = dry, 2 mm or more = rain likely, in between = showers possible.",
@@ -20,12 +20,12 @@
       "rained": 5
      },
      "possible": {
-      "days": 14,
+      "days": 13,
       "rained": 4
      },
      "dry": {
-      "days": 9,
-      "stayedDry": 9
+      "days": 10,
+      "stayedDry": 10
      }
     },
     "clearCallPct": 88,
@@ -38,19 +38,19 @@
    "name": "East",
    "rain": {
     "days": 30,
-    "rainDaysSeen": 19,
+    "rainDaysSeen": 18,
     "said": {
      "likely": {
-      "days": 18,
-      "rained": 15
+      "days": 17,
+      "rained": 14
      },
      "possible": {
       "days": 6,
       "rained": 4
      },
      "dry": {
-      "days": 6,
-      "stayedDry": 6
+      "days": 7,
+      "stayedDry": 7
      }
     },
     "clearCallPct": 88,
@@ -63,19 +63,19 @@
    "name": "South",
    "rain": {
     "days": 30,
-    "rainDaysSeen": 18,
+    "rainDaysSeen": 17,
     "said": {
      "likely": {
-      "days": 17,
-      "rained": 15
+      "days": 16,
+      "rained": 14
      },
      "possible": {
       "days": 9,
       "rained": 3
      },
      "dry": {
-      "days": 4,
-      "stayedDry": 4
+      "days": 5,
+      "stayedDry": 5
      }
     },
     "clearCallPct": 90,
@@ -113,7 +113,7 @@
    "name": "Central Plateau",
    "rain": {
     "days": 30,
-    "rainDaysSeen": 18,
+    "rainDaysSeen": 19,
     "said": {
      "likely": {
       "days": 16,
@@ -121,7 +121,7 @@
      },
      "possible": {
       "days": 10,
-      "rained": 5
+      "rained": 6
      },
      "dry": {
       "days": 4,
@@ -145,15 +145,15 @@
       "rained": 9
      },
      "possible": {
-      "days": 11,
+      "days": 10,
       "rained": 4
      },
      "dry": {
-      "days": 6,
-      "stayedDry": 6
+      "days": 7,
+      "stayedDry": 7
      }
     },
-    "clearCallPct": 79,
+    "clearCallPct": 80,
     "missed": 0,
     "falseAlarms": 4
    },
@@ -163,19 +163,19 @@
    "name": "Rodrigues",
    "rain": {
     "days": 30,
-    "rainDaysSeen": 12,
+    "rainDaysSeen": 13,
     "said": {
      "likely": {
-      "days": 6,
-      "rained": 6
+      "days": 7,
+      "rained": 7
      },
      "possible": {
       "days": 10,
       "rained": 5
      },
      "dry": {
-      "days": 14,
-      "stayedDry": 13
+      "days": 13,
+      "stayedDry": 12
      }
     },
     "clearCallPct": 95,
@@ -195,7 +195,7 @@
     "rainDaysSeen": 9,
     "said": {
      "likely": {
-      "days": 17,
+      "days": 16,
       "rained": 4
      },
      "possible": {
@@ -203,30 +203,30 @@
       "rained": 4
      },
      "dry": {
-      "days": 4,
-      "stayedDry": 3
+      "days": 5,
+      "stayedDry": 4
      }
     },
-    "clearCallPct": 33,
+    "clearCallPct": 38,
     "missed": 1,
-    "falseAlarms": 13
+    "falseAlarms": 12
    },
    "tempMaeC": 1.4
   },
   "FIMR": {
    "name": "Plaine Corail airport (Rodrigues)",
    "region": "rodrigues",
-   "reports": 688,
+   "reports": 689,
    "rain": {
     "days": 30,
-    "rainDaysSeen": 4,
+    "rainDaysSeen": 5,
     "said": {
      "likely": {
-      "days": 5,
-      "rained": 2
+      "days": 6,
+      "rained": 3
      },
      "possible": {
-      "days": 13,
+      "days": 12,
       "rained": 2
      },
      "dry": {
@@ -234,7 +234,7 @@
       "stayedDry": 12
      }
     },
-    "clearCallPct": 82,
+    "clearCallPct": 83,
     "missed": 0,
     "falseAlarms": 3
    },
